@@ -41,7 +41,7 @@ export default function AdminPage() {
                         />
                     </div>
                     <p className="text-lg font-semibold text-orange-400 animate-pulse">
-                        Завантаження...
+                        Завантаження....
                     </p>
                 </div>
             </div>
