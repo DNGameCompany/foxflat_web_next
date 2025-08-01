@@ -1,0 +1,54 @@
+import IphoneMockup from "@/src/components/main/PhoneMockup";
+
+export default function HeroFoxFlat() {
+    return (
+        <section className="relative overflow-hidden">
+            <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center py-24 sm:py-32">
+
+                    {/* Текст ліворуч */}
+                    <div className="max-w-xl">
+                        <div className="mb-4 flex space-x-4">
+                            <span className="inline-flex items-center rounded-full bg-orange-400/10 px-3 py-1 text-sm font-medium text-orange-300">
+                                Ми працюємо
+                            </span>
+                            <a
+                                href="#"
+                                className="inline-flex items-center text-sm font-medium text-orange-300 hover:text-orange-100 transition"
+                            >
+                                Переглянути вакансії →
+                            </a>
+                        </div>
+                        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                            FoxFlat – моніторинг квартир
+                        </h1>
+                        <p className="mt-6 text-lg leading-8 text-gray-300">
+                            Моніторинг квартир у Львові та Києві. Отримуй сповіщення та бронюй квартири першим. Наразі діє безкоштовна акція.
+                        </p>
+                        <div className="mt-10 flex gap-x-6">
+                            <a
+                                href="https://t.me/FoxFlat_bot"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-base font-semibold text-black shadow-sm hover:from-orange-400 hover:to-orange-300 transition"
+                            >
+                                Запустити бота
+                            </a>
+                            <a
+                                href="#"
+                                className="text-base font-semibold leading-6 text-white hover:text-orange-300 transition"
+                            >
+                                Дізнатися більше →
+                            </a>
+                        </div>
+                    </div>
+
+
+                    <div className="flex justify-center lg:justify-end lg:pr-16">
+                        <IphoneMockup videoSrc="/videos/phone-screen-video.mp4" width={330} />
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
