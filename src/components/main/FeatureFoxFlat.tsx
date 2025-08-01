@@ -35,8 +35,10 @@ export default function FeatureFoxFlat() {
     ];
 
     return (
-        <section className="bg-[#0f172a] py-24 sm:py-32">
-            <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section
+            className="bg-[#0f172a] min-h-screen py-24 sm:py-32 flex flex-col justify-center"
+        >
+            <div className="mx-auto max-w-7xl px-6 lg:px-8 w-full">
                 <div className="max-w-3xl mx-auto text-center">
                     <p className="text-base font-semibold leading-7 text-orange-400">Твої переваги</p>
                     <h2 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">

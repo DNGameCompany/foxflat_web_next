@@ -1,6 +1,14 @@
-import Head from 'next/head';
 import ClientPublicOffer from './ClientPublicOffer';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
+
+export const metadata = {
+    title: 'Договір публічної оферти',
+    description: 'Договір публічної оферти для використання Telegram-бота FoxFlat, який визначає умови надання інформаційних послуг.',
+    keywords: 'foxflat, договір оферти, telegram-бот, оренда квартир',
+    icons: {
+        icon: '/favicon.ico',
+    },
+};
 
 interface PageData {
     title: string;
@@ -22,7 +30,8 @@ interface PageData {
 export default async function TermsOfServicePage() {
     const pageData: PageData = {
         title: 'Договір публічної оферти',
-        description: 'Договір публічної оферти для використання Telegram-бота FoxFlat, який визначає умови надання інформаційних послуг.',
+        description:
+            'Договір публічної оферти для використання Telegram-бота FoxFlat, який визначає умови надання інформаційних послуг.',
         lastUpdated: '28 липня 2025 року',
         supportTelegram: 'https://t.me/FoxFlatSupport',
         supportEmail: 'support@foxflat.com',
@@ -39,12 +48,6 @@ export default async function TermsOfServicePage() {
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-            <Head>
-                <title>{pageData.title}</title>
-                <meta name="description" content={pageData.description} />
-                <meta name="keywords" content="foxflat, договір оферти, telegram-бот, оренда квартир" />
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
             <ClientPublicOffer pageData={pageData} />
             <FooterFoxFlat />
         </div>

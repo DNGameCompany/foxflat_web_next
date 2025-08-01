@@ -3,10 +3,12 @@
 import { useEffect, useRef } from 'react';
 
 interface AnimatedBackgroundProps {
-    color?: string; // Колір у форматі rgba, наприклад, 'rgba(0,255,170,0.6)'
+    color?: string; // Колір у форматі rgba
 }
 
-export default function AnimatedBackground({ color = 'rgba(0,255,170,0.6)' }: AnimatedBackgroundProps) {
+export default function AnimatedBackground({
+                                               color = 'rgba(255,165,0,0.4)', // 🔶 помаранчевий за замовчуванням
+                                           }: AnimatedBackgroundProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function AnimatedBackground({ color = 'rgba(0,255,170,0.6)' }: An
                 if (p.x < 0 || p.x > width) p.vx *= -1;
                 if (p.y < 0 || p.y > height) p.vy *= -1;
 
+                // 🔶 Точка
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 1.5, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
@@ -50,6 +53,7 @@ export default function AnimatedBackground({ color = 'rgba(0,255,170,0.6)' }: An
                     const dy = p.y - q.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < 100) {
+                        // 🔶 Лінія з прозорістю залежно від відстані
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(q.x, q.y);
@@ -69,7 +73,7 @@ export default function AnimatedBackground({ color = 'rgba(0,255,170,0.6)' }: An
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            points.forEach(p => {
+            points.forEach((p) => {
                 p.x = Math.random() * width;
                 p.y = Math.random() * height;
             });

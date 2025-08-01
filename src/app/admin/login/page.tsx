@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import AnimatedBackground from "@/src/components/AnimatedBackground";
 import Image from "next/image";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
@@ -18,7 +19,6 @@ export default function AdminLogin() {
         e.preventDefault();
         setError(null);
         setLoading(true);
-        const auth = getAuth();
         try {
             await signInWithEmailAndPassword(auth, email, password);
             router.push("/admin");

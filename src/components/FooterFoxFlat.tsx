@@ -4,16 +4,16 @@ export default function FooterFoxFlat() {
             <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
                 <p>© {new Date().getFullYear()} FoxFlat. Всі права захищено.</p>
                 <div className="flex gap-4 flex-wrap justify-center">
-                    <a href="/terms-of-service" className="hover:text-orange-300 transition">
+                    <a href="/legal/terms-of-service" className="hover:text-orange-300 transition">
                         Договір публічної оферти
                     </a>
-                    <a href="/privacy-policy" className="hover:text-orange-300 transition">
+                    <a href="/legal/privacy-policy" className="hover:text-orange-300 transition">
                         Політика конфіденційності
                     </a>
-                    <a href="/acceptable-use-policy" className="hover:text-orange-300 transition">
+                    <a href="/legal/acceptable-use-policy" className="hover:text-orange-300 transition">
                         Політика прийнятного використання
                     </a>
-                    <a href="/contact" className="hover:text-orange-300 transition">
+                    <a href="/contacts/contact" className="hover:text-orange-300 transition">
                         Контакти
                     </a>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, FireIcon } from "@heroicons/react/20/solid";
 
 const tiers = [
     {
@@ -13,7 +13,7 @@ const tiers = [
             "Автоматичний пошук нових квартир з оновленням кожні 30 хвилин.",
             "Можливість одноразової зміни фільтру.",
             "Застосування одного параметра в кожному фільтрі.",
-            "Максимум 3 переходи по посиланням на добу."
+            "Максимум 3 переходи по посиланням на добу.",
         ],
         featured: false,
     },
@@ -27,7 +27,7 @@ const tiers = [
             "Моніторинг кожні 5 хвилин.",
             "Необмежена кількість змін параметрів фільтрів.",
             "Підтримка декількох районів та фільтр за наявністю тварин.",
-            "Необмежена кількість переходів за посиланнями."
+            "Необмежена кількість переходів за посиланнями.",
         ],
         featured: true,
     },
@@ -40,7 +40,7 @@ function classNames(...classes: string[]) {
 export default function PricingFoxFlat() {
     return (
         <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 rounded-3xl overflow-hidden">
-            {/* Прозорий матуючий фон + сітка */}
+            {/* Фон-сітка */}
             <div
                 aria-hidden="true"
                 className="absolute inset-0 z-0
@@ -52,16 +52,29 @@ export default function PricingFoxFlat() {
         pointer-events-none"
             />
 
+            {/* Заголовок */}
             <div className="relative z-10 mx-auto max-w-4xl text-center">
                 <h2 className="text-base font-semibold text-orange-400">FoxFlat Підписка</h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
                     Обери свій план моніторингу
                 </p>
             </div>
-            <p className="relative z-10 mx-auto mt-6 max-w-2xl text-center text-lg text-gray-300">
-                Зараз діє акція: місячна підписка безкоштовно (звичайна ціна ~200 грн~ ). Бронюй квартиру першим з FoxFlat.
-            </p>
-            <div className="relative z-10 mx-auto mt-16 grid max-w-lg grid-cols-1 gap-y-6 sm:mt-20 lg:max-w-4xl lg:grid-cols-2">
+
+            {/* 🔥 Блок акції */}
+            <div className="relative z-10 mx-auto mt-10 mb-8 max-w-2xl text-center rounded-xl border border-orange-400 p-4 bg-orange-500/10 text-orange-300 shadow-[0_0_25px_-8px_rgba(251,146,60,0.5)] animate-pulsePromo transition-all duration-300">
+                <div className="flex items-center justify-center gap-2 font-semibold text-base">
+                    <FireIcon className="h-5 w-5 text-orange-400 animate-bounce" />
+                    Спеціальна пропозиція:{" "}
+                    <span className="text-orange-100">преміум зараз безкоштовно!</span>
+                </div>
+                <p className="mt-1 text-sm text-orange-200">
+                    Звичайна ціна <span className="line-through">200 грн</span> / місяць — тільки зараз{" "}
+                    <span className="font-bold text-white">0 грн</span>
+                </p>
+            </div>
+
+            {/* Ціни */}
+            <div className="relative z-10 mx-auto mt-8 grid max-w-lg grid-cols-1 gap-y-6 sm:mt-12 lg:max-w-4xl lg:grid-cols-2">
                 {tiers.map((tier) => (
                     <div
                         key={tier.id}

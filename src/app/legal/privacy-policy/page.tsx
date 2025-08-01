@@ -1,6 +1,14 @@
-import Head from 'next/head';
 import ClientPrivacyPolicy from './ClientPrivacyPolicy';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
+
+export const metadata = {
+    title: 'Політика конфіденційності',
+    description: 'Політика конфіденційності Telegram-бота FoxFlat, що регламентує порядок збору, зберігання, обробки та використання персональних даних користувачів.',
+    keywords: 'foxflat, політика конфіденційності, telegram-бот, оренда квартир',
+    icons: {
+        icon: '/favicon.ico',
+    },
+};
 
 interface PageData {
     title: string;
@@ -10,7 +18,7 @@ interface PageData {
     supportEmail: string;
 }
 
-export default async function PrivacyPolicyPage() {
+export default function PrivacyPolicyPage() {
     const pageData: PageData = {
         title: 'Політика конфіденційності',
         description: 'Політика конфіденційності Telegram-бота FoxFlat, що регламентує порядок збору, зберігання, обробки та використання персональних даних користувачів.',
@@ -21,12 +29,6 @@ export default async function PrivacyPolicyPage() {
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-            <Head>
-                <title>{pageData.title}</title>
-                <meta name="description" content={pageData.description} />
-                <meta name="keywords" content="foxflat, політика конфіденційності, telegram-бот, оренда квартир" />
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
             <ClientPrivacyPolicy pageData={pageData} />
             <FooterFoxFlat />
         </div>

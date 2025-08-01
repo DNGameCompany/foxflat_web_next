@@ -17,7 +17,7 @@ export default function CtaFoxFlat() {
                     Почни шукати квартиру вже сьогодні
                 </h2>
                 <p className="mt-4 text-lg leading-8 text-gray-300 max-w-2xl mx-auto">
-                    FoxFlat миттєво повідомляє про нові квартири у Львові та Києві. Запусти Telegram-бота та отримуй сповіщення першим.
+                    FoxFlat миттєво повідомляє про нові квартири у 22-х містах України. Запусти Telegram-бота та отримуй сповіщення першим.
                 </p>
                 <div className="mt-8 flex justify-center">
                     <a
