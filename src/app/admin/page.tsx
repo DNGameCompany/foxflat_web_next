@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";  // Імпорт auth звідси
 import AnimatedBackground from "@/src/components/AnimatedBackground";
 import AdminSidebar from "@/src/components/admin/AdminSidebar";
 import AdminDashboard from "@/src/components/admin/AdminDashboard";
+import Image from "next/image";
 
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<"users" | "messages" | "blogs" | "collages">("users");
@@ -26,7 +27,25 @@ export default function AdminPage() {
     }, [router]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="min-h-screen bg-black text-white flex items-center justify-center relative">
+                <AnimatedBackground />
+                <div className="z-10 flex flex-col items-center space-y-4">
+                    <div className="relative w-20 h-20 animate-pulse">
+                        <Image
+                            src="/images/logo.png"
+                            alt="FoxFlat"
+                            fill
+                            className="object-contain rounded-full"
+                            priority
+                        />
+                    </div>
+                    <p className="text-lg font-semibold text-orange-400 animate-pulse">
+                        Завантаження...
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
