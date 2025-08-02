@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -15,6 +16,7 @@
     "framer-motion": "^12.20.5",
     "lucide-react": "^0.525.0",
     "next": "^15.3.4",
+    "next-sitemap": "^4.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-quill": "^2.0.0",
