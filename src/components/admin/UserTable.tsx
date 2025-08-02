@@ -77,7 +77,13 @@ export default function UserList() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-orange-400">Користувачі</h2>
+                <div>
+                    <h2 className="text-xl font-bold text-orange-400">
+                        Користувачі{" "}
+                        <span className="text-sm text-white/50 ml-2">({filteredUsers.length})</span>
+                    </h2>
+                    <p className="text-sm text-white/40">Усього: {users.length}</p>
+                </div>
 
                 <div className="flex items-center gap-4">
                     {/* Перемикач виду */}
