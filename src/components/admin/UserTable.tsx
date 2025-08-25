@@ -139,7 +139,7 @@ export default function UserList() {
 
     const handleDeleteUser = async (userId: string) => {
         try {
-            const response = await fetch(`http://13.60.192.56:8000/api/users/${userId}`, {
+            const response = await fetch(`https://api.foxflat.com.ua/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
