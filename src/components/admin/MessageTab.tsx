@@ -6,6 +6,7 @@ export default function MessageTab() {
     const [sendToAll, setSendToAll] = useState(false);
     const [userIds, setUserIds] = useState<string[]>([""]);
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleUserIdChange = (index: number, value: string) => {
         const newUserIds = [...userIds];
@@ -13,12 +14,50 @@ export default function MessageTab() {
         setUserIds(newUserIds);
     };
 
-    const addUserIdField = () => {
-        setUserIds((prev) => [...prev, ""]);
-    };
+    const addUserIdField = () => setUserIds((prev) => [...prev, ""]);
+    const removeUserIdField = (index: number) => setUserIds((prev) => prev.filter((_, i) => i !== index));
 
-    const removeUserIdField = (index: number) => {
-        setUserIds((prev) => prev.filter((_, i) => i !== index));
+    const handleSendMessage = async () => {
+        if (!sendToAll && userIds.some((id) => id.trim() === "")) {
+            alert("Будь ласка, введіть всі User ID або видаліть порожні поля");
+            return;
+        }
+        if (!message.trim()) {
+            alert("Будь ласка, введіть текст повідомлення");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch("https://api.foxflat.com.ua/send-message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sendToAll,
+                    userIds: sendToAll ? [] : userIds,
+                    message
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(`Помилка: ${(data as { error?: string }).error || "Щось пішло не так"}`);
+            } else {
+                alert((data as { message: string }).message);
+                setMessage("");
+                if (!sendToAll) setUserIds([""]);
+            }
+        } catch (err) {
+            let errorMessage = "Помилка під час відправки";
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -93,21 +132,11 @@ export default function MessageTab() {
             </div>
 
             <button
-                onClick={() => {
-                    if (!sendToAll && userIds.some((id) => id.trim() === "")) {
-                        alert("Будь ласка, введіть всі User ID або видаліть порожні поля");
-                        return;
-                    }
-                    if (!message.trim()) {
-                        alert("Будь ласка, введіть текст повідомлення");
-                        return;
-                    }
-                    // Тут можна додати логіку відправки повідомлення
-                    alert("Повідомлення готове до відправки!");
-                }}
-                className="mt-4 w-full bg-orange-500 hover:bg-orange-400 text-black font-semibold py-2 rounded transition"
+                onClick={handleSendMessage}
+                disabled={loading}
+                className="mt-4 w-full bg-orange-500 hover:bg-orange-400 text-black font-semibold py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Відправити повідомлення
+                {loading ? "Відправляємо..." : "Відправити повідомлення"}
             </button>
         </div>
     );
