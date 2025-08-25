@@ -10,7 +10,7 @@ export default function HeroFoxFlat() {
                     {/* Текст ліворуч */}
                     <div className="max-w-xl">
                         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-                            FoxFlat – моніторинг квартир
+                            FoxFlat — Telegram-бот для оренди квартир в Україні
                         </h1>
                         <p className="mt-6 text-lg leading-8 text-gray-300">
                             Моніторинг квартир у 22-х містах України. Отримуй сповіщення та бронюй квартири першим. Наразі діє безкоштовна акція.

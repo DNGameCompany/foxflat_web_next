@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
 import EditUserModal from "./EditUserModal";
 import CreateUserModal from "./CreateUserModal";
 
@@ -15,6 +14,66 @@ interface User {
 
 const subscriptionOptions = ["month", "trial"];
 
+interface DeleteConfirmationModalProps {
+    isOpen: boolean;
+    userId: string;
+    onClose: () => void;
+    onConfirm: (userId: string) => Promise<void>;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+                                                                             isOpen,
+                                                                             userId,
+                                                                             onClose,
+                                                                             onConfirm,
+                                                                         }) => {
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    onClick={onClose}
+                >
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl border border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-semibold text-gray-100 mb-4">
+                            Підтвердження видалення
+                        </h3>
+                        <p className="text-gray-300 mb-6">
+                            Ви впевнені, що хочете видалити користувача з ID{" "}
+                            <span className="font-mono text-gray-100">{userId}</span>?
+                            Цю дію неможливо скасувати.
+                        </p>
+                        <div className="flex gap-4 justify-end">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-gray-100 rounded transition"
+                            >
+                                Скасувати
+                            </button>
+                            <button
+                                onClick={() => onConfirm(userId)}
+                                className="px-4 py-2 bg-red-700 hover:bg-red-600 text-gray-100 rounded transition"
+                            >
+                                Видалити
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 export default function UserList() {
     const [users, setUsers] = useState<User[]>([]);
     const [filterId, setFilterId] = useState("");
@@ -23,6 +82,8 @@ export default function UserList() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<"card" | "table">("card");
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, "Users"), (snapshot) => {
@@ -66,6 +127,41 @@ export default function UserList() {
         setIsCreateModalOpen(false);
     };
 
+    const handleOpenDeleteModal = (userId: string) => {
+        setDeletingUserId(userId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setDeletingUserId(null);
+    };
+
+    const handleDeleteUser = async (userId: string) => {
+        try {
+            const response = await fetch(`https://13.60.192.56/api/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Додайте авторизаційні заголовки, якщо потрібні
+                    // 'Authorization': `Bearer ${yourToken}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Помилка при видаленні користувача');
+            }
+
+            setUsers((prev) => prev.filter((u) => u.id !== userId));
+            handleCloseDeleteModal();
+        } catch (error) {
+            alert("Помилка при видаленні користувача");
+            console.error(error);
+            handleCloseDeleteModal();
+        }
+    };
+
     const filteredUsers = users.filter((user) => {
         const matchesId = user.id.includes(filterId);
         const matchesSubscription = filterSubscription
@@ -78,20 +174,19 @@ export default function UserList() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-bold text-orange-400">
+                    <h2 className="text-xl font-semibold text-gray-300">
                         Користувачі{" "}
-                        <span className="text-sm text-white/50 ml-2">({filteredUsers.length})</span>
+                        <span className="text-sm text-gray-500 ml-2">({filteredUsers.length})</span>
                     </h2>
-                    <p className="text-sm text-white/40">Усього: {users.length}</p>
+                    <p className="text-sm text-gray-500">Усього: {users.length}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Перемикач виду */}
-                    <div className="relative flex bg-neutral-800 rounded-full p-1 border border-orange-500/30 w-[140px]">
+                    <div className="relative flex bg-gray-700 rounded-full p-1 border border-gray-600 w-[140px]">
                         <button
                             onClick={() => setViewMode("card")}
                             className={`flex-1 text-sm py-1 rounded-full z-10 transition-colors duration-200 ${
-                                viewMode === "card" ? "text-black" : "text-white"
+                                viewMode === "card" ? "bg-gray-300 text-gray-900" : "text-gray-300"
                             }`}
                         >
                             Плитка
@@ -99,13 +194,13 @@ export default function UserList() {
                         <button
                             onClick={() => setViewMode("table")}
                             className={`flex-1 text-sm py-1 rounded-full z-10 transition-colors duration-200 ${
-                                viewMode === "table" ? "text-black" : "text-white"
+                                viewMode === "table" ? "bg-gray-300 text-gray-900" : "text-gray-300"
                             }`}
                         >
                             Таблиця
                         </button>
                         <div
-                            className={`absolute top-1 left-1 h-[26px] w-[64px] rounded-full bg-orange-400 transition-transform duration-300 ease-in-out ${
+                            className={`absolute top-1 left-1 h-[26px] w-[64px] rounded-full bg-gray-300 transition-transform duration-300 ease-in-out ${
                                 viewMode === "table" ? "translate-x-[70px]" : "translate-x-0"
                             }`}
                         />
@@ -113,27 +208,26 @@ export default function UserList() {
 
                     <button
                         onClick={handleAddUser}
-                        className="bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-black font-semibold px-4 py-2 rounded transition"
+                        className="bg-gray-600 hover:bg-gray-500 text-gray-100 font-semibold px-4 py-2 rounded transition"
                     >
                         Додати користувача
                     </button>
                 </div>
             </div>
 
-            {/* Фільтри */}
             <div className="flex gap-4 mb-4">
                 <input
                     type="text"
                     placeholder="Фільтр по User ID"
                     value={filterId}
                     onChange={(e) => setFilterId(e.target.value)}
-                    className="w-[150px] p-2 rounded border border-orange-400 bg-neutral-900 text-white"
+                    className="w-[150px] p-2 rounded border border-gray-600 bg-gray-800 text-gray-200"
                 />
                 <div className="relative w-[150px]">
                     <select
                         value={filterSubscription}
                         onChange={(e) => setFilterSubscription(e.target.value)}
-                        className="w-full p-2 rounded border border-orange-400 bg-neutral-900 text-white appearance-none pr-8"
+                        className="w-full p-2 rounded border border-gray-600 bg-gray-800 text-gray-200 appearance-none pr-8"
                     >
                         <option value="">Всі підписки</option>
                         {subscriptionOptions.map((option) => (
@@ -142,7 +236,7 @@ export default function UserList() {
                             </option>
                         ))}
                     </select>
-                    <div className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-orange-400">
+                    <div className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5"
@@ -159,7 +253,6 @@ export default function UserList() {
                 </div>
             </div>
 
-            {/* Відображення залежно від viewMode */}
             {viewMode === "card" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredUsers.map((user) => (
@@ -168,29 +261,36 @@ export default function UserList() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-4 flex flex-col justify-between shadow hover:shadow-orange-500/20 transition"
+                            className="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition"
                         >
                             <div className="space-y-2">
-                                <p className="text-sm text-neutral-400">User ID</p>
-                                <p className="text-lg font-mono text-orange-300 break-all">{user.id}</p>
-
-                                <p className="text-sm text-neutral-400 mt-2">Статус підписки</p>
-                                <p className="text-base text-white">{user.subscription}</p>
+                                <p className="text-sm text-gray-400">User ID</p>
+                                <p className="text-lg font-mono text-gray-200 break-all">{user.id}</p>
+                                <p className="text-sm text-gray-400 mt-2">Статус підписки</p>
+                                <p className="text-base text-gray-300">{user.subscription}</p>
                             </div>
-                            <button
-                                onClick={() => handleEditUser(user)}
-                                className="mt-4 bg-orange-500 hover:bg-orange-400 text-black font-medium py-2 rounded transition"
-                            >
-                                Редагувати
-                            </button>
+                            <div className="flex gap-2 mt-4">
+                                <button
+                                    onClick={() => handleEditUser(user)}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-500 text-gray-100 font-medium py-2 rounded transition"
+                                >
+                                    Редагувати
+                                </button>
+                                <button
+                                    onClick={() => handleOpenDeleteModal(user.id)}
+                                    className="flex-1 bg-red-700 hover:bg-red-600 text-gray-100 font-medium py-2 rounded transition"
+                                >
+                                    Видалити
+                                </button>
+                            </div>
                         </motion.div>
                     ))}
                 </div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-white bg-neutral-900/70 rounded-xl border border-orange-500/20">
+                    <table className="min-w-full text-left text-gray-300 bg-gray-800 rounded-xl border border-gray-700">
                         <thead>
-                        <tr className="border-b border-orange-500/50">
+                        <tr className="border-b border-gray-700">
                             <th className="px-6 py-3">User ID</th>
                             <th className="px-6 py-3">Статус підписки</th>
                             <th className="px-6 py-3">Дії</th>
@@ -200,16 +300,22 @@ export default function UserList() {
                         {filteredUsers.map((user) => (
                             <tr
                                 key={user.id}
-                                className="border-b border-orange-500/20 hover:bg-orange-500/10 transition"
+                                className="border-b border-gray-700 hover:bg-gray-700 transition"
                             >
                                 <td className="px-6 py-4 font-mono break-all">{user.id}</td>
                                 <td className="px-6 py-4">{user.subscription}</td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 flex gap-2">
                                     <button
                                         onClick={() => handleEditUser(user)}
-                                        className="bg-orange-500 hover:bg-orange-400 text-black font-medium py-1 px-3 rounded transition"
+                                        className="bg-gray-600 hover:bg-gray-500 text-gray-100 font-medium py-1 px-3 rounded transition"
                                     >
                                         Редагувати
+                                    </button>
+                                    <button
+                                        onClick={() => handleOpenDeleteModal(user.id)}
+                                        className="bg-red-700 hover:bg-red-600 text-gray-100 font-medium py-1 px-3 rounded transition"
+                                    >
+                                        Видалити
                                     </button>
                                 </td>
                             </tr>
@@ -232,6 +338,13 @@ export default function UserList() {
                 subscriptionOptions={subscriptionOptions}
                 onClose={() => setIsCreateModalOpen(false)}
                 onCreate={handleCreateUser}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                userId={deletingUserId || ""}
+                onClose={handleCloseDeleteModal}
+                onConfirm={handleDeleteUser}
             />
         </div>
     );
