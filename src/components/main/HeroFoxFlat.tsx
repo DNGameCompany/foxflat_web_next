@@ -1,8 +1,16 @@
 "use client";
 
 import IphoneMockup from "@/src/components/main/PhoneMockup";
+import { event } from "@/lib/gtag"  // 👈 твоя функція відправки подій
 
 export default function HeroFoxFlat() {
+    const handleBotClick = () => {
+        event({
+            action: "telegram_bot_click",
+            category: "engagement",
+            label: "Hero section bot link",
+        })
+    }
     return (
         <section className="relative overflow-hidden">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -20,6 +28,7 @@ export default function HeroFoxFlat() {
                                 href="https://t.me/FoxFlat_bot"
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={handleBotClick}
                                 className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-base font-semibold text-black shadow-sm hover:from-orange-400 hover:to-orange-300 transition"
                             >
                                 Запустити бота

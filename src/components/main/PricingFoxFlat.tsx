@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, FireIcon } from "@heroicons/react/20/solid";
+import { event } from "@/lib/gtag"
 
 const tiers = [
     {
@@ -38,6 +39,13 @@ function classNames(...classes: string[]) {
 }
 
 export default function PricingFoxFlat() {
+    const handleBotClick = (action: string, label: string) => {
+        event({
+            action,
+            category: "engagement",
+            label,
+        })
+    }
     return (
         <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 rounded-3xl overflow-hidden">
             {/* Фон-сітка */}
@@ -119,6 +127,12 @@ export default function PricingFoxFlat() {
                             href={tier.href}
                             target="_blank"
                             aria-describedby={tier.id}
+                            onClick={() =>
+                                handleBotClick(
+                                    tier.id,
+                                    tier.name
+                                )
+                            }
                             className={classNames(
                                 tier.featured
                                     ? "bg-orange-500 text-black hover:bg-orange-400 focus-visible:outline-orange-500"

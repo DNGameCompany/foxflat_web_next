@@ -1,6 +1,16 @@
 "use client";
 
+import {event} from "@/lib/gtag";
+
 export default function CtaFoxFlat() {
+    const handleBotClick = () => {
+        event({
+            action: "telegram_bot_click",
+            category: "engagement",
+            label: "CTA section bot link",
+        })
+    }
+
     return (
         <section
             className="
@@ -24,6 +34,7 @@ export default function CtaFoxFlat() {
                         href="https://t.me/FoxFlat_bot"
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={handleBotClick}
                         className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-base font-semibold text-black shadow-sm hover:from-orange-400 hover:to-orange-300 transition"
                     >
                         Запустити бота
