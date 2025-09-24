@@ -29,7 +29,7 @@ export const metadata = {
         siteName: 'FoxFlat',
         images: [
             {
-                url: 'https://foxflat.com.ua/og-image.jpg',
+                url: 'https://foxflat.com.ua/og-image.png',
                 width: 1200,
                 height: 630,
                 alt: 'FoxFlat Telegram бот',
@@ -43,7 +43,7 @@ export const metadata = {
         title: 'FoxFlat — Telegram-бот для оренди квартир',
         description:
             'Отримуй нові квартири миттєво прямо в Telegram. Ніякого спаму — тільки актуальні оголошення!',
-        images: ['https://foxflat.com.ua/og-image.jpg'],
+        images: ['https://foxflat.com.ua/og-image.png'],
     },
 };
 
