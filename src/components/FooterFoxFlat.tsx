@@ -13,7 +13,7 @@ export default function FooterFoxFlat() {
                     <a href="/legal/acceptable-use-policy" className="hover:text-orange-300 transition">
                         Політика прийнятного використання
                     </a>
-                    <a href="/contacts/contact" className="hover:text-orange-300 transition">
+                    <a href="/contacts" className="hover:text-orange-300 transition">
                         Контакти
                     </a>
                 </div>
