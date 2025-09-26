@@ -24,10 +24,11 @@ export default function CtaFoxFlat() {
         >
             <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Почни шукати квартиру вже сьогодні
+                    Почни пошук квартири зараз
                 </h2>
                 <p className="mt-4 text-lg leading-8 text-gray-300 max-w-2xl mx-auto">
-                    FoxFlat миттєво повідомляє про нові квартири у 22-х містах України. Запусти Telegram-бота та отримуй сповіщення першим.
+                    FoxFlat надсилає актуальні оголошення про квартири в Києві, Львові, Одесі, Харкові та ще 18 містах України.
+                    Запусти Telegram-бота та отримуй найсвіжіші пропозиції щодня, швидко знаходь квартири та будь першим, хто дізнається про нові оголошення.
                 </p>
                 <div className="mt-8 flex justify-center">
                     <a

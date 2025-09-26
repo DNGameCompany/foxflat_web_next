@@ -18,11 +18,15 @@ export default function HeroFoxFlat() {
                     {/* Текст ліворуч */}
                     <div className="max-w-xl">
                         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-                            FoxFlat — Telegram-бот для оренди квартир в Україні
+                            FoxFlat — Telegram-бот для швидкої оренди квартир в Україні
                         </h1>
+                        <h2 className="mt-4 text-2xl font-semibold text-gray-300">
+                            Актуальні оголошення оренди квартир у 22 містах України: Київ, Львів, Одеса, Харків та інші
+                        </h2>
                         <p className="mt-6 text-lg leading-8 text-gray-300">
-                            Моніторинг квартир у 22-х містах України. Отримуй сповіщення та бронюй квартири першим. Наразі діє безкоштовна акція.
+                            Знімай квартиру швидко та без зайвих пошуків. FoxFlat миттєво надсилає нові оголошення оренди прямо в Telegram, щоб ти був першим, хто дізнається про доступні квартири.
                         </p>
+
                         <div className="mt-10 flex gap-x-6">
                             <a
                                 href="https://t.me/FoxFlat_bot"

@@ -9,7 +9,7 @@ const tiers = [
         id: "tier-free",
         href: "https://t.me/FoxFlat_bot",
         priceMonthly: "0 грн",
-        description: "Ідеально для ознайомлення та перших спроб моніторингу квартир.",
+        description: "Ідеально, щоб спробувати пошук квартир у Києві, Львові, Одесі чи Харкові. Отримуй нові оголошення кожного дня.",
         features: [
             "Автоматичний пошук нових квартир з оновленням кожні 30 хвилин.",
             "Можливість одноразової зміни фільтру.",
@@ -23,7 +23,7 @@ const tiers = [
         id: "tier-premium",
         href: "https://t.me/FoxFlat_bot",
         priceMonthly: "0 грн",
-        description: "Все включено для швидкого моніторингу та бронювання першим.",
+        description: "Преміум-доступ для тих, хто хоче знаходити квартири миттєво. Оновлення кожні 5 хвилин і необмежені фільтри у 22 містах України.",
         features: [
             "Моніторинг кожні 5 хвилин.",
             "Необмежена кількість змін параметрів фільтрів.",
@@ -62,9 +62,11 @@ export default function PricingFoxFlat() {
 
             {/* Заголовок */}
             <div className="relative z-10 mx-auto max-w-4xl text-center">
-                <h2 className="text-base font-semibold text-orange-400">FoxFlat Підписка</h2>
+                <h2 className="text-base font-semibold text-orange-400">
+                    FoxFlat Підписка
+                </h2>
                 <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                    Обери свій план моніторингу
+                    Швидкий доступ до нових квартир у твоєму місті
                 </p>
             </div>
 

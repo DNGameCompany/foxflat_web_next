@@ -3,34 +3,34 @@ import { BellRing, Filter, Zap, Clock, RefreshCw, Send } from "lucide-react";
 export default function FeatureFoxFlat() {
     const features = [
         {
-            icon: <BellRing className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <BellRing className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Миттєві сповіщення квартир у Києві" />,
             title: "Миттєві сповіщення",
-            description: "Отримуй повідомлення про нові квартири за секунди після публікації.",
+            description: "Отримуй нові квартири в Києві, Львові, Одесі та інших містах України одразу після публікації."
         },
         {
-            icon: <Filter className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <Filter className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Гнучкі фільтри для пошуку квартир" />,
             title: "Гнучкі фільтри",
-            description: "Налаштовуй район, кількість кімнат і бюджет під власні потреби.",
+            description: "Фільтруй квартири за ціною, районом, кількістю кімнат та іншими параметрами для швидкого пошуку."
         },
         {
-            icon: <Zap className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <Zap className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Бронювання квартир першим" />,
             title: "Бронювання першим",
-            description: "Встигаєш першим зв’язатися з власником та забронювати квартиру.",
+            description: "Встигаєш першим зв’язатися з власником і забронювати квартиру через Telegram-бот."
         },
         {
-            icon: <Clock className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <Clock className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Цілодобова робота FoxFlat" />,
             title: "Цілодобова робота",
-            description: "Бот працює 24/7, щоб ти не пропустив жодного оголошення.",
+            description: "FoxFlat працює 24/7 і надсилає нові оголошення навіть вночі."
         },
         {
-            icon: <RefreshCw className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <RefreshCw className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Оновлення квартир в реальному часі" />,
             title: "Оновлення в реальному часі",
-            description: "Моніторинг популярних платформ з оновленнями у реальному часі.",
+            description: "Моніторинг популярних платформ з оновленнями квартир у режимі реального часу."
         },
         {
-            icon: <Send className="h-6 w-6 text-orange-400 transition hover:text-orange-300" />,
+            icon: <Send className="h-6 w-6 text-orange-400 transition hover:text-orange-300" aria-label="Усі сповіщення в Telegram" />,
             title: "У Telegram",
-            description: "Отримуй всі сповіщення одразу у Telegram без зайвих застосунків.",
+            description: "Отримуй всі нові квартири одразу в Telegram без додаткових застосунків."
         },
     ];
 
@@ -40,12 +40,13 @@ export default function FeatureFoxFlat() {
         >
             <div className="mx-auto max-w-7xl px-6 lg:px-8 w-full">
                 <div className="max-w-3xl mx-auto text-center">
-                    <p className="text-base font-semibold leading-7 text-orange-400">Твої переваги</p>
+                    <p className="text-base font-semibold leading-7 text-orange-400">Переваги FoxFlat</p>
                     <h2 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                        Знайди квартиру швидше з FoxFlat
+                        Оренда квартир у Києві, Львові, Одесі та Харкові за допомогою Telegram-бота
                     </h2>
                     <p className="mt-6 text-lg leading-8 text-gray-300">
-                        Telegram-бот FoxFlat миттєво повідомляє про нові квартири у Львові та Києві, допомагаючи бронювати житло першим.
+                        FoxFlat щосекунди перевіряє популярні платформи оголошень і надсилає оновлення у 22 містах України.
+                        Більше не потрібно витрачати години на пошук — усі квартири одразу в одному зручному боті.
                     </p>
                 </div>
                 <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
