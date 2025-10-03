@@ -10,7 +10,7 @@ import AdminDashboard from "@/src/components/admin/AdminDashboard";
 import Image from "next/image";
 
 export default function AdminPage() {
-    const [activeTab, setActiveTab] = useState<"users" | "messages" | "blogs" | "collages">("users");
+    const [activeTab, setActiveTab] = useState<"users" | "messages" | "blogs" | "collages" | "stats">("users");
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
