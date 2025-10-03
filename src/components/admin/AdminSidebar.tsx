@@ -6,7 +6,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 
-type TabKey = "users" | "messages" | "blogs" | "collages";
+type TabKey = "users" | "messages" | "blogs" | "collages" | "stats";
 
 interface AdminSidebarProps {
     activeTab: TabKey;
@@ -18,6 +18,7 @@ const tabs: { key: TabKey; label: string }[] = [
     { key: "messages", label: "Повідомлення" },
     { key: "blogs", label: "Блоги" },
     { key: "collages", label: "Колажі" },
+    { key: "stats", label: "Статистика" },
 ];
 
 export default function AdminSidebar({ activeTab, setActiveTab }: AdminSidebarProps) {

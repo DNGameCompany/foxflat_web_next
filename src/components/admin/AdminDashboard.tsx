@@ -2,9 +2,10 @@
 import UserTable from "@/src/components/admin/UserTable";
 import MessageTab from "@/src/components/admin/MessageTab";
 import BlogsTab from "@/src/components/admin/Blogs";
+import StatsTab from "@/src/components/admin/Stats";
 
 interface AdminDashboardProps {
-    activeTab: "users" | "messages" | "blogs" | "collages";
+    activeTab: "users" | "messages" | "blogs" | "collages" | "stats";
 }
 
 export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
@@ -35,6 +36,13 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
                     <h3 className="text-2xl font-bold text-orange-400 mb-4">Генерація колажів</h3>
                     {/* Тут генератор колажів */}
                     <p className="text-neutral-300">Тут буде форма генерації колажів.</p>
+                </section>
+            )}
+
+            {activeTab === "stats" && (
+                <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold text-orange-400 mb-4">Статистика</h3>
+                    <StatsTab />
                 </section>
             )}
         </div>
