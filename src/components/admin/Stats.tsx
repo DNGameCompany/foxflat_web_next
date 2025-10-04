@@ -12,7 +12,10 @@ import {
     ResponsiveContainer,
     Legend,
 } from "recharts";
-import {db} from "@/lib/firebase";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { db } from "@/lib/firebase";
 
 interface CityStats {
     city: string;
@@ -30,7 +33,7 @@ export default function StatsTab() {
                 const cityCountMap: Record<string, number> = {};
 
                 querySnapshot.docs.forEach((doc) => {
-                    const geoName = doc.data().geo_name;
+                    const geoName = doc.data().geo_name as string | undefined;
                     if (geoName) {
                         cityCountMap[geoName] = (cityCountMap[geoName] || 0) + 1;
                     }
@@ -51,19 +54,58 @@ export default function StatsTab() {
         fetchUsersByCity();
     }, []);
 
+    // 📄 CSV
+    const exportCSV = () => {
+        const csv = Papa.unparse(usersByCity);
+        const csvWithBom = "\uFEFF" + csv; // UTF-8 BOM для Excel
+        const blob = new Blob([csvWithBom], { type: "text/csv;charset=utf-8;" });
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "users_by_city.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // 📄 Excel (XLSX)
+    const exportExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(usersByCity);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "UsersByCity");
+        const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        saveAs(new Blob([buf], { type: "application/octet-stream" }), "users_by_city.xlsx");
+    };
+
     if (loading) return <p className="text-white">Завантаження статистики...</p>;
 
     return (
         <div className="space-y-6">
-            {/* --- Користувачі по містах --- */}
             <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                <h3 className="text-2xl font-bold text-orange-400 mb-4">Користувачі по містах</h3>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-2xl font-bold text-orange-400">Користувачі по містах</h3>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={exportCSV}
+                            className="px-5 py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm"
+                        >
+                            Експорт CSV
+                        </button>
+                        <button
+                            onClick={exportExcel}
+                            className="px-5 py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm"
+                        >
+                            Експорт Excel
+                        </button>
+                    </div>
+                </div>
 
                 {usersByCity.length === 0 ? (
                     <p className="text-white">Немає даних для відображення.</p>
                 ) : (
                     <>
-                        {/* Графік */}
                         <div className="bg-neutral-800 p-4 rounded-lg shadow-md mb-6">
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={usersByCity}>
@@ -77,7 +119,6 @@ export default function StatsTab() {
                             </ResponsiveContainer>
                         </div>
 
-                        {/* Таблиця */}
                         <div className="bg-neutral-800 p-4 rounded-lg shadow-md overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
@@ -98,12 +139,6 @@ export default function StatsTab() {
                         </div>
                     </>
                 )}
-            </section>
-
-            {/* --- Тут можна додавати інші статистики --- */}
-            <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                <h3 className="text-2xl font-bold text-orange-400 mb-4">Інші статистики (порожньо)</h3>
-                <p className="text-neutral-300">Тут згодом будуть додані інші графіки та метрики.</p>
             </section>
         </div>
     );
