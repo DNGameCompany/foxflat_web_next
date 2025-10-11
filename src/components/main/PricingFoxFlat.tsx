@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckIcon, FireIcon } from "@heroicons/react/20/solid";
-import { event } from "@/lib/gtag"
+import { event } from "@/lib/gtag";
 
 const tiers = [
     {
@@ -44,18 +44,18 @@ export default function PricingFoxFlat() {
             action,
             category: "engagement",
             label,
-        })
-    }
+        });
+    };
     return (
-        <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 rounded-3xl overflow-hidden">
-            {/* Фон-сітка */}
+        <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 overflow-hidden w-full">
+            {/* Фон із блюром і димкою на всю ширину */}
             <div
                 aria-hidden="true"
                 className="absolute inset-0 z-0
         bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),
              linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)]
         bg-[size:40px_40px]
-        backdrop-blur-sm backdrop-saturate-150 bg-white/5
+        backdrop-blur-sm bg-white/5
         [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]
         pointer-events-none"
             />
@@ -91,8 +91,8 @@ export default function PricingFoxFlat() {
                         className={classNames(
                             tier.featured
                                 ? "bg-orange-400/5 border border-orange-400 shadow-[0_0_30px_-10px_rgba(251,146,60,0.5)] hover:shadow-[0_0_40px_-5px_rgba(251,146,60,0.6)] scale-100 hover:scale-[1.02] transition-all duration-300"
-                                : "bg-white/5",
-                            "rounded-3xl p-8 ring-1 ring-white/10 sm:p-10 backdrop-blur-sm"
+                                : "bg-transparent",
+                            "rounded-3xl p-8 ring-1 ring-white/10 sm:p-10"
                         )}
                     >
                         <h3
