@@ -1,32 +1,81 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import {collection, getDocs, onSnapshot, orderBy, query} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import HeaderFoxFlat from '@/src/components/HeaderFoxFlat';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
 import { Review } from './page';
 import AddReviewForm from '@/src/components/reviews/AddReviewForm';
 
 interface ClientReviewsProps {
-    reviews: Review[];
+    initialReviews: Review[];
     schemaData: Record<string, unknown>;
 }
 
-export default function ClientReviews({ reviews, schemaData }: ClientReviewsProps) {
-    const [allReviews, setAllReviews] = useState<Review[]>(reviews);
+export default function ClientReviews({ initialReviews, schemaData }: ClientReviewsProps) {
+    const [allReviews, setAllReviews] = useState<Review[]>(initialReviews);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const q = query(collection(db, 'reviews'), orderBy('date', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const reviewsData = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                name: doc.data().name || '',
+                text: doc.data().text || '',
+                rating: doc.data().rating || 0,
+                date: doc.data().date?.toDate().toISOString() || '',
+            }));
+            setAllReviews(reviewsData);
+            setLoading(false);
+        }, (error) => {
+            console.error('Помилка при завантаженні відгуків:', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const handleNewReview = (review: Review) => {
-        setAllReviews([review, ...allReviews]);
+        setAllReviews(prev => [review, ...prev]); // Тимчасове додавання для UX
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-black">
+                <div className="text-center py-16 text-orange-400 text-2xl">Завантаження відгуків...</div>
+            </div>
+        );
+    }
 
     return (
         <main className="bg-black text-white min-h-screen w-full font-sans">
             <HeaderFoxFlat />
 
-            {/* JSON-LD */}
+            {/* JSON-LD з динамічними даними */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        ...schemaData,
+                        reviewCount: allReviews.length,
+                        aggregateRating: {
+                            ratingValue: (
+                                allReviews.reduce((sum, r) => sum + r.rating, 0) / (allReviews.length || 1)
+                            ).toFixed(1),
+                            reviewCount: allReviews.length,
+                        },
+                        reviews: allReviews.map(review => ({
+                            author: review.name,
+                            reviewBody: review.text,
+                            reviewRating: review.rating,
+                            datePublished: review.date,
+                        })),
+                    }),
+                }}
             />
 
             {/* Hero */}
@@ -88,4 +137,43 @@ export default function ClientReviews({ reviews, schemaData }: ClientReviewsProp
             <FooterFoxFlat />
         </main>
     );
+}
+
+export async function getServerSideProps() {
+    const querySnapshot = await getDocs(collection(db, 'reviews'));
+    const reviews = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name || '',
+        text: doc.data().text || '',
+        rating: doc.data().rating || 0,
+        date: doc.data().date?.toDate().toISOString() || '',
+    }));
+
+    return {
+        props: {
+            initialReviews: reviews,
+            schemaData: {
+                '@context': 'https://schema.org',
+                '@type': 'Product',
+                name: 'FoxFlat',
+                review: reviews.map(review => ({
+                    '@type': 'Review',
+                    author: review.name,
+                    reviewBody: review.text,
+                    reviewRating: review.rating,
+                    datePublished: review.date,
+                })),
+                aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: (
+                        reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1)
+                    ).toFixed(1),
+                    reviewCount: reviews.length,
+                },
+            },
+        },
+        headers: {
+            'Cache-Control': 'no-store, max-age=0', // Попереджає кешування
+        },
+    };
 }
