@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {collection, getDocs, onSnapshot, orderBy, query} from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import HeaderFoxFlat from '@/src/components/HeaderFoxFlat';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
@@ -10,12 +10,12 @@ import { Review } from './page';
 import AddReviewForm from '@/src/components/reviews/AddReviewForm';
 
 interface ClientReviewsProps {
-    initialReviews: Review[];
+    reviews: Review[];
     schemaData: Record<string, unknown>;
 }
 
-export default function ClientReviews({ initialReviews, schemaData }: ClientReviewsProps) {
-    const [allReviews, setAllReviews] = useState<Review[]>(initialReviews);
+export default function ClientReviews({ reviews, schemaData }: ClientReviewsProps) {
+    const [allReviews, setAllReviews] = useState<Review[]>(reviews);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -137,43 +137,4 @@ export default function ClientReviews({ initialReviews, schemaData }: ClientRevi
             <FooterFoxFlat />
         </main>
     );
-}
-
-export async function getServerSideProps() {
-    const querySnapshot = await getDocs(collection(db, 'reviews'));
-    const reviews = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        name: doc.data().name || '',
-        text: doc.data().text || '',
-        rating: doc.data().rating || 0,
-        date: doc.data().date?.toDate().toISOString() || '',
-    }));
-
-    return {
-        props: {
-            initialReviews: reviews,
-            schemaData: {
-                '@context': 'https://schema.org',
-                '@type': 'Product',
-                name: 'FoxFlat',
-                review: reviews.map(review => ({
-                    '@type': 'Review',
-                    author: review.name,
-                    reviewBody: review.text,
-                    reviewRating: review.rating,
-                    datePublished: review.date,
-                })),
-                aggregateRating: {
-                    '@type': 'AggregateRating',
-                    ratingValue: (
-                        reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1)
-                    ).toFixed(1),
-                    reviewCount: reviews.length,
-                },
-            },
-        },
-        headers: {
-            'Cache-Control': 'no-store, max-age=0', // Попереджає кешування
-        },
-    };
 }
