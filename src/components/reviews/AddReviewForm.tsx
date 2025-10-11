@@ -64,7 +64,7 @@ export default function AddReviewForm({ onNewReview }: AddReviewFormProps) {
             <div className="space-y-4">
                 <div>
                     <label htmlFor="name" className="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">
-                        Ім'я
+                        Ім&#39;я
                     </label>
                     <input
                         id="name"
