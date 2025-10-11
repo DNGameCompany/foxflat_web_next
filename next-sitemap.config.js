@@ -3,8 +3,10 @@ module.exports = {
     siteUrl: 'https://foxflat.com.ua',
     generateRobotsTxt: true,
     generateIndexSitemap: false,
-    changefreq: 'monthly',
-    priority: 0.7,
+    // Динамічна генерація sitemap з урахуванням /reviews
+    dynamicRoutes: ['/reviews'], // Додаємо /reviews як динамічний маршрут
+    changefreq: 'weekly', // Змінено на "weekly", оскільки відгуки оновлюються частіше
+    priority: 0.8, // Підвищено пріоритет для /reviews
     sitemapSize: 1000,
     exclude: [
         '/admin/*',
@@ -16,7 +18,7 @@ module.exports = {
         policies: [
             {
                 userAgent: '*',
-                allow: '/',
+                allow: ['/', '/reviews'], // Явно дозволяємо /reviews
                 disallow: [
                     '/admin/',
                     '/admin/*',
@@ -27,6 +29,6 @@ module.exports = {
             },
         ],
         host: 'https://foxflat.com.ua',
-        additionalSitemaps: ['https://foxflat.com.ua/sitemap.xml'],
+        // Видаляємо additionalSitemaps, якщо не потрібен кастомний sitemap
     },
 };
