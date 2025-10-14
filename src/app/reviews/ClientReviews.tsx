@@ -20,61 +20,79 @@ export default function ClientReviews({ reviews, schemaData }: ClientReviewsProp
 
     useEffect(() => {
         const q = query(collection(db, 'reviews'), orderBy('date', 'desc'));
-
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const reviewsData = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                name: doc.data().name || '',
-                text: doc.data().text || '',
-                rating: doc.data().rating || 0,
-                date: doc.data().date?.toDate().toISOString() || '',
-            }));
-            setAllReviews(reviewsData);
-            setLoading(false);
-        }, (error) => {
-            console.error('Помилка при завантаженні відгуків:', error);
-            setLoading(false);
-        });
-
+        const unsubscribe = onSnapshot(
+            q,
+            (querySnapshot) => {
+                const reviewsData = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    name: doc.data().name || '',
+                    text: doc.data().text || '',
+                    rating: doc.data().rating || 0,
+                    date: doc.data().date?.toDate().toISOString() || '',
+                }));
+                setAllReviews(reviewsData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error('Помилка при завантаженні відгуків:', error);
+                setLoading(false);
+            }
+        );
         return () => unsubscribe();
     }, []);
 
     const handleNewReview = (review: Review) => {
-        setAllReviews(prev => [review, ...prev]); // Тимчасове додавання для UX
+        setAllReviews((prev) => [review, ...prev]);
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-black">
-                <div className="text-center py-16 text-orange-400 text-2xl">Завантаження відгуків...</div>
+                <div className="text-center py-16 text-orange-400 text-2xl">
+                    Завантаження відгуків...
+                </div>
             </div>
         );
     }
+
+    // ✅ Формуємо валідний JSON-LD
+    const jsonLdData = {
+        ...schemaData,
+        '@type': 'SoftwareApplication', // краще для Telegram-бота
+        operatingSystem: 'Telegram',
+        applicationCategory: 'BusinessApplication',
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: (
+                allReviews.reduce((sum, r) => sum + r.rating, 0) / (allReviews.length || 1)
+            ).toFixed(1),
+            reviewCount: allReviews.length,
+        },
+        review: allReviews.map((review) => ({
+            '@type': 'Review',
+            author: {
+                '@type': 'Person',
+                name: review.name,
+            },
+            reviewBody: review.text,
+            reviewRating: {
+                '@type': 'Rating',
+                ratingValue: review.rating,
+                bestRating: '5',
+            },
+            datePublished: review.date ?? undefined,
+        })),
+    };
 
     return (
         <main className="bg-black text-white min-h-screen w-full font-sans">
             <HeaderFoxFlat />
 
-            {/* JSON-LD з динамічними даними */}
+            {/* ✅ JSON-LD Schema.org */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        ...schemaData,
-                        reviewCount: allReviews.length,
-                        aggregateRating: {
-                            ratingValue: (
-                                allReviews.reduce((sum, r) => sum + r.rating, 0) / (allReviews.length || 1)
-                            ).toFixed(1),
-                            reviewCount: allReviews.length,
-                        },
-                        reviews: allReviews.map(review => ({
-                            author: review.name,
-                            reviewBody: review.text,
-                            reviewRating: review.rating,
-                            datePublished: review.date,
-                        })),
-                    }),
+                    __html: JSON.stringify(jsonLdData),
                 }}
             />
 
@@ -105,7 +123,7 @@ export default function ClientReviews({ reviews, schemaData }: ClientReviewsProp
                 </div>
             </section>
 
-            {/* Візуальні цитати */}
+            {/* Відгуки */}
             <section className="max-w-4xl mx-auto px-6 py-20 flex flex-col gap-14">
                 {allReviews.length === 0 && (
                     <p className="text-center text-neutral-600">Поки що немає відгуків 😔</p>
@@ -130,7 +148,6 @@ export default function ClientReviews({ reviews, schemaData }: ClientReviewsProp
                     </motion.blockquote>
                 ))}
 
-                {/* Форма додавання відгуку */}
                 <AddReviewForm onNewReview={handleNewReview} />
             </section>
 
