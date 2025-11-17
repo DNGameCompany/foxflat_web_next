@@ -20,6 +20,7 @@ const tabs: { key: TabKey; label: string }[] = [
     { key: "blogs", label: "Блоги" },
     { key: "collages", label: "Колажі" },
     { key: "stats", label: "Статистика" },
+    { key: "channel", label: "Телеграм канал" },
 ];
 
 export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: AdminSidebarProps) {
