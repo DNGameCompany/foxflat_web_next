@@ -36,7 +36,7 @@ export default function MessageTab() {
                 body: JSON.stringify({
                     sendToAll,
                     userIds: sendToAll ? [] : userIds,
-                    message
+                    message,
                 }),
             });
 
@@ -61,7 +61,7 @@ export default function MessageTab() {
     };
 
     return (
-        <div className="p-4 space-y-6 bg-neutral-900 rounded-lg shadow-md text-white max-w-xl">
+        <div className="p-4 sm:p-6 space-y-6 bg-neutral-900 rounded-lg shadow-md text-white w-full max-w-full sm:max-w-xl">
             <h2 className="text-2xl font-bold text-orange-400">Повідомлення</h2>
 
             <div className="space-y-2">
@@ -72,13 +72,13 @@ export default function MessageTab() {
                         onChange={(e) => setSendToAll(e.target.checked)}
                         className="form-checkbox h-5 w-5 text-orange-500"
                     />
-                    <span>Всім користувачам</span>
+                    <span className="text-sm sm:text-base">Всім користувачам</span>
                 </label>
             </div>
 
             {!sendToAll && (
-                <div className="space-y-4">
-                    <label className="font-semibold">User ID отримувачів</label>
+                <div className="space-y-3">
+                    <label className="font-semibold text-sm sm:text-base">User ID отримувачів</label>
                     {userIds.map((id, idx) => (
                         <div key={idx} className="flex items-center gap-2">
                             <input
@@ -86,12 +86,12 @@ export default function MessageTab() {
                                 value={id}
                                 onChange={(e) => handleUserIdChange(idx, e.target.value)}
                                 placeholder="Введіть User ID"
-                                className="flex-grow p-2 rounded border border-orange-400 bg-neutral-800 text-white"
+                                className="flex-grow p-2 rounded border border-orange-400 bg-neutral-800 text-white text-sm sm:text-base"
                             />
                             {userIds.length > 1 && (
                                 <button
                                     onClick={() => removeUserIdField(idx)}
-                                    className="px-2 py-1 bg-red-600 rounded hover:bg-red-500 transition"
+                                    className="px-2 py-1 bg-red-600 rounded hover:bg-red-500 transition text-sm"
                                     aria-label="Видалити отримувача"
                                 >
                                     ✖
@@ -101,7 +101,7 @@ export default function MessageTab() {
                     ))}
                     <button
                         onClick={addUserIdField}
-                        className="mt-2 inline-block px-4 py-2 bg-orange-500 rounded hover:bg-orange-400 transition font-semibold"
+                        className="mt-2 inline-block px-3 sm:px-4 py-2 bg-orange-500 rounded hover:bg-orange-400 transition font-semibold text-sm sm:text-base"
                     >
                         ➕ Додати отримувача
                     </button>
@@ -110,31 +110,31 @@ export default function MessageTab() {
 
             {sendToAll && (
                 <div className="opacity-50 pointer-events-none">
-                    <label className="font-semibold">User ID отримувачів</label>
+                    <label className="font-semibold text-sm sm:text-base">User ID отримувачів</label>
                     <input
                         type="text"
                         disabled
                         value=""
                         placeholder="User ID недоступний при виборі всім користувачам"
-                        className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white cursor-not-allowed"
+                        className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white cursor-not-allowed text-sm sm:text-base"
                     />
                 </div>
             )}
 
             <div className="space-y-2">
-                <label className="font-semibold">Текст повідомлення</label>
+                <label className="font-semibold text-sm sm:text-base">Текст повідомлення</label>
                 <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Введіть текст повідомлення..."
-                    className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white resize-none h-40"
+                    className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white resize-none h-32 sm:h-40 text-sm sm:text-base"
                 />
             </div>
 
             <button
                 onClick={handleSendMessage}
                 disabled={loading}
-                className="mt-4 w-full bg-orange-500 hover:bg-orange-400 text-black font-semibold py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-4 w-full bg-orange-500 hover:bg-orange-400 text-black font-semibold py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
                 {loading ? "Відправляємо..." : "Відправити повідомлення"}
             </button>

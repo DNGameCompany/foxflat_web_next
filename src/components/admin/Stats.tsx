@@ -2,16 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -39,9 +30,7 @@ export default function StatsTab() {
                     }
                 });
 
-                const cityStats: CityStats[] = Object.entries(cityCountMap).map(
-                    ([city, count]) => ({ city, count })
-                );
+                const cityStats: CityStats[] = Object.entries(cityCountMap).map(([city, count]) => ({ city, count }));
 
                 setUsersByCity(cityStats);
             } catch (error) {
@@ -54,13 +43,11 @@ export default function StatsTab() {
         fetchUsersByCity();
     }, []);
 
-    // 📄 CSV
     const exportCSV = () => {
         const csv = Papa.unparse(usersByCity);
-        const csvWithBom = "\uFEFF" + csv; // UTF-8 BOM для Excel
+        const csvWithBom = "\uFEFF" + csv;
         const blob = new Blob([csvWithBom], { type: "text/csv;charset=utf-8;" });
         const url = window.URL.createObjectURL(blob);
-
         const link = document.createElement("a");
         link.href = url;
         link.setAttribute("download", "users_by_city.csv");
@@ -69,7 +56,6 @@ export default function StatsTab() {
         document.body.removeChild(link);
     };
 
-    // 📄 Excel (XLSX)
     const exportExcel = () => {
         const ws = XLSX.utils.json_to_sheet(usersByCity);
         const wb = XLSX.utils.book_new();
@@ -82,22 +68,22 @@ export default function StatsTab() {
 
     return (
         <div className="space-y-6">
-            <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                <div className="flex justify-between items-center mb-4">
+            <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
                     <h3 className="text-2xl font-bold text-orange-400">Користувачі по містах</h3>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3 flex-wrap">
                         <button
                             onClick={exportCSV}
-                            className="px-5 py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm"
+                            className="px-3 py-2 sm:px-5 sm:py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm text-sm sm:text-base"
                         >
-                            Експорт CSV
+                            CSV
                         </button>
                         <button
                             onClick={exportExcel}
-                            className="px-5 py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm"
+                            className="px-3 py-2 sm:px-5 sm:py-2 bg-neutral-800 text-orange-400 font-semibold border border-orange-400 hover:bg-orange-500 hover:text-black transition-colors duration-200 rounded-lg shadow-sm text-sm sm:text-base"
                         >
-                            Експорт Excel
+                            Excel
                         </button>
                     </div>
                 </div>
@@ -106,32 +92,34 @@ export default function StatsTab() {
                     <p className="text-white">Немає даних для відображення.</p>
                 ) : (
                     <>
-                        <div className="bg-neutral-800 p-4 rounded-lg shadow-md mb-6">
+                        {/* 📊 Графік (тільки на sm і більше) */}
+                        <div className="hidden sm:block bg-neutral-800 p-3 sm:p-4 rounded-lg shadow-md mb-6">
                             <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={usersByCity}>
+                                <BarChart data={usersByCity} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="city" />
-                                    <YAxis />
+                                    <XAxis dataKey="city" tick={{ fontSize: 12 }} />
+                                    <YAxis tick={{ fontSize: 12 }} />
                                     <Tooltip />
-                                    <Legend />
+                                    <Legend wrapperStyle={{ fontSize: 12 }} />
                                     <Bar dataKey="count" fill="#FFA500" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
 
-                        <div className="bg-neutral-800 p-4 rounded-lg shadow-md overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                        {/* 📋 Таблиця */}
+                        <div className="bg-neutral-800 p-3 sm:p-4 rounded-lg shadow-md overflow-x-auto">
+                            <table className="w-full text-left border-collapse min-w-[300px] sm:min-w-full">
                                 <thead>
                                 <tr className="border-b border-orange-500/50">
-                                    <th className="px-4 py-2">Місто</th>
-                                    <th className="px-4 py-2">Кількість користувачів</th>
+                                    <th className="px-3 sm:px-4 py-2 text-sm sm:text-base">Місто</th>
+                                    <th className="px-3 sm:px-4 py-2 text-sm sm:text-base">Кількість користувачів</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {usersByCity.map((item, idx) => (
                                     <tr key={idx} className="border-b border-orange-500/20">
-                                        <td className="px-4 py-2">{item.city}</td>
-                                        <td className="px-4 py-2">{item.count}</td>
+                                        <td className="px-3 sm:px-4 py-2 text-sm sm:text-base">{item.city}</td>
+                                        <td className="px-3 sm:px-4 py-2 text-sm sm:text-base">{item.count}</td>
                                     </tr>
                                 ))}
                                 </tbody>

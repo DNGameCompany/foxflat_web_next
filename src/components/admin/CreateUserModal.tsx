@@ -1,3 +1,4 @@
+// CreateUserModal.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -53,27 +54,27 @@ export default function CreateUserModal({
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.8 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-neutral-900 rounded-lg p-6 w-80 max-w-full"
+                    className="bg-neutral-900 rounded-lg p-4 sm:p-6 w-full sm:w-80 max-w-full"
                 >
-                    <h3 className="text-xl font-bold mb-4 text-orange-400">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-3 text-orange-400">
                         Створення користувача
                     </h3>
 
-                    <label className="block mb-2 text-neutral-400">User ID</label>
+                    <label className="block mb-2 text-neutral-400 text-sm sm:text-base">User ID</label>
                     <input
                         type="text"
                         value={userId}
                         onChange={(e) => setUserId(e.target.value)}
-                        className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4"
+                        className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4 text-sm sm:text-base"
                         placeholder="Введіть User ID"
                     />
 
-                    <label className="block mb-2 text-neutral-400">Статус підписки</label>
+                    <label className="block mb-2 text-neutral-400 text-sm sm:text-base">Статус підписки</label>
                     <div className="relative mb-6">
                         <select
                             value={subscription}
                             onChange={(e) => setSubscription(e.target.value)}
-                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white appearance-none pr-8"
+                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white appearance-none pr-8 text-sm sm:text-base"
                         >
                             {subscriptionOptions.map((option) => (
                                 <option key={option} value={option}>
@@ -97,16 +98,16 @@ export default function CreateUserModal({
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-4">
+                    <div className="flex justify-end gap-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white transition"
+                            className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm sm:text-base transition"
                         >
                             Відміна
                         </button>
                         <button
                             onClick={handleCreate}
-                            className="px-4 py-2 rounded bg-orange-500 hover:bg-orange-400 text-black font-semibold transition"
+                            className="px-4 py-2 rounded bg-orange-500 hover:bg-orange-400 text-black font-semibold text-sm sm:text-base transition"
                         >
                             Створити
                         </button>

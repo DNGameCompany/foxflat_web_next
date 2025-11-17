@@ -92,8 +92,8 @@ export default function BlogsTab() {
     };
 
     return (
-        <div className="p-4 bg-neutral-900 rounded-lg shadow-md max-w-5xl mx-auto text-white space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="p-4 sm:p-6 bg-neutral-900 rounded-lg shadow-md max-w-5xl mx-auto text-white space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-orange-400">Блоги</h2>
                 <button
                     onClick={() => openModal()}
@@ -107,10 +107,10 @@ export default function BlogsTab() {
                 <table className="min-w-full text-sm text-left">
                     <thead>
                     <tr className="text-orange-300 border-b border-orange-500/30">
-                        <th className="py-2 px-4">Дата</th>
-                        <th className="py-2 px-4">Назва</th>
-                        <th className="py-2 px-4">SEO Name</th>
-                        <th className="py-2 px-4 text-right">Дії</th>
+                        <th className="py-2 px-2 sm:px-4">Дата</th>
+                        <th className="py-2 px-2 sm:px-4">Назва</th>
+                        <th className="py-2 px-2 sm:px-4">SEO Name</th>
+                        <th className="py-2 px-2 sm:px-4 text-right">Дії</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -122,19 +122,19 @@ export default function BlogsTab() {
                             transition={{ duration: 0.3 }}
                             className="border-b border-orange-500/10 hover:bg-neutral-800/50"
                         >
-                            <td className="py-2 px-4">{format(blog.createdAt, "dd.MM.yyyy HH:mm")}</td>
-                            <td className="py-2 px-4">{blog.title}</td>
-                            <td className="py-2 px-4">{blog.seoName}</td>
-                            <td className="py-2 px-4 flex justify-end gap-2">
+                            <td className="py-1 px-2 sm:px-4">{format(blog.createdAt, "dd.MM.yyyy HH:mm")}</td>
+                            <td className="py-1 px-2 sm:px-4">{blog.title}</td>
+                            <td className="py-1 px-2 sm:px-4">{blog.seoName}</td>
+                            <td className="py-1 px-2 sm:px-4 flex justify-end gap-2">
                                 <button
                                     onClick={() => openModal(blog)}
-                                    className="px-3 py-1 rounded bg-orange-500 hover:bg-orange-400 text-black transition text-sm"
+                                    className="px-2 sm:px-3 py-1 rounded bg-orange-500 hover:bg-orange-400 text-black transition text-sm"
                                 >
                                     ✏️ Редагувати
                                 </button>
                                 <button
                                     onClick={() => handleDelete(blog.id)}
-                                    className="px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-white transition text-sm"
+                                    className="px-2 sm:px-3 py-1 rounded bg-red-600 hover:bg-red-500 text-white transition text-sm"
                                 >
                                     🗑️ Видалити
                                 </button>
@@ -148,14 +148,14 @@ export default function BlogsTab() {
             {/* Модалка створення/редагування */}
             {isModalOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+                    className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4"
                     onClick={closeModal}
                 >
                     <div
-                        className="bg-neutral-900 p-6 rounded-lg max-w-lg w-full"
+                        className="bg-neutral-900 p-4 sm:p-6 rounded-lg max-w-full sm:max-w-lg w-full"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-xl font-bold text-orange-400 mb-4">
+                        <h3 className="text-xl sm:text-2xl font-bold text-orange-400 mb-4">
                             {editBlogId ? "Редагувати блог" : "Створити новий блог"}
                         </h3>
 
@@ -164,7 +164,7 @@ export default function BlogsTab() {
                             placeholder="Назва блогу"
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
-                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4"
+                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4 text-sm sm:text-base"
                         />
 
                         <input
@@ -172,27 +172,27 @@ export default function BlogsTab() {
                             placeholder="SEO Name"
                             value={newSeoName}
                             onChange={(e) => setNewSeoName(e.target.value)}
-                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4"
+                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white mb-4 text-sm sm:text-base"
                         />
 
                         <textarea
                             placeholder="Контент блогу"
                             value={newContent}
                             onChange={(e) => setNewContent(e.target.value)}
-                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white resize-none h-32"
+                            className="w-full p-2 rounded border border-orange-400 bg-neutral-800 text-white resize-none h-32 text-sm sm:text-base"
                         />
 
-                        <div className="mt-6 flex justify-end space-x-4">
+                        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-end gap-2">
                             <button
                                 onClick={closeModal}
-                                className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 transition font-semibold"
+                                className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 transition font-semibold text-sm sm:text-base"
                             >
                                 Відмінити
                             </button>
 
                             <button
                                 onClick={handleSave}
-                                className="px-4 py-2 rounded bg-orange-500 hover:bg-orange-400 transition font-semibold"
+                                className="px-4 py-2 rounded bg-orange-500 hover:bg-orange-400 transition font-semibold text-sm sm:text-base"
                             >
                                 {editBlogId ? "Зберегти зміни" : "Створити"}
                             </button>
