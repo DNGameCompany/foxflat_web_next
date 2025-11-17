@@ -11,6 +11,9 @@ interface TGPost {
     date: string;
 }
 
+type SortColumn = "label" | "messageUrl" | "date";
+type SortDirection = "asc" | "desc";
+
 export default function TGChannel() {
     const [posts, setPosts] = useState<TGPost[]>([]);
     const [newLabel, setNewLabel] = useState("");
@@ -21,6 +24,18 @@ export default function TGChannel() {
     const [editingUrl, setEditingUrl] = useState("");
     const [editingDate, setEditingDate] = useState("");
     const [error, setError] = useState("");
+
+    const [sortColumn, setSortColumn] = useState<SortColumn>("date");
+    const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+    // Пагінація
+    const [currentPage, setCurrentPage] = useState(1);
+    const postsPerPage = 5;
+
+    // Пошук і фільтр
+    const [searchLabel, setSearchLabel] = useState("");
+    const [filterFromDate, setFilterFromDate] = useState("");
+    const [filterToDate, setFilterToDate] = useState("");
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, "TGChanel"), (snapshot) => {
@@ -35,10 +50,7 @@ export default function TGChannel() {
         return () => unsubscribe();
     }, []);
 
-    const isValidTelegramUrl = (url: string) => {
-        const regex = /^https:\/\/t\.me\/FoxFlatNews\/\d+$/;
-        return regex.test(url);
-    };
+    const isValidTelegramUrl = (url: string) => /^https:\/\/t\.me\/FoxFlatNews\/\d+$/.test(url);
 
     const handleSaveNew = async () => {
         if (!newLabel.trim() || !newUrl.trim() || !newDate.trim()) return;
@@ -58,11 +70,11 @@ export default function TGChannel() {
         setNewUrl("");
         setNewDate("");
         setError("");
+        setCurrentPage(1);
     };
 
     const handleSaveEdit = async (id: string) => {
         if (!editingLabel.trim() || !editingUrl.trim() || !editingDate.trim()) return;
-
         if (!isValidTelegramUrl(editingUrl)) {
             setError("URL має бути у форматі https://t.me/FoxFlatNews/номер");
             return;
@@ -82,9 +94,66 @@ export default function TGChannel() {
         setError("");
     };
 
+    // Функція для скидання фільтрів
+    const handleResetFilters = () => {
+        setSearchLabel("");
+        setFilterFromDate("");
+        setFilterToDate("");
+        setCurrentPage(1); // Опційно: повертати на першу сторінку
+    };
+
     const handleDelete = async (id: string) => {
         const docRef = doc(db, "TGChanel", id);
         await deleteDoc(docRef);
+    };
+
+    const handleSort = (column: SortColumn) => {
+        if (sortColumn === column) setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+        else {
+            setSortColumn(column);
+            setSortDirection("asc");
+        }
+        setCurrentPage(1);
+    };
+
+    // Фільтруємо по пошуку і даті
+    const filteredPosts = posts.filter((p) => {
+        const matchesLabel = p.label.toLowerCase().includes(searchLabel.toLowerCase());
+        const matchesFrom = filterFromDate ? p.date >= filterFromDate : true;
+        const matchesTo = filterToDate ? p.date <= filterToDate : true;
+        return matchesLabel && matchesFrom && matchesTo;
+    });
+
+    // Сортуємо
+    const sortedPosts = [...filteredPosts].sort((a, b) => {
+        let compare = 0;
+        if (sortColumn === "label") compare = a.label.localeCompare(b.label);
+        else if (sortColumn === "messageUrl") compare = a.messageUrl.localeCompare(b.messageUrl);
+        else if (sortColumn === "date") compare = a.date.localeCompare(b.date);
+        return sortDirection === "asc" ? compare : -compare;
+    });
+
+    // Пагінація
+    const indexOfLastPost = currentPage * postsPerPage;
+    const indexOfFirstPost = indexOfLastPost - postsPerPage;
+    const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+    const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
+
+    const getVisiblePages = () => {
+        if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+        let start = Math.max(currentPage - 2, 1);
+        let end = Math.min(currentPage + 2, totalPages);
+
+        if (currentPage <= 2) {
+            start = 1;
+            end = 5;
+        } else if (currentPage >= totalPages - 1) {
+            start = totalPages - 4;
+            end = totalPages;
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     };
 
     return (
@@ -123,21 +192,70 @@ export default function TGChannel() {
 
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-            {/* Список постів */}
-            {posts.length === 0 ? (
-                <p className="text-gray-400 text-center py-10">Пости відсутні</p>
+
+            {/* Пошук і фільтр */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-5">
+                <input
+                    type="text"
+                    placeholder="Пошук по назві"
+                    value={searchLabel}
+                    onChange={(e) => setSearchLabel(e.target.value)}
+                    className="flex-1 min-w-[150px] max-w-[300px] p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                />
+
+                <div className="flex items-center gap-2">
+                    <span className="text-gray-300">Від:</span>
+                    <input
+                        type="date"
+                        placeholder="Від дати"
+                        value={filterFromDate}
+                        onChange={(e) => setFilterFromDate(e.target.value)}
+                        className="p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    />
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-gray-300">До:</span>
+                    <input
+                        type="date"
+                        placeholder="До дати"
+                        value={filterToDate}
+                        onChange={(e) => setFilterToDate(e.target.value)}
+                        className="p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    />
+                </div>
+
+                <button
+                    onClick={handleResetFilters}
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition"
+                >
+                    Скинути фільтри
+                </button>
+            </div>
+
+
+
+            {sortedPosts.length === 0 ? (
+                <p className="text-gray-400 text-center py-10">Пости не знайдено</p>
             ) : (
                 <>
                     {/* Desktop table */}
                     <div className="hidden md:block bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
                         <div className="grid grid-cols-4 gap-4 p-4 bg-gray-800 font-semibold text-gray-200">
-                            <span>Назва</span>
-                            <span>Посилання</span>
-                            <span>Дата</span>
+                            <button onClick={() => handleSort("label")} className="text-left hover:underline">
+                                Назва {sortColumn === "label" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                            </button>
+                            <button onClick={() => handleSort("messageUrl")} className="text-left hover:underline">
+                                Посилання {sortColumn === "messageUrl" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                            </button>
+                            <button onClick={() => handleSort("date")} className="text-left hover:underline">
+                                Дата {sortColumn === "date" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
+                            </button>
                             <span className="text-right">Дії</span>
                         </div>
+
                         <div className="divide-y divide-gray-700">
-                            {posts.map((post) => (
+                            {currentPosts.map((post) => (
                                 <div
                                     key={post.id}
                                     className="grid grid-cols-4 gap-4 p-4 items-center hover:bg-gray-800 transition"
@@ -209,11 +327,48 @@ export default function TGChannel() {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Пагінація Desktop */}
+                        <div className="flex flex-wrap justify-center gap-2 p-4 bg-gray-800">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
+                            >
+                                Попередня
+                            </button>
+
+                            {getVisiblePages().map((num) => (
+                                <button
+                                    key={num}
+                                    onClick={() => setCurrentPage(num)}
+                                    className={`px-3 py-1 rounded-lg transition ${
+                                        currentPage === num
+                                            ? "bg-gray-600 text-white font-bold"
+                                            : "bg-gray-700 hover:bg-gray-600 text-white"
+                                    }`}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
+                            >
+                                Наступна
+                            </button>
+                        </div>
+
+                        <div className="text-center text-gray-300 py-2">
+                            {currentPage} з {totalPages}
+                        </div>
                     </div>
 
                     {/* Mobile cards */}
                     <div className="md:hidden flex flex-col gap-4">
-                        {posts.map((post) => (
+                        {currentPosts.map((post) => (
                             <div
                                 key={post.id}
                                 className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col gap-2 hover:bg-gray-800 transition"
@@ -284,6 +439,43 @@ export default function TGChannel() {
                                 )}
                             </div>
                         ))}
+
+                        {/* Пагінація Mobile */}
+                        <div className="flex flex-wrap justify-center gap-2 p-4">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
+                            >
+                                Попередня
+                            </button>
+
+                            {getVisiblePages().map((num) => (
+                                <button
+                                    key={num}
+                                    onClick={() => setCurrentPage(num)}
+                                    className={`px-3 py-1 rounded-lg transition ${
+                                        currentPage === num
+                                            ? "bg-gray-600 text-white font-bold"
+                                            : "bg-gray-700 hover:bg-gray-600 text-white"
+                                    }`}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
+                            >
+                                Наступна
+                            </button>
+                        </div>
+
+                        <div className="text-center text-gray-300 py-2">
+                            {currentPage} з {totalPages}
+                        </div>
                     </div>
                 </>
             )}
