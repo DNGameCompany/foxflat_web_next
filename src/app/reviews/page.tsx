@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         ],
     },
     alternates: {
-        canonical: 'https://foxflat.app/reviews',
+        canonical: 'https://foxflat.com.ua/reviews',
     },
     robots: { index: true, follow: true },
 };
