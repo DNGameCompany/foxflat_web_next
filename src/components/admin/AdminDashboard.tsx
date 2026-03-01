@@ -1,5 +1,6 @@
 "use client";
-import UserTable from "@/src/components/admin/UserTable";
+
+import UserTab from "@/src/components/admin/UserTab";         // ← правильний компонент
 import MessageTab from "@/src/components/admin/MessageTab";
 import BlogsTab from "@/src/components/admin/Blogs";
 import StatsTab from "@/src/components/admin/Stats";
@@ -14,7 +15,7 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
         <div className="space-y-6">
             {activeTab === "users" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                    <UserTable />
+                    <UserTab />           {/* ← тепер тут правильний компонент */}
                 </section>
             )}
 
