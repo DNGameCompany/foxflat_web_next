@@ -22,7 +22,7 @@ export default function ThankYouPage() {
     const pageData: PageData = {
         title: 'Дякуємо за оплату!',
         description: 'Ваш платіж успішно оброблено. Доступ до функцій FoxFlat буде активовано автоматично.',
-        telegramLink: 'https://t.me/pobazhannyaUA_bot',
+        telegramLink: 'https://t.me/FoxFlat_bot',
         imageSrc: '/images/snapedit_1745754407639-removebg-preview.png',
         imageAlt: 'Логотип FlatFox',
     };

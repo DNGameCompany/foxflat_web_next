@@ -7,7 +7,7 @@ const tiers = [
     {
         name: "Безкоштовно",
         id: "tier-free",
-        href: "https://t.me/FoxFlat_bot",
+        href: "https://t.me/FoxFlat_bot?start=website",
         priceMonthly: "0 грн",
         description: "Ідеально, щоб спробувати пошук квартир у Києві, Львові, Одесі чи Харкові. Отримуй нові оголошення кожного дня.",
         features: [
@@ -21,7 +21,7 @@ const tiers = [
     {
         name: "Місячна підписка",
         id: "tier-premium",
-        href: "https://t.me/FoxFlat_bot",
+        href: "https://t.me/FoxFlat_bot?start=website",
         priceMonthly: "0 грн",
         description: "Преміум-доступ для тих, хто хоче знаходити квартири миттєво. Оновлення кожні 5 хвилин і необмежені фільтри у 22 містах України.",
         features: [
