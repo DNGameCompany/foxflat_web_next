@@ -40,6 +40,7 @@ export default function UserDetail({ userId }: UserDetailProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // 1️⃣ Fetch основної інформації користувача
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -58,9 +59,9 @@ export default function UserDetail({ userId }: UserDetailProps) {
                     current_state: data.current_state,
                     flatfy_url: data.flatfy_url,
                     dimria_url: data.dimria_url,
-                    filters: data.filters,
                     last_payment: data.last_payment,
                     deleted_info: data.deleted_info,
+                    filters: null, // поки що пусто, підтягуємо окремо
                 });
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "Не вдалося завантажити дані користувача");
@@ -70,6 +71,22 @@ export default function UserDetail({ userId }: UserDetailProps) {
         };
 
         fetchUser();
+    }, [userId]);
+
+    // 2️⃣ Fetch фільтрів через серверний ендпоінт (Redis → Firestore)
+    useEffect(() => {
+        const fetchFilters = async () => {
+            if (!userId) return;
+            try {
+                const res = await fetch(`/users/${userId}/filters`);
+                if (!res.ok) throw new Error("Не вдалося завантажити фільтри");
+                const data = await res.json();
+                setUser(prev => prev ? { ...prev, filters: data.filters } : null);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchFilters();
     }, [userId]);
 
     const formatDate = (dateInput?: string | Timestamp) => {
