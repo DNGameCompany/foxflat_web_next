@@ -46,32 +46,10 @@ export default function UserDetail({ userId }: UserDetailProps) {
         const fetchUserData = async () => {
             setLoading(true);
             try {
-                // Паралельні запити
-                const [userRes, filtersRes] = await Promise.all([
-                    fetch(`https://api.foxflat.com.ua/users/${userId}`),
-                    fetch(`https://api.foxflat.com.ua/users/${userId}/filters`),
-                ]);
-
-                if (!userRes.ok) throw new Error(userRes.status === 404 ? "Користувача не знайдено" : `Помилка сервера: ${userRes.status}`);
-                if (!filtersRes.ok) throw new Error("Не вдалося завантажити фільтри");
-
-                const userData = await userRes.json();
-                const filterData = await filtersRes.json();
-
-                setUser({
-                    user_id: userData.user_id || userId,
-                    created_at: userData.created_at,
-                    subscription_status: userData.subscription_status,
-                    subscription_name: userData.subscription_name || userData.active_subscription?.sub_name || "немає",
-                    subscription_end_date: userData.subscription_end_date,
-                    current_geo: userData.current_geo,
-                    current_state: userData.current_state,
-                    flatfy_url: userData.flatfy_url,
-                    dimria_url: userData.dimria_url,
-                    last_payment: userData.last_payment,
-                    deleted_info: userData.deleted_info,
-                    filters: filterData.filters || null,
-                });
+                const res = await fetch(`https://api.foxflat.com.ua/users/${userId}`);
+                if (!res.ok) throw new Error(res.status === 404 ? "Користувача не знайдено" : `Помилка сервера: ${res.status}`);
+                const data = await res.json();
+                setUser(data); // всі дані вже тут, включно з filters
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "Не вдалося завантажити дані користувача");
             } finally {
