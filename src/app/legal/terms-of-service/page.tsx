@@ -36,7 +36,7 @@ export default async function TermsOfServicePage() {
         supportTelegram: 'https://t.me/FoxFlatSupport',
         supportEmail: 'support@foxflat.com',
         offerUrl: 'https://flatfox.com/offer',
-        botUrl: 'https://t.me/foxflat_bot',
+        botUrl: 'https://t.me/FoxFlat_bot',
         aupUrl: 'https://flatfox.com/aup',
         privacyPolicyUrl: 'https://flatfox.com/privacy-policy',
         executorDetails: {

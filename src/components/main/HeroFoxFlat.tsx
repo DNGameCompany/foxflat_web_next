@@ -29,7 +29,7 @@ export default function HeroFoxFlat() {
 
                         <div className="mt-10 flex gap-x-6">
                             <a
-                                href="https://t.me/FoxFlat_bot"
+                                href="https://t.me/FoxFlat_bot?start=website"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={handleBotClick}

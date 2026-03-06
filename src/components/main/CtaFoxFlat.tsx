@@ -32,7 +32,7 @@ export default function CtaFoxFlat() {
                 </p>
                 <div className="mt-8 flex justify-center">
                     <a
-                        href="https://t.me/FoxFlat_bot"
+                        href="https://t.me/FoxFlat_bot?start=website"
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleBotClick}
