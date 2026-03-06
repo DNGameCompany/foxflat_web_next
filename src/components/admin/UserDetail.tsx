@@ -78,7 +78,7 @@ export default function UserDetail({ userId }: UserDetailProps) {
         const fetchFilters = async () => {
             if (!userId) return;
             try {
-                const res = await fetch(`/users/${userId}/filters`);
+                const res = await fetch(`https://api.foxflat.com.ua/users/${userId}/filters`);
                 if (!res.ok) throw new Error("Не вдалося завантажити фільтри");
                 const data = await res.json();
                 setUser(prev => prev ? { ...prev, filters: data.filters } : null);
