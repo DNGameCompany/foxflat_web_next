@@ -1,7 +1,7 @@
 // src/components/admin/UserDetail.tsx
 "use client";
 
-import {JSX, useEffect, useState} from "react";
+import { useEffect, useState, JSX } from "react";
 
 interface Timestamp {
     seconds: number;
@@ -40,28 +40,37 @@ export default function UserDetail({ userId }: UserDetailProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // 1️⃣ Fetch основної інформації користувача
     useEffect(() => {
-        const fetchUser = async () => {
+        if (!userId) return;
+
+        const fetchUserData = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
-                const res = await fetch(`https://api.foxflat.com.ua/users/${userId}`);
-                if (!res.ok) throw new Error(res.status === 404 ? "Користувача не знайдено" : `Помилка сервера: ${res.status}`);
-                const data = await res.json();
+                // Паралельні запити
+                const [userRes, filtersRes] = await Promise.all([
+                    fetch(`https://api.foxflat.com.ua/users/${userId}`),
+                    fetch(`https://api.foxflat.com.ua/users/${userId}/filters`),
+                ]);
+
+                if (!userRes.ok) throw new Error(userRes.status === 404 ? "Користувача не знайдено" : `Помилка сервера: ${userRes.status}`);
+                if (!filtersRes.ok) throw new Error("Не вдалося завантажити фільтри");
+
+                const userData = await userRes.json();
+                const filterData = await filtersRes.json();
 
                 setUser({
-                    user_id: data.user_id || userId,
-                    created_at: data.created_at,
-                    subscription_status: data.subscription_status,
-                    subscription_name: data.subscription_name || data.active_subscription?.sub_name || "немає",
-                    subscription_end_date: data.subscription_end_date,
-                    current_geo: data.current_geo,
-                    current_state: data.current_state,
-                    flatfy_url: data.flatfy_url,
-                    dimria_url: data.dimria_url,
-                    last_payment: data.last_payment,
-                    deleted_info: data.deleted_info,
-                    filters: null, // поки що пусто, підтягуємо окремо
+                    user_id: userData.user_id || userId,
+                    created_at: userData.created_at,
+                    subscription_status: userData.subscription_status,
+                    subscription_name: userData.subscription_name || userData.active_subscription?.sub_name || "немає",
+                    subscription_end_date: userData.subscription_end_date,
+                    current_geo: userData.current_geo,
+                    current_state: userData.current_state,
+                    flatfy_url: userData.flatfy_url,
+                    dimria_url: userData.dimria_url,
+                    last_payment: userData.last_payment,
+                    deleted_info: userData.deleted_info,
+                    filters: filterData.filters || null,
                 });
             } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : "Не вдалося завантажити дані користувача");
@@ -70,23 +79,7 @@ export default function UserDetail({ userId }: UserDetailProps) {
             }
         };
 
-        fetchUser();
-    }, [userId]);
-
-    // 2️⃣ Fetch фільтрів через серверний ендпоінт (Redis → Firestore)
-    useEffect(() => {
-        const fetchFilters = async () => {
-            if (!userId) return;
-            try {
-                const res = await fetch(`https://api.foxflat.com.ua/users/${userId}/filters`);
-                if (!res.ok) throw new Error("Не вдалося завантажити фільтри");
-                const data = await res.json();
-                setUser(prev => prev ? { ...prev, filters: data.filters } : null);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        fetchFilters();
+        fetchUserData();
     }, [userId]);
 
     const formatDate = (dateInput?: string | Timestamp) => {
@@ -117,9 +110,10 @@ export default function UserDetail({ userId }: UserDetailProps) {
         );
     }
 
+    const hasFilters = user.filters && Object.keys(user.filters).length > 0;
+
     return (
         <div className="space-y-8 pb-8">
-
             {/* Основна інформація */}
             <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
                 <h2 className="text-xl font-semibold mb-4 text-gray-200">Основна інформація</h2>
@@ -143,11 +137,11 @@ export default function UserDetail({ userId }: UserDetailProps) {
             )}
 
             {/* Фільтри */}
-            {user.filters && Object.keys(user.filters).length > 0 && (
+            {hasFilters && (
                 <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
                     <h2 className="text-xl font-semibold mb-4 text-gray-200">Фільтри користувача</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(user.filters).map(([key, value]) => (
+                        {Object.entries(user.filters!).map(([key, value]) => (
                             <FilterItem key={key} label={key} value={value} />
                         ))}
                     </div>
@@ -197,16 +191,13 @@ const LinkItem = ({ label, url }: { label: string; url: string }) => (
     </div>
 );
 
-// Компонент для красивого відображення фільтрів
 const FilterItem = ({ label, value }: { label: string; value: unknown }) => {
     const renderValue = (val: unknown): JSX.Element => {
         if (val === null || val === undefined) return <span className="text-gray-400">—</span>;
         if (Array.isArray(val)) {
             return (
                 <ul className="list-disc list-inside text-gray-200">
-                    {val.map((item, idx) => (
-                        <li key={idx}>{renderValue(item)}</li>
-                    ))}
+                    {val.map((item, idx) => <li key={idx}>{renderValue(item)}</li>)}
                 </ul>
             );
         }
