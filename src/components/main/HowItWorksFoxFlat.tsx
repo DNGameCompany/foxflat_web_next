@@ -1,51 +1,88 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const IconBot = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="8" width="18" height="13" rx="3" />
+        <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+        <circle cx="9" cy="14" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="14" r="1.2" fill="currentColor" stroke="none" />
+        <path d="M9 18h6" />
+    </svg>
+);
+
+const IconFilter = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 5h18M6 10h12M9 15h6M11 20h2" />
+    </svg>
+);
+
+const IconBell = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 10a6 6 0 0 1 12 0c0 4 2 6 2 6H4s2-2 2-6" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        <circle cx="18" cy="5" r="3" fill="#F97316" stroke="none" />
+    </svg>
+);
+
+const IconHome = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9.5z" />
+        <path d="M9 21V12h6v9" />
+    </svg>
+);
 
 const steps = [
     {
         num: '01',
-        icon: '🤖',
+        Icon: IconBot,
         title: 'Запусти бота',
-        desc: 'Натисни /start у FoxFlat Telegram-боті. Реєстрація займає 10 секунд — ніяких паролів і форм.',
+        desc: 'Натисни /start у FoxFlat Telegram-боті. Реєстрація займає 10 секунд — ніяких паролів, форм і підтверджень email.',
         highlight: 'Старт за 10 сек',
+        detail: 'Доступно на iOS, Android та десктопі',
     },
     {
         num: '02',
-        icon: '🎯',
+        Icon: IconFilter,
         title: 'Налаштуй фільтри',
-        desc: 'Обери місто, район, кількість кімнат і бюджет. Бот запам\'ятає твої вподобання.',
+        desc: "Обери місто, район, кількість кімнат і бюджет. Бот запам'ятає всі твої вподобання і застосує їх автоматично.",
         highlight: 'Гнучкі критерії',
+        detail: '22 міста, необмежена кількість фільтрів у преміумі',
     },
     {
         num: '03',
-        icon: '🔔',
+        Icon: IconBell,
         title: 'Отримуй сповіщення',
-        desc: 'Нові квартири надходять миттєво — ти серед перших, хто бачить нове оголошення.',
+        desc: 'Нові квартири надходять миттєво — ти серед перших, хто бачить нове оголошення. Моніторинг кожні 15 хвилин.',
         highlight: 'Моментально',
+        detail: 'Без спаму — тільки релевантні оголошення',
     },
     {
         num: '04',
-        icon: '🏠',
+        Icon: IconHome,
         title: 'Знайди квартиру',
-        desc: 'Перейди за посиланням прямо до оголошення й зв\'яжись з орендодавцем без посередників.',
+        desc: "Перейди за посиланням прямо до оголошення й зв'яжись з орендодавцем напряму.",
         highlight: 'Без переплат',
+        detail: 'Прямий контакт з власником квартири',
     },
 ];
 
 export default function HowItWorksFoxFlat() {
+    const [activeStep, setActiveStep] = useState<number>(0);
+
     return (
-        <section className="relative py-24 px-4 overflow-hidden">
-            {/* bg grid */}
+        <section className="relative py-28 px-6 overflow-hidden">
+            {/* bg glow */}
             <div
-                className="absolute inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: 'linear-gradient(rgba(249,115,22,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(249,115,22,0.5) 1px, transparent 1px)',
-                    backgroundSize: '60px 60px',
-                }}
+                className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(249,115,22,0.05) 0%, transparent 65%)' }}
             />
 
-            <div className="relative max-w-5xl mx-auto">
+            <div className="relative max-w-6xl mx-auto">
+
+                {/* Header */}
                 <motion.p
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
@@ -75,54 +112,174 @@ export default function HowItWorksFoxFlat() {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.15 }}
-                    className="text-center text-white/40 text-base max-w-md mx-auto mb-16 leading-relaxed"
+                    className="text-center text-white/40 text-base max-w-md mx-auto mb-20 leading-relaxed"
                 >
-                    Без реєстрації на сайтах, без дзвінків ріелторам — тільки свіжі оголошення в Telegram
+                    Без реєстрацій, без дзвінків ріелторам — тільки свіжі оголошення в Telegram
                 </motion.p>
 
-                {/* Steps */}
-                <div className="relative">
-                    {/* connector line desktop */}
-                    <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-px"
-                         style={{ background: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.25), rgba(249,115,22,0.25), transparent)' }} />
+                {/* Layout: ліворуч таймлайн, праворуч панель */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {steps.map((step, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 40 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: i * 0.12 }}
-                                className="group relative flex flex-col items-start p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-orange-500/30 hover:bg-white/[0.04] transition-all duration-300"
-                            >
-                                {/* step number */}
-                                <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center mb-5 text-sm font-bold border border-orange-500/30 bg-orange-500/10 text-orange-400 relative z-10"
-                                    style={{ fontFamily: "'Unbounded', sans-serif" }}
-                                >
-                                    {step.num}
-                                </div>
+                    {/* Ліва колонка — вертикальний таймлайн */}
+                    <div className="relative">
+                        {/* Вертикальна лінія */}
+                        <div className="absolute left-[27px] top-4 bottom-4 w-px bg-white/[0.06]" />
+                        <motion.div
+                            className="absolute left-[27px] top-4 w-px bg-gradient-to-b from-orange-500/70 to-orange-500/10"
+                            initial={{ height: '0%' }}
+                            whileInView={{ height: '100%' }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.4, ease: 'easeInOut', delay: 0.4 }}
+                        />
 
-                                <span className="text-2xl mb-3">{step.icon}</span>
+                        <div className="flex flex-col gap-3">
+                            {steps.map((step, i) => {
+                                const isActive = activeStep === i;
+                                return (
+                                    <motion.div
+                                        key={step.num}
+                                        initial={{ opacity: 0, x: -24 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.45, delay: i * 0.1 + 0.3 }}
+                                        onMouseEnter={() => setActiveStep(i)}
+                                        className={`relative flex items-center gap-5 pl-16 pr-5 py-5 rounded-2xl cursor-pointer transition-all duration-300 ${
+                                            isActive
+                                                ? 'bg-white/[0.04] border border-orange-500/25'
+                                                : 'border border-transparent hover:bg-white/[0.02]'
+                                        }`}
+                                    >
+                                        {/* Dot на лінії */}
+                                        <div className={`absolute left-[19px] w-[17px] h-[17px] rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${
+                                            isActive
+                                                ? 'border-orange-500 bg-orange-500/20 scale-125'
+                                                : 'border-white/20 bg-black'
+                                        }`}>
+                                            {isActive && (
+                                                <div className="w-[7px] h-[7px] rounded-full bg-orange-500" />
+                                            )}
+                                        </div>
 
-                                <h3
-                                    className="font-bold text-white mb-2 text-base leading-tight"
-                                    style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '14px' }}
-                                >
-                                    {step.title}
-                                </h3>
+                                        {/* Іконка */}
+                                        <div className={`flex-shrink-0 p-2.5 rounded-xl border transition-all duration-300 ${
+                                            isActive
+                                                ? 'bg-orange-500/15 border-orange-500/30 text-orange-400'
+                                                : 'bg-white/[0.03] border-white/[0.07] text-white/30'
+                                        }`}>
+                                            <step.Icon />
+                                        </div>
 
-                                <p className="text-sm text-white/40 leading-relaxed mb-4 flex-1">
-                                    {step.desc}
-                                </p>
+                                        {/* Назва + бейдж */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-0.5">
+                                                <span
+                                                    className={`font-bold leading-snug transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/50'}`}
+                                                    style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '14px' }}
+                                                >
+                                                    {step.title}
+                                                </span>
+                                            </div>
+                                            <span className={`text-xs transition-colors duration-300 ${isActive ? 'text-orange-400/80' : 'text-white/20'}`}>
+                                                {step.highlight}
+                                            </span>
+                                        </div>
 
-                                {/* pill */}
-                                <span className="text-[11px] font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full">
-                                    {step.highlight}
-                                </span>
-                            </motion.div>
-                        ))}
+                                        {/* Номер праворуч */}
+                                        <span
+                                            className={`flex-shrink-0 text-sm font-bold transition-colors duration-300 ${isActive ? 'text-orange-500/50' : 'text-white/10'}`}
+                                            style={{ fontFamily: "'Unbounded', sans-serif" }}
+                                        >
+                                            {step.num}
+                                        </span>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Права колонка — панель деталей */}
+                    <div className="lg:sticky lg:top-32">
+                        <AnimatePresence mode="wait">
+                            {steps.map((step, i) =>
+                                activeStep === i ? (
+                                    <motion.div
+                                        key={step.num}
+                                        initial={{ opacity: 0, x: 30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.35, ease: 'easeOut' }}
+                                        className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-10"
+                                    >
+                                        {/* Декоративний великий номер */}
+                                        <div
+                                            className="absolute -top-4 -right-4 font-black text-white/[0.04] select-none pointer-events-none leading-none"
+                                            style={{
+                                                fontFamily: "'Unbounded', sans-serif",
+                                                fontSize: '160px',
+                                                letterSpacing: '-8px',
+                                            }}
+                                        >
+                                            {step.num}
+                                        </div>
+
+                                        {/* Glow за номером */}
+                                        <div
+                                            className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
+                                            style={{ background: 'radial-gradient(circle at 80% 20%, rgba(249,115,22,0.07) 0%, transparent 60%)' }}
+                                        />
+
+                                        {/* Іконка велика */}
+                                        <div className="inline-flex p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400 mb-8">
+                                            <div style={{ transform: 'scale(1.4)', transformOrigin: 'center' }}>
+                                                <step.Icon />
+                                            </div>
+                                        </div>
+
+                                        {/* Крок */}
+                                        <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-3">
+                                            Крок {step.num}
+                                        </p>
+
+                                        <h3
+                                            className="font-black text-white mb-4 leading-tight"
+                                            style={{
+                                                fontFamily: "'Unbounded', sans-serif",
+                                                fontSize: 'clamp(22px, 2.5vw, 30px)',
+                                                letterSpacing: '-0.5px',
+                                            }}
+                                        >
+                                            {step.title}
+                                        </h3>
+
+                                        <p className="text-white/50 leading-relaxed mb-8 text-[15px]">
+                                            {step.desc}
+                                        </p>
+
+                                        {/* Detail рядок */}
+                                        <div className="flex items-center gap-3 pt-6 border-t border-white/[0.06]">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
+                                            <span className="text-sm text-white/35">{step.detail}</span>
+                                        </div>
+
+                                        {/* Прогрес-індикатор */}
+                                        <div className="flex gap-1.5 mt-6">
+                                            {steps.map((_, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`h-[3px] rounded-full transition-all duration-300 ${
+                                                        idx === i
+                                                            ? 'bg-orange-500 w-8'
+                                                            : idx < i
+                                                                ? 'bg-orange-500/30 w-3'
+                                                                : 'bg-white/10 w-3'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                ) : null
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
@@ -132,17 +289,19 @@ export default function HowItWorksFoxFlat() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.5 }}
-                    className="flex justify-center mt-12"
+                    className="flex justify-center mt-16"
                 >
                     <a
-                        href="https://t.me/foxflat_bot?start=website"
+                        href="https://t.me/FoxFlat_bot?start=website"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-500/25"
+                        className="inline-flex items-center gap-3 bg-orange-500 hover:bg-transparent text-black hover:text-orange-500 font-bold px-8 py-4 rounded-xl border-2 border-orange-500 transition-all duration-200"
                         style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '13px' }}
                     >
                         <span>Спробувати зараз</span>
-                        <span>→</span>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                     </a>
                 </motion.div>
             </div>

@@ -1,152 +1,207 @@
 "use client";
 
-import { CheckIcon, FireIcon } from "@heroicons/react/20/solid";
+import { motion } from "framer-motion";
 import { event } from "@/lib/gtag";
 
-const tiers = [
-    {
-        name: "Безкоштовно",
-        id: "tier-free",
-        href: "https://t.me/FoxFlat_bot?start=website",
-        priceMonthly: "0 грн",
-        description: "Ідеально, щоб спробувати пошук квартир у Києві, Львові, Одесі чи Харкові. Отримуй нові оголошення кожного дня.",
-        features: [
-            "Автоматичний пошук нових квартир з оновленням кожні 30 хвилин.",
-            "Можливість одноразової зміни фільтру.",
-            "Застосування одного параметра в кожному фільтрі.",
-            "Максимум 3 переходи по посиланням на добу.",
-        ],
-        featured: false,
-    },
-    {
-        name: "Місячна підписка",
-        id: "tier-premium",
-        href: "https://t.me/FoxFlat_bot?start=website",
-        priceMonthly: "0 грн",
-        description: "Преміум-доступ для тих, хто хоче знаходити квартири миттєво. Оновлення кожні 5 хвилин і необмежені фільтри у 22 містах України.",
-        features: [
-            "Моніторинг кожні 5 хвилин.",
-            "Необмежена кількість змін параметрів фільтрів.",
-            "Підтримка декількох районів та фільтр за наявністю тварин.",
-            "Необмежена кількість переходів за посиланнями.",
-        ],
-        featured: true,
-    },
+const freeFeatures = [
+    "Базовий пошук квартир у вибраному місті",
+    "Основні фільтри (ціна та кількість кімнат)",
+    "Сповіщення про нові квартири кожні 30 хвилин",
+    "Зміна параметрів пошуку 1 раз на добу",
+    "До 3 переходів на оголошення щодня"
 ];
 
-function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-}
+const premiumFeatures = [
+    "Релевантні квартири у стрічці",
+    "Можливість зберігати обрані квартири",
+    "Необмежена зміна параметрів пошуку",
+    "Повний набір фільтрів (місто, район, площа, поверх, кімнати)",
+    "Можливість використовувати кілька значень у фільтрах",
+    "Перевірка нових оголошень кожні 15 хвилин",
+    "Миттєві сповіщення про нові квартири (кожні 3 хвилини)",
+    "Необмежена кількість переходів на оголошення",
+    "Перегляд поточних фільтрів",
+    "Повний доступ до налаштувань",
+    "Підтримка користувачів",
+    "Можливість залишити відгук"
+];
+
+const CheckIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 mt-0.5">
+        <circle cx="8" cy="8" r="7.5" stroke="rgba(249,115,22,0.3)" />
+        <path d="M5 8l2.5 2.5L11 5.5" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const CheckIconSmall = () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 mt-0.5">
+        <path d="M4 8l3 3 5-6" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
 
 export default function PricingFoxFlat() {
     const handleBotClick = (action: string, label: string) => {
-        event({
-            action,
-            category: "engagement",
-            label,
-        });
+        event({ action, category: "engagement", label });
     };
+
     return (
-        <div className="relative isolate px-6 py-24 sm:py-32 lg:px-8 overflow-hidden w-full">
-            {/* Фон із блюром і димкою на всю ширину */}
+        <section className="relative py-28 px-6 overflow-hidden">
+
             <div
-                aria-hidden="true"
-                className="absolute inset-0 z-0
-        bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),
-             linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)]
-        bg-[size:40px_40px]
-        backdrop-blur-sm bg-white/5
-        [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]
-        pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] pointer-events-none"
+                style={{ background: "radial-gradient(ellipse, rgba(249,115,22,0.06) 0%, transparent 65%)" }}
             />
 
-            {/* Заголовок */}
-            <div className="relative z-10 mx-auto max-w-4xl text-center">
-                <h2 className="text-base font-semibold text-orange-400">
+            <div className="relative max-w-5xl mx-auto">
+
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-4"
+                >
                     FoxFlat Підписка
-                </h2>
-                <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                    Швидкий доступ до нових квартир у твоєму місті
-                </p>
-            </div>
+                </motion.p>
 
-            {/* 🔥 Блок акції */}
-            <div className="relative z-10 mx-auto mt-10 mb-8 max-w-2xl text-center rounded-xl border border-orange-400 p-4 bg-orange-500/10 text-orange-300 shadow-[0_0_25px_-8px_rgba(251,146,60,0.5)] animate-pulsePromo transition-all duration-300">
-                <div className="flex items-center justify-center gap-2 font-semibold text-base">
-                    <FireIcon className="h-5 w-5 text-orange-400 animate-bounce" />
-                    Спеціальна пропозиція:{" "}
-                    <span className="text-orange-100">преміум зараз безкоштовно!</span>
-                </div>
-                <p className="mt-1 text-sm text-orange-200">
-                    Звичайна ціна <span className="line-through">200 грн</span> / місяць — тільки зараз{" "}
-                    <span className="font-bold text-white">0 грн</span>
-                </p>
-            </div>
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="text-center font-black mb-4 leading-tight"
+                    style={{
+                        fontFamily: "'Unbounded', sans-serif",
+                        fontSize: "clamp(26px, 3.5vw, 42px)",
+                        letterSpacing: "-1px",
+                    }}
+                >
+                    Швидкий доступ до нових квартир
+                </motion.h2>
 
-            {/* Ціни */}
-            <div className="relative z-10 mx-auto mt-8 grid max-w-lg grid-cols-1 gap-y-6 sm:mt-12 lg:max-w-4xl lg:grid-cols-2">
-                {tiers.map((tier) => (
-                    <div
-                        key={tier.id}
-                        className={classNames(
-                            tier.featured
-                                ? "bg-orange-400/5 border border-orange-400 shadow-[0_0_30px_-10px_rgba(251,146,60,0.5)] hover:shadow-[0_0_40px_-5px_rgba(251,146,60,0.6)] scale-100 hover:scale-[1.02] transition-all duration-300"
-                                : "bg-transparent",
-                            "rounded-3xl p-8 ring-1 ring-white/10 sm:p-10"
-                        )}
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.15 }}
+                    className="text-center text-white/40 text-base max-w-md mx-auto mb-10 leading-relaxed"
+                >
+                    Обери план і отримуй нові оголошення першим
+                </motion.p>
+
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.7fr] gap-4 items-stretch">
+
+                    {/* FREE */}
+
+                    <motion.div
+                        initial={{ opacity: 0, x: -24 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="flex flex-col p-7 rounded-2xl border border-white/[0.08] bg-white/[0.02]"
                     >
-                        <h3
-                            id={tier.id}
-                            className={classNames(
-                                tier.featured ? "text-orange-400" : "text-orange-300",
-                                "text-base font-semibold"
-                            )}
-                        >
-                            {tier.name}
-                        </h3>
-                        <p className="mt-4 flex items-baseline gap-x-2">
-                            <span className="text-white text-4xl font-bold tracking-tight">
-                                {tier.priceMonthly}
-                            </span>
-                            <span className="text-gray-400 text-base">/місяць</span>
+
+                        <div className="mb-6">
+                            <p className="text-xs font-bold tracking-widest text-white/40 uppercase mb-3">
+                                Безкоштовно
+                            </p>
+
+                            <div className="flex items-end gap-1">
+                                <span className="font-black text-white leading-none text-[40px]">
+                                    0
+                                </span>
+                                <span className="text-white/40 text-sm mb-1.5 font-medium">
+                                    грн / міс
+                                </span>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-white/40 leading-relaxed mb-7">
+                            Спробуй сервіс та отримуй нові оголошення про квартири.
                         </p>
-                        <p className="mt-6 text-base text-gray-300">{tier.description}</p>
-                        <ul
-                            role="list"
-                            className="mt-8 space-y-3 text-sm text-gray-300 sm:mt-10"
-                        >
-                            {tier.features.map((feature) => (
-                                <li key={feature} className="flex gap-x-3">
-                                    <CheckIcon
-                                        aria-hidden="true"
-                                        className="h-6 w-5 flex-none text-orange-400"
-                                    />
-                                    {feature}
+
+                        <ul className="flex flex-col gap-3 mb-8 flex-1">
+                            {freeFeatures.map((f) => (
+                                <li key={f} className="flex items-start gap-2.5 text-sm text-white/50">
+                                    <CheckIconSmall />
+                                    {f}
                                 </li>
                             ))}
                         </ul>
+
                         <a
-                            href={tier.href}
+                            href="https://t.me/FoxFlat_bot?start=website"
                             target="_blank"
-                            aria-describedby={tier.id}
-                            onClick={() =>
-                                handleBotClick(
-                                    tier.id,
-                                    tier.name
-                                )
-                            }
-                            className={classNames(
-                                tier.featured
-                                    ? "bg-orange-500 text-black hover:bg-orange-400 focus-visible:outline-orange-500"
-                                    : "text-orange-400 ring-1 ring-orange-400 hover:bg-orange-400 hover:text-black focus-visible:outline-orange-600",
-                                "mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10"
-                            )}
+                            onClick={() => handleBotClick("tier-free", "Безкоштовно")}
+                            className="block text-center text-sm font-bold text-orange-500 border border-orange-500 px-4 py-3 rounded-xl"
                         >
-                            {tier.featured ? "Оформити підписку" : "Спробувати безкоштовно"}
+                            Спробувати безкоштовно
                         </a>
-                    </div>
-                ))}
+
+                    </motion.div>
+
+                    {/* PREMIUM */}
+
+                    <motion.div
+                        initial={{ opacity: 0, x: 24 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="relative flex flex-col p-8 rounded-2xl border border-orange-500/40 bg-orange-500/[0.04]"
+                    >
+
+                        <div className="absolute top-6 right-6">
+                            <span className="text-[10px] font-bold text-black bg-orange-500 px-3 py-1.5 rounded-full">
+                                ПОПУЛЯРНИЙ
+                            </span>
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-3">
+                                Місячна підписка
+                            </p>
+
+                            <div className="flex items-end gap-2 mb-1">
+                                <span className="font-black text-white text-[56px] leading-none">
+                                    0
+                                </span>
+
+                                <div className="mb-2">
+                                    <span className="text-white/40 text-sm block">
+                                        грн / міс
+                                    </span>
+                                    <span className="text-white/25 text-xs line-through">
+                                        200 грн
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-white/50 leading-relaxed mb-8 max-w-sm">
+                            Отримуй нові оголошення раніше за інших та знаходь квартири швидше.
+                        </p>
+
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 mb-10 flex-1">
+                            {premiumFeatures.map((f) => (
+                                <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
+                                    <CheckIcon />
+                                    {f}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <a
+                            href="https://t.me/FoxFlat_bot?start=website"
+                            target="_blank"
+                            onClick={() => handleBotClick("tier-premium", "Місячна підписка")}
+                            className="block text-center font-bold text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 px-6 py-4 rounded-xl transition-all"
+                        >
+                            Оформити підписку →
+                        </a>
+
+                    </motion.div>
+
+                </div>
             </div>
-        </div>
+        </section>
     );
 }
