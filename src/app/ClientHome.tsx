@@ -13,10 +13,15 @@ import CtaFoxFlat from '@/src/components/main/CtaFoxFlat';
 import { Review } from '@/src/app/reviews/page';
 import ClientReviewsHome from "@/src/components/main/ReviewsFoxFlat";
 
+// ── нові секції ──────────────────────────────────────────────
+import StatsCounterFoxFlat from '@/src/components/main/StatsCounterFoxFlat';
+import HowItWorksFoxFlat from '@/src/components/main/HowItWorksFoxFlat';
+import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
+
 export default function ClientHome() {
     const [showScrollHint, setShowScrollHint] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState(true); // Використовуємо для відображення стану
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -33,7 +38,7 @@ export default function ClientHome() {
             } catch (error) {
                 console.error('Помилка при завантаженні відгуків:', error);
             } finally {
-                setLoading(false); // Оновлюємо стан після завершення
+                setLoading(false);
             }
         };
 
@@ -42,15 +47,18 @@ export default function ClientHome() {
 
     useEffect(() => {
         const handleScroll = () => {
-            if (window.scrollY > 100) {
-                setShowScrollHint(false);
-            } else {
-                setShowScrollHint(true);
-            }
+            setShowScrollHint(window.scrollY <= 100);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const fadeInSection = {
+        initial: { opacity: 0, y: 50 },
+        whileInView: { opacity: 1, y: 0 },
+        transition: { duration: 0.6 },
+        viewport: { once: true },
+    };
 
     return (
         <main className="relative min-h-screen w-full overflow-hidden bg-black">
@@ -58,49 +66,70 @@ export default function ClientHome() {
             <HeaderFoxFlat />
             <HeroFoxFlat />
 
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
             {showScrollHint && (
                 <span className="fixed bottom-6 left-1/2 -translate-x-1/2 animate-bounce text-orange-400 z-10 text-3xl pointer-events-none select-none">
-          ↓
-        </span>
+                    ↓
+                </span>
             )}
 
-            <motion.section
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
+            {/* ── Лічильники довіри ── */}
+            <motion.section {...fadeInSection}>
+                <StatsCounterFoxFlat />
+            </motion.section>
+
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            {/* ── Як це працює ── */}
+            <motion.section {...fadeInSection}>
+                <HowItWorksFoxFlat />
+            </motion.section>
+
+            {/* ── Переваги ── */}
+            <motion.section {...fadeInSection}>
                 <FeatureFoxFlat />
             </motion.section>
 
-            <motion.section
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
+            {/* ── Ціни ── */}
+            <motion.section {...fadeInSection}>
                 <PricingFoxFlat />
             </motion.section>
 
-            <motion.section
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            {/* ── Відгуки ── */}
+            <motion.section {...fadeInSection}>
                 {loading ? (
-                    <div className="text-center py-16 text-orange-400 text-2xl">Завантаження відгуків...</div>
+                    <div className="text-center py-16 text-orange-400 text-2xl animate-pulse">
+                        Завантаження відгуків...
+                    </div>
                 ) : (
                     <ClientReviewsHome reviews={reviews} />
                 )}
             </motion.section>
 
-            <motion.section
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-            >
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            {/* ── FAQ ── */}
+            <motion.section {...fadeInSection}>
+                <FaqFoxFlat />
+            </motion.section>
+
+            {/* ── Фінальний CTA ── */}
+            <motion.section {...fadeInSection}>
                 <CtaFoxFlat />
             </motion.section>
         </main>
