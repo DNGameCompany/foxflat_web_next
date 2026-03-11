@@ -141,7 +141,7 @@ export default function FaqFoxFlat() {
                 >
                     Не знайшов відповідь?{' '}
                     <a
-                        href="https://t.me/foxflat_support"
+                        href="https://t.me/qa_aqa_dmytro"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors"
