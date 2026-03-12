@@ -4,7 +4,7 @@ import FooterFoxFlat from '@/src/components/FooterFoxFlat';
 export const metadata = {
     title: 'FoxFlat — Telegram-бот для оренди квартир | Київ, Львів, Одеса, Харків',
     description:
-        'FoxFlat — Telegram-бот для пошуку квартир без посередників. Оновлення кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
+        'FoxFlat — Telegram-бот для пошуку квартир без посередників. Оновлення кожні 5 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
     keywords: [
         // Бренд
         'foxflat',
@@ -64,7 +64,7 @@ export const metadata = {
     openGraph: {
         title: 'FoxFlat — Знайди квартиру першим через Telegram',
         description:
-            'Бот моніторить оголошення кожні 15 хвилин у 22 містах України. Отримуй нові квартири без посередників прямо в Telegram — безкоштовно!',
+            'Бот моніторить оголошення кожні 5 хвилин у 22 містах України. Отримуй нові квартири без посередників прямо в Telegram — безкоштовно!',
         url: 'https://foxflat.com.ua/',
         siteName: 'FoxFlat',
         images: [
@@ -90,7 +90,7 @@ export const metadata = {
 
 export default function HomePage() {
     return (
-        <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+        <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0f0f] text-white">
             <main>
                 <h1 className="sr-only">
                     FoxFlat — Telegram-бот для оренди квартир без посередників у Києві, Львові, Одесі та 22 містах України
@@ -214,6 +214,24 @@ export default function HomePage() {
                                         },
                                     },
                                 ],
+                            },
+                            // VideoObject schema
+                            {
+                                '@context': 'https://schema.org',
+                                '@type': 'VideoObject',
+                                name: 'FoxFlat — як працює Telegram-бот для оренди квартир',
+                                description: 'Демо роботи FoxFlat: налаштування фільтрів, отримання сповіщень про нові квартири в Telegram у 22 містах України.',
+                                thumbnailUrl: 'https://foxflat.com.ua/video-thumb.jpg',
+                                uploadDate: '2025-01-01T00:00:00+02:00',
+                                contentUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
+                                embedUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
+                                duration: 'PT12S',
+                                inLanguage: 'uk-UA',
+                                publisher: {
+                                    '@type': 'Organization',
+                                    name: 'FoxFlat',
+                                    url: 'https://foxflat.com.ua',
+                                },
                             },
                         ]),
                     }}
