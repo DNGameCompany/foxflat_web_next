@@ -221,7 +221,7 @@ export default function HomePage() {
                                 '@type': 'VideoObject',
                                 name: 'FoxFlat — як працює Telegram-бот для оренди квартир',
                                 description: 'Демо роботи FoxFlat: налаштування фільтрів, отримання сповіщень про нові квартири в Telegram у 22 містах України.',
-                                thumbnailUrl: 'https://foxflat.com.ua/video-thumb.jpg',
+                                thumbnailUrl: 'https://foxflat.com.ua/images/video-thumb.jpg',
                                 uploadDate: '2025-01-01T00:00:00+02:00',
                                 contentUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
                                 embedUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
