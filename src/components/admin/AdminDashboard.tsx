@@ -3,7 +3,7 @@
 import UserTab from "@/src/components/admin/UserTab";         // ← правильний компонент
 import MessageTab from "@/src/components/admin/MessageTab";
 import BlogsTab from "@/src/components/admin/Blogs";
-import StatsTab from "@/src/components/admin/Stats";
+import StatsTab from "@/src/components/admin/Stats/Stats";
 import TGChannelSection from "@/src/components/admin/TGChannelSection";
 
 interface AdminDashboardProps {

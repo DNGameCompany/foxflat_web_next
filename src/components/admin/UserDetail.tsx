@@ -42,162 +42,191 @@ export default function UserDetail({ userId }: UserDetailProps) {
 
     useEffect(() => {
         if (!userId) return;
+        setLoading(true);
+        setError(null);
 
-        const fetchUserData = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch(`https://api.foxflat.com.ua/users/${userId}`);
+        fetch(`https://api.foxflat.com.ua/users/${userId}`)
+            .then((res) => {
                 if (!res.ok) throw new Error(res.status === 404 ? "Користувача не знайдено" : `Помилка сервера: ${res.status}`);
-                const data = await res.json();
-                setUser(data); // всі дані вже тут, включно з filters
-            } catch (err: unknown) {
-                setError(err instanceof Error ? err.message : "Не вдалося завантажити дані користувача");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUserData();
+                return res.json();
+            })
+            .then((data) => setUser(data))
+            .catch((err: unknown) => setError(err instanceof Error ? err.message : "Не вдалося завантажити дані"))
+            .finally(() => setLoading(false));
     }, [userId]);
 
-    const formatDate = (dateInput?: string | Timestamp) => {
-        if (!dateInput) return "—";
-        const date = typeof dateInput === "string" ? new Date(dateInput) : new Date(dateInput.seconds * 1000);
+    const formatDate = (d?: string | Timestamp) => {
+        if (!d) return "—";
+        const date = typeof d === "string" ? new Date(d) : new Date(d.seconds * 1000);
         return isNaN(date.getTime()) ? "—" : date.toLocaleString("uk-UA");
     };
 
-    const formatDateOnly = (dateInput?: string | Timestamp) => {
-        if (!dateInput) return "—";
-        const date = typeof dateInput === "string" ? new Date(dateInput) : new Date(dateInput.seconds * 1000);
+    const formatDateOnly = (d?: string | Timestamp) => {
+        if (!d) return "—";
+        const date = typeof d === "string" ? new Date(d) : new Date(d.seconds * 1000);
         return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("uk-UA");
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-orange-500 border-opacity-50" />
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[40vh] gap-3 text-orange-400">
+            <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+                <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="text-sm font-medium">Завантаження...</span>
+        </div>
+    );
 
-    if (error || !user) {
-        return (
-            <div className="text-center py-12 text-red-400">
-                <p className="text-xl">{error || "Користувача не знайдено"}</p>
-            </div>
-        );
-    }
+    if (error || !user) return (
+        <div className="text-center py-12">
+            <p className="text-sm text-red-400">{error || "Користувача не знайдено"}</p>
+        </div>
+    );
 
     const hasFilters = user.filters && Object.keys(user.filters).length > 0;
+    const hasSources = user.flatfy_url || user.dimria_url;
+    const subName = user.subscription_name || "—";
+    const subStatus = user.subscription_status;
 
     return (
-        <div className="space-y-8 pb-8">
-            {/* Основна інформація */}
-            <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
-                <h2 className="text-xl font-semibold mb-4 text-gray-200">Основна інформація</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <InfoItem label="ID" value={user.user_id} mono />
-                    <InfoItem label="Дата створення" value={formatDate(user.created_at)} />
-                    <InfoItem label="Підписка" value={`${user.subscription_name} ${user.subscription_status ? `(${user.subscription_status})` : ""}`} />
-                    <InfoItem label="Закінчення підписки" value={formatDateOnly(user.subscription_end_date)} />
-                    <InfoItem label="Поточне місто" value={user.current_geo || "—"} />
-                    <InfoItem label="Стан бота" value={user.current_state || "невідомо"} />
+        <div className="space-y-4 pb-8">
+
+            {/* Видалений юзер */}
+            {user.deleted_info && (
+                <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-red-500/30 bg-red-500/[0.07]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-red-400 flex-shrink-0">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <p className="text-sm text-red-400 font-medium">
+                        Користувач видалений — {formatDate(user.deleted_info.deleted_at)}
+                        {user.deleted_info.deleted_by ? ` · ${user.deleted_info.deleted_by}` : ""}
+                    </p>
                 </div>
-            </section>
+            )}
+
+            {/* Основна інформація */}
+            <Section title="Основна інформація">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <InfoItem label="User ID" value={user.user_id} mono />
+                    <InfoItem label="Дата створення" value={formatDate(user.created_at)} />
+                    <InfoItem label="Підписка" value={`${subName}${subStatus ? ` · ${subStatus}` : ""}`}
+                              accent={subName !== "—" && subName !== "trial"} />
+                    <InfoItem label="Закінчення підписки" value={formatDateOnly(user.subscription_end_date)} />
+                    <InfoItem label="Місто" value={user.current_geo || "—"} />
+                    <InfoItem label="Стан бота" value={user.current_state || "—"} />
+                </div>
+            </Section>
 
             {/* Джерела парсингу */}
-            {(user.flatfy_url || user.dimria_url) && (
-                <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-200">Джерела парсингу</h2>
-                    {user.flatfy_url && <LinkItem label="Flatfy URL" url={user.flatfy_url} />}
-                    {user.dimria_url && <LinkItem label="DimRia URL" url={user.dimria_url} />}
-                </section>
+            {hasSources && (
+                <Section title="Джерела парсингу">
+                    <div className="flex flex-col gap-3">
+                        {user.flatfy_url && <LinkItem label="Flatfy" url={user.flatfy_url} />}
+                        {user.dimria_url && <LinkItem label="DimRia" url={user.dimria_url} />}
+                    </div>
+                </Section>
             )}
 
             {/* Фільтри */}
             {hasFilters && (
-                <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-200">Фільтри користувача</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Section title="Фільтри">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {Object.entries(user.filters!).map(([key, value]) => (
                             <FilterItem key={key} label={key} value={value} />
                         ))}
                     </div>
-                </section>
+                </Section>
             )}
 
             {/* Останній платіж */}
             {user.last_payment && (
-                <section className="bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-200">Останній платіж</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <InfoItem label="Сума" value={`${user.last_payment.amount ?? "—"} ${user.last_payment.currency ?? ""}`} />
+                <Section title="Останній платіж">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <InfoItem label="Сума" value={`${user.last_payment.amount ?? "—"} ${user.last_payment.currency ?? ""}`} accent />
                         <InfoItem label="Статус" value={user.last_payment.status ?? "—"} />
                         <InfoItem label="Дата" value={formatDate(user.last_payment.create_date)} />
                     </div>
-                </section>
-            )}
-
-            {/* Видалений користувач */}
-            {user.deleted_info && (
-                <section className="bg-red-900/30 border border-red-700 rounded-xl p-6 shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4 text-red-300">Користувач видалений</h2>
-                    <p className="text-gray-300">
-                        Видалено: {formatDate(user.deleted_info.deleted_at)}<br />
-                        Ким: {user.deleted_info.deleted_by ?? "—"}
-                    </p>
-                </section>
+                </Section>
             )}
         </div>
     );
 }
 
-// Компоненти для структурованого відображення
-const InfoItem = ({ label, value, mono }: { label: string; value: string; mono?: boolean }) => (
-    <div>
-        <dt className="text-sm text-gray-400">{label}</dt>
-        <dd className={`mt-1 text-gray-200 ${mono ? "font-mono text-lg break-all" : ""}`}>{value}</dd>
-    </div>
-);
+// ── Допоміжні компоненти ─────────────────────────────────────
 
-const LinkItem = ({ label, url }: { label: string; url: string }) => (
-    <div className="mb-2">
-        <dt className="text-sm text-gray-400">{label}</dt>
-        <dd className="mt-1 break-all">
-            <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{url}</a>
-        </dd>
-    </div>
-);
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+            <div className="px-5 py-3 border-b border-white/[0.05]">
+                <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase"
+                   style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                    {title}
+                </p>
+            </div>
+            <div className="p-5">{children}</div>
+        </section>
+    );
+}
 
-const FilterItem = ({ label, value }: { label: string; value: unknown }) => {
+function InfoItem({ label, value, mono, accent }: { label: string; value: string; mono?: boolean; accent?: boolean }) {
+    return (
+        <div className="flex flex-col gap-1 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <p className="text-[10px] text-white/25 uppercase tracking-widest">{label}</p>
+            <p className={`text-sm font-semibold leading-snug break-all ${
+                mono ? "font-mono text-white/60" : accent ? "text-orange-400" : "text-white/70"
+            }`}>
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function LinkItem({ label, url }: { label: string; url: string }) {
+    return (
+        <div className="flex flex-col gap-1 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <p className="text-[10px] text-white/25 uppercase tracking-widest mb-1">{label}</p>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-orange-400 hover:text-orange-300 break-all underline underline-offset-2 transition-colors"
+            >
+                {url}
+            </a>
+        </div>
+    );
+}
+
+function FilterItem({ label, value }: { label: string; value: unknown }) {
     const renderValue = (val: unknown): JSX.Element => {
-        if (val === null || val === undefined) return <span className="text-gray-400">—</span>;
-        if (Array.isArray(val)) {
-            return (
-                <ul className="list-disc list-inside text-gray-200">
-                    {val.map((item, idx) => <li key={idx}>{renderValue(item)}</li>)}
-                </ul>
-            );
-        }
-        if (typeof val === "object") {
-            return (
-                <div className="pl-4 border-l border-gray-700">
-                    {Object.entries(val as Record<string, unknown>).map(([k, v]) => (
-                        <div key={k}>
-                            <span className="text-gray-400">{k}: </span>
-                            {renderValue(v)}
-                        </div>
-                    ))}
-                </div>
-            );
-        }
-        return <span className="text-gray-200">{val.toString()}</span>;
+        if (val === null || val === undefined) return <span className="text-white/25">—</span>;
+        if (Array.isArray(val)) return (
+            <div className="flex flex-wrap gap-1 mt-1">
+                {val.map((item, idx) => (
+                    <span key={idx} className="text-xs px-2 py-0.5 rounded-md bg-white/[0.05] text-white/50">
+                        {renderValue(item)}
+                    </span>
+                ))}
+            </div>
+        );
+        if (typeof val === "object") return (
+            <div className="flex flex-col gap-1 mt-1 pl-3 border-l border-white/[0.07]">
+                {Object.entries(val as Record<string, unknown>).map(([k, v]) => (
+                    <div key={k} className="text-xs">
+                        <span className="text-white/25">{k}: </span>
+                        {renderValue(v)}
+                    </div>
+                ))}
+            </div>
+        );
+        return <span className="text-white/60">{val.toString()}</span>;
     };
 
     return (
-        <div className="bg-gray-900 rounded p-3">
-            <dt className="text-sm text-gray-400">{label}</dt>
-            <dd className="mt-1">{renderValue(value)}</dd>
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <p className="text-[10px] text-white/25 uppercase tracking-widest mb-1">{label}</p>
+            <div className="text-sm">{renderValue(value)}</div>
         </div>
     );
-};
+}
