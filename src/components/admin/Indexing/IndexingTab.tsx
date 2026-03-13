@@ -103,7 +103,7 @@ export default function IndexingTab() {
             const res = await fetch(`${API_URL}/indexing/sync-sitemap`, { method: "POST" });
             const data = await res.json();
             await fetchPages();
-            alert(`Синхронізовано: +${data.added} нових, ${data.skipped} вже є`);
+            alert(`Синхронізовано: +${data.added ?? 0} нових, ${data.skipped ?? 0} вже є`);
         } catch (e) {
             console.error(e);
         } finally {
@@ -115,10 +115,13 @@ export default function IndexingTab() {
         setCheckingAll(true);
         try {
             await fetch(`${API_URL}/indexing/check-all`, { method: "POST" });
-            await fetchPages();
+            // Чекаємо 30 секунд поки фоновий процес завершиться, потім оновлюємо
+            setTimeout(async () => {
+                await fetchPages();
+                setCheckingAll(false);
+            }, 30000);
         } catch (e) {
             console.error(e);
-        } finally {
             setCheckingAll(false);
         }
     };
