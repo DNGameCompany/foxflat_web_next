@@ -25,29 +25,58 @@ const CITIES = [
     { slug: "chernivtsi",      name: "Чернівці" },
 ];
 
+const BLOG_LINKS = [
+    { slug: "yak-znayty-kvartyru-2026",                             name: "Як знайти квартиру у 2026" },
+    { slug: "yak-ne-propustyty-khoroshу-kvartyru",                  name: "Як не пропустити хорошу квартиру" },
+    { slug: "yak-nalashtuvaты-foxflat-maksymalna-efektyvnist",      name: "Як налаштувати FoxFlat" },
+];
+
 export default function FooterFoxFlat() {
     return (
         <footer className="w-full bg-black pt-10 pb-6 px-4 relative z-10">
             {/* Розділювач */}
-            <div className="w-full h-px mb-10" style={{ background: "linear-gradient(to right, transparent, rgba(249,115,22,0.3), transparent)" }} />
+            <div className="w-full h-px mb-10"
+                 style={{ background: "linear-gradient(to right, transparent, rgba(249,115,22,0.3), transparent)" }} />
+
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Міста */}
-                <div>
-                    <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
-                        Оренда по містах
-                    </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2">
-                        {CITIES.map((city) => (
-                            <Link
-                                key={city.slug}
-                                href={`/misto/${city.slug}`}
-                                className="text-xs text-white/30 hover:text-orange-400 transition-colors"
-                            >
-                                {city.name}
-                            </Link>
-                        ))}
+                {/* Міста + Блог */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                    {/* Міста */}
+                    <div className="md:col-span-2">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                            Оренда по містах
+                        </p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            {CITIES.map((city) => (
+                                <Link key={city.slug} href={`/misto/${city.slug}`}
+                                      className="text-xs text-white/30 hover:text-orange-400 transition-colors">
+                                    {city.name}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
+
+                    {/* Блог */}
+                    <div>
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                            Блог
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            {BLOG_LINKS.map((post) => (
+                                <Link key={post.slug} href={`/blog/${post.slug}`}
+                                      className="text-xs text-white/30 hover:text-orange-400 transition-colors leading-snug">
+                                    {post.name}
+                                </Link>
+                            ))}
+                            <Link href="/blog"
+                                  className="text-xs text-orange-500/50 hover:text-orange-400 transition-colors mt-1">
+                                Всі статті →
+                            </Link>
+                        </div>
+                    </div>
+
                 </div>
 
                 {/* Розділювач */}

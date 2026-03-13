@@ -18,6 +18,7 @@ import StatsCounterFoxFlat from '@/src/components/main/StatsCounterFoxFlat';
 import HowItWorksFoxFlat from '@/src/components/main/HowItWorksFoxFlat';
 import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
 import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
+import BlogPreviewFoxFlat from "@/src/components/main/BlogPreviewFoxFlat";
 
 export default function ClientHome() {
     const [showScrollHint, setShowScrollHint] = useState(true);
@@ -117,6 +118,15 @@ export default function ClientHome() {
                 ) : (
                     <ClientReviewsHome reviews={reviews} />
                 )}
+            </motion.section>
+
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            <motion.section {...fadeInSection}>
+                <BlogPreviewFoxFlat />
             </motion.section>
 
             {/* тонкий розділювач */}
