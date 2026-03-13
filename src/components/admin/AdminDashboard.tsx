@@ -2,10 +2,10 @@
 
 import UserTab from "@/src/components/admin/UserTab";         // ← правильний компонент
 import MessageTab from "@/src/components/admin/MessageTab";
-import BlogsTab from "@/src/components/admin/Blogs";
 import StatsTab from "@/src/components/admin/Stats/Stats";
 import TGChannelSection from "@/src/components/admin/TGChannelSection";
 import IndexingTab from "./Indexing/IndexingTab";
+import BlogTab from "@/src/components/admin/Blog/BlogTab";
 
 interface AdminDashboardProps {
     activeTab: "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing";
@@ -30,7 +30,7 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
             {activeTab === "blogs" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
                     <h3 className="text-2xl font-bold text-orange-400 mb-4">Керування блогами</h3>
-                    <BlogsTab />
+                    <BlogTab />
                 </section>
             )}
 
