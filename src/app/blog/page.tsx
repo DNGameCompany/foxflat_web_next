@@ -1,7 +1,9 @@
 // app/blog/page.tsx
 
 import type { Metadata } from "next";
-import BlogList from "@/src/app/blog/BlogList.client"; // твій правильний шлях
+import BlogList from "@/src/app/blog/BlogList.client";
+import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
+import FooterFoxFlat from "@/src/components/FooterFoxFlat"; // твій правильний шлях
 
 export const metadata: Metadata = {
     title: "Блог FoxFlat — поради з оренди квартир в Україні",
@@ -52,5 +54,11 @@ async function getPosts(): Promise<Post[]> {
 
 export default async function BlogPage() {
     const posts = await getPosts();
-    return <BlogList posts={posts} />;
+    return (
+        <>
+            <HeaderFoxFlat />
+            <BlogList posts={posts} />
+            <FooterFoxFlat />
+        </>
+    );
 }

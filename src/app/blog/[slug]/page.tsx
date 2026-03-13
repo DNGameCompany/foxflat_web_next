@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import BlogPost from "./BlogPost.client";
 import BlogSidebar from "./BlogSidebar";
+import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
+import FooterFoxFlat from "@/src/components/FooterFoxFlat";
 
 export const revalidate = 3600;
 
@@ -56,22 +58,26 @@ export default async function BlogPostPage(
     if (!post) notFound();
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            <div className="max-w-5xl mx-auto px-4 py-14">
-                <div className="flex gap-12 items-start">
+        <>
+            <HeaderFoxFlat />
+            <div className="min-h-screen bg-black text-white">
+                <div className="max-w-5xl mx-auto px-4 py-14">
+                    <div className="flex gap-12 items-start">
 
-                    {/* Основний контент */}
-                    <div className="flex-1 min-w-0">
-                        <BlogPost post={post} />
+                        {/* Основний контент */}
+                        <div className="flex-1 min-w-0">
+                            <BlogPost post={post} />
+                        </div>
+
+                        {/* Сайдбар */}
+                        <div className="hidden lg:block sticky top-8">
+                            <BlogSidebar currentSlug={slug} />
+                        </div>
+
                     </div>
-
-                    {/* Сайдбар */}
-                    <div className="hidden lg:block sticky top-8">
-                        <BlogSidebar currentSlug={slug} />
-                    </div>
-
                 </div>
             </div>
-        </div>
+            <FooterFoxFlat />
+        </>
     );
 }
