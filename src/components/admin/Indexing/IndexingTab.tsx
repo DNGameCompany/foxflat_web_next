@@ -278,9 +278,10 @@ export default function IndexingTab() {
                                     <td className="px-3 py-3">
                                         <div className="flex items-center gap-2">
                                             <button onClick={() => submitPage(page.path, page.url)}
-                                                    disabled={isSubmitting}
+                                                    disabled={isSubmitting || page.status === "pending" || page.status === "indexed"}
+                                                    title={page.status === "pending" ? "Вже відправлено" : page.status === "indexed" ? "Вже проіндексовано" : ""}
                                                     className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all disabled:opacity-40 whitespace-nowrap">
-                                                {isSubmitting ? "..." : "Індексувати"}
+                                                {isSubmitting ? "..." : page.status === "pending" ? "Очікує" : page.status === "indexed" ? "✓ Готово" : "Індексувати"}
                                             </button>
                                             <button onClick={() => checkPage(page.path, page.url)}
                                                     disabled={isChecking}
