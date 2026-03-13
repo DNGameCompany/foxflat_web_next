@@ -25,11 +25,7 @@ const CITIES = [
     { slug: "chernivtsi",      name: "Чернівці" },
 ];
 
-const BLOG_LINKS = [
-    { slug: "yak-znayty-kvartyru-2026",                             name: "Як знайти квартиру у 2026" },
-    { slug: "yak-ne-propustyty-khoroshу-kvartyru",                  name: "Як не пропустити хорошу квартиру" },
-    { slug: "yak-nalashtuvaты-foxflat-maksymalna-efektyvnist",      name: "Як налаштувати FoxFlat" },
-];
+
 
 export default function FooterFoxFlat() {
     return (
@@ -41,10 +37,10 @@ export default function FooterFoxFlat() {
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Міста + Блог */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 gap-8">
 
                     {/* Міста */}
-                    <div className="md:col-span-2">
+                    <div className="">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
                             Оренда по містах
                         </p>
@@ -58,24 +54,7 @@ export default function FooterFoxFlat() {
                         </div>
                     </div>
 
-                    {/* Блог */}
-                    <div>
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
-                            Блог
-                        </p>
-                        <div className="flex flex-col gap-2">
-                            {BLOG_LINKS.map((post) => (
-                                <Link key={post.slug} href={`/blog/${post.slug}`}
-                                      className="text-xs text-white/30 hover:text-orange-400 transition-colors leading-snug">
-                                    {post.name}
-                                </Link>
-                            ))}
-                            <Link href="/blog"
-                                  className="text-xs text-orange-500/50 hover:text-orange-400 transition-colors mt-1">
-                                Всі статті →
-                            </Link>
-                        </div>
-                    </div>
+
 
                 </div>
 
@@ -97,6 +76,9 @@ export default function FooterFoxFlat() {
                         </Link>
                         <Link href="/contacts" className="hover:text-orange-300 transition-colors">
                             Контакти
+                        </Link>
+                        <Link href="/blog" className="hover:text-orange-300 transition-colors">
+                            Блог
                         </Link>
                     </div>
                 </div>
