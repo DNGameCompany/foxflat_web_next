@@ -21,8 +21,8 @@ interface SidebarPost {
 async function getLatestPosts(excludeSlug: string): Promise<SidebarPost[]> {
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/blog/posts?published=true&limit=6`,
-            { next: { revalidate: 3600 } }
+            `https://api.foxflat.com.ua/blog/posts?published=true&limit=6`,
+            { next: { revalidate: 300 } }
         );
         if (!res.ok) return [];
         const posts: SidebarPost[] = await res.json();
