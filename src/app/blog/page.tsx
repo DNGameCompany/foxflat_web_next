@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import BlogList from "@/src/app/blog/ClientBlogList";
+import BlogList from "@/src/app/blog/BlogList.client";
 
 export const metadata: Metadata = {
     title: "Блог FoxFlat — поради з оренди квартир в Україні",

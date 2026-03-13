@@ -1,7 +1,7 @@
 // app/blog/[slug]/page.tsx — SSR
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import BlogPost from "@/src/app/blog/[slug]/ClientBlogPost";
+import BlogPost from "@/src/app/blog/[slug]/BlogPost.client";
 
 export const revalidate = 3600;
 
