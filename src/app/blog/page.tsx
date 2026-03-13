@@ -1,6 +1,5 @@
-// app/blog/page.tsx — SSR
 import type { Metadata } from "next";
-import BlogList from "@/src/app/blog/ClientBlogList";
+import BlogList from "@/src/app/blog/BlogList.client";
 
 export const metadata: Metadata = {
     title: "Блог FoxFlat — поради з оренди квартир в Україні",
@@ -30,7 +29,7 @@ export interface Post {
 async function getPosts(): Promise<Post[]> {
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/blog/posts?published=true`,
+            `https://api.foxflat.com.ua/blog/posts?published=true`,
             { next: { revalidate: 3600 } }
         );
         if (!res.ok) return [];
