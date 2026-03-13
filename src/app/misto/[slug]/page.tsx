@@ -175,7 +175,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                 </h2>
                 <div className="flex flex-col gap-4">
                     {[
-                        { n: '01', t: 'Запусти бота', d: <span>Відкрий <a href={`https://t.me/FoxFlat_bot?start=website_${slug}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2">@FoxFlat_bot</a> у Telegram і натисни Start</span> },
+                        { n: '01', t: 'Запусти бота', d: <span>Відкрий <a href={`https://t.me/FoxFlat_bot?start=website_${slug}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2">@FoxFlat_bot</a> у Telegram</span> },
                         { n: '02', t: `Обери ${city.name}`, d: `Вкажи місто ${city.name} і налаштуй фільтри — ціна, район, кімнати` },
                         { n: '03', t: 'Отримуй квартири', d: `Нові оголошення у ${city.nameGen} приходять кожні 5 хвилин прямо в Telegram` },
                     ].map((step, i) => (
