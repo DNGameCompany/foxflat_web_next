@@ -7,17 +7,48 @@ module.exports = {
     changefreq: 'weekly',
     priority: 0.8,
 
-    additionalPaths: async () => [
-        'kyiv', 'lviv', 'odesa', 'kharkiv', 'dnipro', 'zaporizhzhia',
-        'vinnytsia', 'mykolaiv', 'chernihiv', 'poltava', 'cherkasy',
-        'sumy', 'zhytomyr', 'rivne', 'lutsk', 'ternopil', 'khmelnytskyi',
-        'kropyvnytskyi', 'uzhhorod', 'ivano-frankivsk', 'chernivtsi', 'kherson',
-    ].map((slug) => ({
-        loc: `/misto/${slug}`,
-        changefreq: 'monthly',
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
-    })),
+    additionalPaths: async () => {
+        const cities = [
+            'kyiv', 'lviv', 'odesa', 'kharkiv', 'dnipro', 'zaporizhzhia',
+            'vinnytsia', 'mykolaiv', 'chernihiv', 'poltava', 'cherkasy',
+            'sumy', 'zhytomyr', 'rivne', 'lutsk', 'ternopil', 'khmelnytskyi',
+            'kropyvnytskyi', 'uzhhorod', 'ivano-frankivsk', 'chernivtsi', 'kherson',
+        ].map((slug) => ({
+            loc: `/misto/${slug}`,
+            changefreq: 'monthly',
+            priority: 0.7,
+            lastmod: new Date().toISOString(),
+        }));
+
+        // Блог — тягнемо опубліковані пости з API
+        let blogPaths = [];
+        try {
+            const res = await fetch(
+                'https://api.foxflat.com.ua/blog/posts?published=true&limit=100'
+            );
+            const posts = await res.json();
+            blogPaths = posts.map((post) => ({
+                loc: `/blog/${post.slug}`,
+                changefreq: 'monthly',
+                priority: 0.6,
+                lastmod: post.updated_at || post.created_at || new Date().toISOString(),
+            }));
+        } catch (e) {
+            console.warn('[sitemap] Не вдалось завантажити блог-пости:', e.message);
+        }
+
+        return [
+            // Блог індексна сторінка
+            {
+                loc: '/blog',
+                changefreq: 'weekly',
+                priority: 0.8,
+                lastmod: new Date().toISOString(),
+            },
+            ...cities,
+            ...blogPaths,
+        ];
+    },
 
     exclude: [
         '/admin',
@@ -30,7 +61,7 @@ module.exports = {
         policies: [
             {
                 userAgent: '*',
-                allow: ['/', '/reviews', '/misto/*', '/contacts'],
+                allow: ['/', '/reviews', '/misto/*', '/contacts', '/blog', '/blog/*'],
                 disallow: [
                     '/admin/',
                     '/admin/*',
