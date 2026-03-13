@@ -115,10 +115,14 @@ export default function IndexingTab() {
     };
 
     const submitSelected = async () => {
-        for (const path of Array.from(selected)) {
-            const page = pages.find((p) => p.path === path);
-            if (page) await submitPage(page.path, page.url);
-        }
+        const toSubmit = Array.from(selected)
+            .map((path) => pages.find((p) => p.path === path))
+            .filter((p): p is Page =>
+                !!p && p.status !== "pending" && p.status !== "indexed"
+            );
+
+        // Відправляємо паралельно
+        await Promise.all(toSubmit.map((page) => submitPage(page.path, page.url)));
         setSelected(new Set());
     };
 
