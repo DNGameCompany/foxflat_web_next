@@ -17,6 +17,7 @@ import ClientReviewsHome from "@/src/components/main/ReviewsFoxFlat";
 import StatsCounterFoxFlat from '@/src/components/main/StatsCounterFoxFlat';
 import HowItWorksFoxFlat from '@/src/components/main/HowItWorksFoxFlat';
 import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
+import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
 
 export default function ClientHome() {
     const [showScrollHint, setShowScrollHint] = useState(true);
@@ -131,6 +132,11 @@ export default function ClientHome() {
             {/* ── Фінальний CTA ── */}
             <motion.section {...fadeInSection}>
                 <CtaFoxFlat />
+            </motion.section>
+
+            {/* Cities */}
+            <motion.section {...fadeInSection}>
+                <CitiesFoxFlat />
             </motion.section>
         </main>
     );
