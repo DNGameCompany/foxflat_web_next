@@ -53,109 +53,187 @@ export default function IndexingTab() {
 
     const saveStatusToFirestore = async (path: string, update: Partial<Page>) => {
         const id = path.replace(/\//g, "_").replace(/^_/, "") || "home";
+
         await setDoc(doc(db, "indexing_status", id), update, { merge: true });
+
         setPages((prev) =>
             prev.map((p) => p.path === path ? { ...p, ...update } : p)
         );
     };
 
     const submitPage = async (path: string, url: string) => {
+
         setSubmitting((p) => ({ ...p, [path]: true }));
+
         try {
+
             const res = await fetch(`${API_URL}/indexing/submit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url }),
             });
+
             if (!res.ok) throw new Error();
+
+            const submittedAt = new Date().toISOString();
+
+            // 🔧 ФІКС: одразу оновлюємо UI
+            setPages((prev) =>
+                prev.map((p) =>
+                    p.path === path
+                        ? { ...p, status: "pending", submitted_at: submittedAt }
+                        : p
+                )
+            );
+
             await saveStatusToFirestore(path, {
                 status: "pending",
-                submitted_at: new Date().toISOString(),
+                submitted_at: submittedAt,
             });
+
         } catch {
+
             await saveStatusToFirestore(path, { status: "error" });
+
         } finally {
+
             setSubmitting((p) => ({ ...p, [path]: false }));
+
         }
     };
 
     const checkPage = async (path: string, url: string) => {
+
         setChecking((p) => ({ ...p, [path]: true }));
+
         try {
+
             const res = await fetch(`${API_URL}/indexing/status?url=${encodeURIComponent(url)}`);
+
             if (!res.ok) throw new Error();
+
             const data = await res.json();
+
             await saveStatusToFirestore(path, {
                 status: data.indexed ? "indexed" : "not_indexed",
                 checked_at: new Date().toISOString(),
                 coverage_state: data.coverageState,
             });
+
         } catch {
+
             await saveStatusToFirestore(path, { status: "error" });
+
         } finally {
+
             setChecking((p) => ({ ...p, [path]: false }));
+
         }
     };
 
     const syncSitemap = async () => {
+
         setSyncing(true);
+
         try {
+
             const res = await fetch(`${API_URL}/indexing/sync-sitemap`, { method: "POST" });
+
             const data = await res.json();
+
             await fetchPages();
+
             alert(`Синхронізовано: +${data.added ?? 0} нових, ${data.skipped ?? 0} вже є`);
+
         } catch (e) {
+
             console.error(e);
+
         } finally {
+
             setSyncing(false);
+
         }
     };
 
     const checkAll = async () => {
+
         setCheckingAll(true);
+
         try {
+
             await fetch(`${API_URL}/indexing/check-all`, { method: "POST" });
-            // Чекаємо 30 секунд поки фоновий процес завершиться, потім оновлюємо
+
             setTimeout(async () => {
                 await fetchPages();
                 setCheckingAll(false);
             }, 30000);
+
         } catch (e) {
+
             console.error(e);
             setCheckingAll(false);
+
         }
     };
 
     const submitSelected = async () => {
+
         for (const path of Array.from(selected)) {
+
             const page = pages.find((p) => p.path === path);
+
             if (page) await submitPage(page.path, page.url);
+
         }
+
         setSelected(new Set());
+
     };
 
     const toggleSelect = (path: string) => {
+
         setSelected((prev) => {
+
             const next = new Set(prev);
-            if (next.has(path)) { next.delete(path); } else { next.add(path); }
+
+            if (next.has(path)) {
+                next.delete(path);
+            } else {
+                next.add(path);
+            }
+
             return next;
+
         });
+
     };
 
     const toggleSelectAll = () => {
+
         if (selected.size === filteredPages.length) {
+
             setSelected(new Set());
+
         } else {
+
             setSelected(new Set(filteredPages.map((p) => p.path)));
+
         }
+
     };
 
     const formatDate = (iso?: string | null) => {
+
         if (!iso) return "—";
+
         return new Date(iso).toLocaleString("uk-UA", {
-            day: "2-digit", month: "2-digit",
-            hour: "2-digit", minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
         });
+
     };
 
     const filteredPages = pages.filter(
@@ -163,7 +241,10 @@ export default function IndexingTab() {
     );
 
     const counts = (["indexed", "pending", "not_indexed", "unknown", "error"] as IndexStatus[])
-        .reduce((acc, s) => ({ ...acc, [s]: pages.filter((p) => p.status === s).length }), {} as Record<IndexStatus, number>);
+        .reduce((acc, s) => ({
+            ...acc,
+            [s]: pages.filter((p) => p.status === s).length
+        }), {} as Record<IndexStatus, number>);
 
     const sorts: { key: SortKey; label: string }[] = [
         { key: "created_at",   label: "Новіші" },
@@ -188,126 +269,221 @@ export default function IndexingTab() {
             {/* Статус картки */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {(["indexed", "pending", "not_indexed", "unknown", "error"] as IndexStatus[]).map((s) => {
+
                     const cfg = STATUS_CONFIG[s];
+
                     return (
-                        <button key={s}
-                                onClick={() => setFilter(filter === s ? "all" : s)}
-                                className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all ${
-                                    filter === s
-                                        ? "border-orange-500/30 bg-orange-500/[0.08]"
-                                        : "border-white/[0.07] bg-white/[0.02] hover:border-white/15"
-                                }`}>
-                            <p className={`font-black text-xl leading-none mb-1 ${cfg.color}`}
-                               style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                        <button
+                            key={s}
+                            onClick={() => setFilter(filter === s ? "all" : s)}
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all ${
+                                filter === s
+                                    ? "border-orange-500/30 bg-orange-500/[0.08]"
+                                    : "border-white/[0.07] bg-white/[0.02] hover:border-white/15"
+                            }`}
+                        >
+                            <p
+                                className={`font-black text-xl leading-none mb-1 ${cfg.color}`}
+                                style={{ fontFamily: "'Unbounded', sans-serif" }}
+                            >
                                 {counts[s] ?? 0}
                             </p>
-                            <p className="text-[10px] text-white/25">{cfg.label}</p>
+
+                            <p className="text-[10px] text-white/25">
+                                {cfg.label}
+                            </p>
+
                         </button>
                     );
+
                 })}
             </div>
 
             {/* Тулбар */}
             <div className="flex flex-wrap items-center gap-2">
+
                 <div className="flex gap-1">
                     {sorts.map(({ key, label }) => (
-                        <button key={key} onClick={() => setSort(key)}
-                                className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                    sort === key
-                                        ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
-                                        : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"
-                                }`}>
+
+                        <button
+                            key={key}
+                            onClick={() => setSort(key)}
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                                sort === key
+                                    ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
+                                    : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"
+                            }`}
+                        >
                             {label}
                         </button>
+
                     ))}
                 </div>
 
                 <div className="ml-auto flex gap-2">
+
                     {selected.size > 0 && (
-                        <button onClick={submitSelected}
-                                className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-all">
+                        <button
+                            onClick={submitSelected}
+                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-all"
+                        >
                             Індексувати вибрані ({selected.size})
                         </button>
                     )}
-                    <button onClick={syncSitemap} disabled={syncing}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20 transition-all disabled:opacity-40">
+
+                    <button
+                        onClick={syncSitemap}
+                        disabled={syncing}
+                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20 transition-all disabled:opacity-40"
+                    >
                         {syncing ? "Синхронізуємо..." : "↻ Sitemap"}
                     </button>
-                    <button onClick={checkAll} disabled={checkingAll}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20 transition-all disabled:opacity-40">
+
+                    <button
+                        onClick={checkAll}
+                        disabled={checkingAll}
+                        className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20 transition-all disabled:opacity-40"
+                    >
                         {checkingAll ? "Перевіряємо..." : "Перевірити всі"}
                     </button>
+
                 </div>
+
             </div>
 
             {/* Таблиця */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+
                 <div className="overflow-x-auto">
+
                     <table className="w-full min-w-[700px]">
+
                         <thead>
+
                         <tr className="border-b border-white/[0.05]">
+
                             <th className="px-4 py-3 w-10">
-                                <input type="checkbox"
-                                       checked={selected.size === filteredPages.length && filteredPages.length > 0}
-                                       onChange={toggleSelectAll}
-                                       className="accent-orange-500 w-3.5 h-3.5 cursor-pointer" />
+                                <input
+                                    type="checkbox"
+                                    checked={selected.size === filteredPages.length && filteredPages.length > 0}
+                                    onChange={toggleSelectAll}
+                                    className="accent-orange-500 w-3.5 h-3.5 cursor-pointer"
+                                />
                             </th>
+
                             {["Сторінка", "Статус", "Створено", "Відправлено", "Перевірено", "Дії"].map((h) => (
-                                <th key={h} className="text-left text-[10px] font-bold tracking-widest text-white/25 uppercase px-3 py-3">{h}</th>
+                                <th
+                                    key={h}
+                                    className="text-left text-[10px] font-bold tracking-widest text-white/25 uppercase px-3 py-3"
+                                >
+                                    {h}
+                                </th>
                             ))}
+
                         </tr>
+
                         </thead>
+
                         <tbody>
+
                         {filteredPages.map((page) => {
+
                             const cfg = STATUS_CONFIG[page.status];
                             const isSubmitting = submitting[page.path];
                             const isChecking = checking[page.path];
 
                             return (
                                 <tr key={page.path} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+
                                     <td className="px-4 py-3">
-                                        <input type="checkbox"
-                                               checked={selected.has(page.path)}
-                                               onChange={() => toggleSelect(page.path)}
-                                               className="accent-orange-500 w-3.5 h-3.5 cursor-pointer" />
+                                        <input
+                                            type="checkbox"
+                                            checked={selected.has(page.path)}
+                                            onChange={() => toggleSelect(page.path)}
+                                            className="accent-orange-500 w-3.5 h-3.5 cursor-pointer"
+                                        />
                                     </td>
+
                                     <td className="px-3 py-3">
-                                        <p className="text-sm text-white/70 font-medium">{page.title}</p>
-                                        <p className="text-[11px] text-white/25 font-mono mt-0.5">{page.path}</p>
+                                        <p className="text-sm text-white/70 font-medium">
+                                            {page.title}
+                                        </p>
+                                        <p className="text-[11px] text-white/25 font-mono mt-0.5">
+                                            {page.path}
+                                        </p>
                                     </td>
+
                                     <td className="px-3 py-3">
+
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot} ${page.status === "pending" ? "animate-pulse" : ""}`} />
-                                            <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+
+                                            <div
+                                                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot} ${page.status === "pending" ? "animate-pulse" : ""}`}
+                                            />
+
+                                            <span className={`text-xs font-semibold ${cfg.color}`}>
+                                                {cfg.label}
+                                            </span>
+
                                         </div>
+
                                         {page.coverage_state && (
-                                            <p className="text-[10px] text-white/20 mt-0.5">{page.coverage_state}</p>
+                                            <p className="text-[10px] text-white/20 mt-0.5">
+                                                {page.coverage_state}
+                                            </p>
                                         )}
+
                                     </td>
-                                    <td className="px-3 py-3 text-xs text-white/30">{formatDate(page.created_at)}</td>
-                                    <td className="px-3 py-3 text-xs text-white/30">{formatDate(page.submitted_at)}</td>
-                                    <td className="px-3 py-3 text-xs text-white/30">{formatDate(page.checked_at)}</td>
+
+                                    <td className="px-3 py-3 text-xs text-white/30">
+                                        {formatDate(page.created_at)}
+                                    </td>
+
+                                    <td className="px-3 py-3 text-xs text-white/30">
+                                        {formatDate(page.submitted_at)}
+                                    </td>
+
+                                    <td className="px-3 py-3 text-xs text-white/30">
+                                        {formatDate(page.checked_at)}
+                                    </td>
+
                                     <td className="px-3 py-3">
+
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => submitPage(page.path, page.url)}
-                                                    disabled={isSubmitting}
-                                                    className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all disabled:opacity-40 whitespace-nowrap">
+
+                                            <button
+                                                onClick={() => submitPage(page.path, page.url)}
+                                                disabled={isSubmitting}
+                                                className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all disabled:opacity-40 whitespace-nowrap"
+                                            >
                                                 {isSubmitting ? "..." : "Індексувати"}
                                             </button>
-                                            <button onClick={() => checkPage(page.path, page.url)}
-                                                    disabled={isChecking}
-                                                    className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-white/[0.07] text-white/30 hover:text-white/60 transition-all disabled:opacity-40 whitespace-nowrap">
+
+                                            <button
+                                                onClick={() => checkPage(page.path, page.url)}
+                                                disabled={isChecking}
+                                                className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-white/[0.07] text-white/30 hover:text-white/60 transition-all disabled:opacity-40 whitespace-nowrap"
+                                            >
                                                 {isChecking ? "..." : "Перевірити"}
                                             </button>
+
                                         </div>
+
                                     </td>
+
                                 </tr>
                             );
+
                         })}
+
                         </tbody>
+
                     </table>
+
                 </div>
+
             </div>
+
         </div>
     );
 }
