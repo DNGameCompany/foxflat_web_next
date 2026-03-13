@@ -5,3 +5,129 @@
 body {
     @apply bg-white text-black;
 }
+
+
+/* Додай в globals.css */
+
+/* ── Редактор (адмінка) ─────────────────────────────── */
+.tiptap-editor p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: rgba(255,255,255,0.15);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+.tiptap-editor h1 { font-family: 'Unbounded', sans-serif; font-size: 1.5rem; font-weight: 900; color: white; margin: 1.5rem 0 0.5rem; letter-spacing: -0.5px; }
+.tiptap-editor h2 { font-family: 'Unbounded', sans-serif; font-size: 1.2rem; font-weight: 900; color: white; margin: 1.25rem 0 0.5rem; }
+.tiptap-editor h3 { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.85); margin: 1rem 0 0.4rem; }
+.tiptap-editor p  { color: rgba(255,255,255,0.65); font-size: 0.875rem; line-height: 1.8; margin-bottom: 0.75rem; }
+.tiptap-editor strong { color: white; }
+.tiptap-editor em { color: rgba(255,255,255,0.55); }
+.tiptap-editor u  { text-decoration-color: rgba(255,255,255,0.3); }
+.tiptap-editor s  { color: rgba(255,255,255,0.3); }
+
+.tiptap-editor ul { list-style: disc; margin: 0.5rem 0 0.75rem 1.5rem; }
+.tiptap-editor ol { list-style: decimal; margin: 0.5rem 0 0.75rem 1.5rem; }
+.tiptap-editor li { color: rgba(255,255,255,0.55); font-size: 0.875rem; line-height: 1.7; margin-bottom: 0.25rem; }
+
+.tiptap-editor blockquote {
+    border-left: 2px solid rgba(249,115,22,0.4);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: rgba(255,255,255,0.4);
+    font-style: italic;
+}
+
+.tiptap-editor code {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #fb923c;
+}
+
+.tiptap-editor pre {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+.tiptap-editor pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+}
+
+.tiptap-editor hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    margin: 1.5rem 0;
+}
+
+.tiptap-editor a { color: #f97316; text-decoration: underline; text-underline-offset: 3px; }
+.tiptap-editor a:hover { color: #fb923c; }
+
+.tiptap-editor img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Виділення */
+.tiptap-editor .ProseMirror-selectednode { outline: 2px solid rgba(249,115,22,0.5); border-radius: 4px; }
+.tiptap-editor ::selection { background: rgba(249,115,22,0.2); }
+
+/* ── Публічна сторінка (blog-content) ───────────────── */
+.blog-content h1 { font-family: 'Unbounded', sans-serif; font-size: 1.5rem; font-weight: 900; color: white; margin: 2rem 0 0.75rem; letter-spacing: -0.5px; }
+.blog-content h2 { font-family: 'Unbounded', sans-serif; font-size: 1.2rem; font-weight: 900; color: white; margin: 1.75rem 0 0.75rem; }
+.blog-content h3 { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.85); margin: 1.5rem 0 0.5rem; }
+.blog-content p  { color: rgba(255,255,255,0.6); font-size: 0.9rem; line-height: 1.8; margin-bottom: 1.25rem; }
+.blog-content strong { color: white; font-weight: 700; }
+.blog-content em { color: rgba(255,255,255,0.5); }
+
+.blog-content ul { list-style: disc; margin: 0.75rem 0 1.25rem 1.5rem; }
+.blog-content ol { list-style: decimal; margin: 0.75rem 0 1.25rem 1.5rem; }
+.blog-content li { color: rgba(255,255,255,0.55); font-size: 0.875rem; line-height: 1.7; margin-bottom: 0.35rem; }
+
+.blog-content blockquote {
+    border-left: 2px solid rgba(249,115,22,0.35);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: rgba(255,255,255,0.4);
+    font-style: italic;
+}
+
+.blog-content code {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #fb923c;
+}
+
+.blog-content pre {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+.blog-content pre code { background: none; border: none; padding: 0; color: rgba(255,255,255,0.7); }
+
+.blog-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 2rem 0; }
+
+.blog-content a { color: #f97316; text-decoration: underline; text-underline-offset: 3px; transition: color 0.15s; }
+.blog-content a:hover { color: #fb923c; }
+
+.blog-content img { max-width: 100%; border-radius: 8px; margin: 1.5rem 0; border: 1px solid rgba(255,255,255,0.07); }

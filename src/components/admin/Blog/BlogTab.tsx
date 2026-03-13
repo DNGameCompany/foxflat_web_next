@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 
 const API_URL = "https://api.foxflat.com.ua";
 
@@ -219,19 +220,10 @@ export default function BlogTab() {
                                 className="w-full bg-transparent text-sm text-white/50 placeholder:text-white/20 outline-none"
                             />
                         </div>
-                        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-                            <div className="px-4 py-2 border-b border-white/[0.05] flex items-center gap-2">
-                                <span className="text-[10px] text-white/25 font-bold tracking-widest uppercase">Markdown</span>
-                                <span className="text-[10px] text-white/15">— **жирний** *курсив* ## заголовок [текст](url) ---</span>
-                            </div>
-                            <textarea
-                                value={editing.content}
-                                onChange={(e) => setEditing((ed) => ed ? { ...ed, content: e.target.value } : ed)}
-                                placeholder="Пиши статтю тут у форматі Markdown..."
-                                rows={20}
-                                className="w-full bg-transparent text-sm text-white/70 placeholder:text-white/20 outline-none p-4 resize-none font-mono leading-relaxed"
-                            />
-                        </div>
+                        <TipTapEditor
+                            content={editing.content}
+                            onChange={(html) => setEditing((ed) => ed ? { ...ed, content: html } : ed)}
+                        />
                     </div>
 
                     <div className="space-y-3">
@@ -272,21 +264,7 @@ export default function BlogTab() {
                                 />
                             </div>
                         </div>
-                        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 space-y-2">
-                            <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase">Статистика</p>
-                            <div className="flex justify-between text-[11px]">
-                                <span className="text-white/30">Слів</span>
-                                <span className="text-white/60">{editing.content.split(/\s+/).filter(Boolean).length}</span>
-                            </div>
-                            <div className="flex justify-between text-[11px]">
-                                <span className="text-white/30">Читання</span>
-                                <span className="text-white/60">~{Math.max(1, Math.round(editing.content.split(" ").length / 200))} хв</span>
-                            </div>
-                            <div className="flex justify-between text-[11px]">
-                                <span className="text-white/30">Символів</span>
-                                <span className="text-white/60">{editing.content.length}</span>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             )}

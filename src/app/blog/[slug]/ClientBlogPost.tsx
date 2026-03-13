@@ -12,20 +12,6 @@ const CATEGORY_CONFIG = {
     guide: { label: "Гайд",    color: "text-green-400 bg-green-400/10 border-green-400/20" },
 } as const;
 
-function renderMarkdown(content: string): string {
-    return content
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-        .replace(/^---$/gm, '<hr />')
-        .replace(/^- (.+)$/gm, '<li>$1</li>')
-        .replace(/(<li>[^<]*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
-        .replace(/\n\n/g, '</p><p>');
-}
-
 export default function BlogPost({ post }: { post: PostFull }) {
     const [readProgress, setReadProgress] = useState(0);
 
@@ -40,7 +26,6 @@ export default function BlogPost({ post }: { post: PostFull }) {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    const html = renderMarkdown(post.content);
     const cat = CATEGORY_CONFIG[post.category];
 
     return (
@@ -108,7 +93,7 @@ export default function BlogPost({ post }: { post: PostFull }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
                     className="mt-10 blog-content"
-                    dangerouslySetInnerHTML={{ __html: `<p>${html}</p>` }}
+                    dangerouslySetInnerHTML={{ __html: post.content }}
                 />
 
                 {/* CTA */}
@@ -119,7 +104,7 @@ export default function BlogPost({ post }: { post: PostFull }) {
                     className="mt-14 p-6 rounded-xl border border-orange-500/20 bg-orange-500/[0.04] text-center"
                 >
                     <p className="text-sm text-white/60 mb-4">Шукаєш квартиру в оренду? Спробуй FoxFlat</p>
-                    <a href="https://t.me/FoxFlat_bot?start=website_blog" target="_blank" rel="noopener noreferrer"
+                    <a href="https://t.me/FoxFlat_bot" target="_blank" rel="noopener noreferrer"
                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 text-black text-sm font-bold hover:bg-orange-400 transition-all">
                         Запустити бота →
                     </a>
