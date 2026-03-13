@@ -1,4 +1,3 @@
-// app/blog/[slug]/BlogPost.client.tsx — клієнтський компонент
 "use client";
 
 import { useEffect, useState } from "react";
@@ -29,7 +28,7 @@ export default function BlogPost({ post }: { post: PostFull }) {
     const cat = CATEGORY_CONFIG[post.category];
 
     return (
-        <main className="min-h-screen bg-black text-white">
+        <>
 
             {/* Прогрес читання */}
             <div className="fixed top-0 left-0 right-0 h-[2px] bg-white/[0.05] z-50">
@@ -39,14 +38,6 @@ export default function BlogPost({ post }: { post: PostFull }) {
                     transition={{ ease: "linear", duration: 0.1 }}
                 />
             </div>
-
-            {/* Cover */}
-            {post.cover_image && (
-                <div className="w-full h-64 md:h-80 overflow-hidden">
-                    <img src={post.cover_image} alt={post.title}
-                         className="w-full h-full object-cover opacity-60" />
-                </div>
-            )}
 
             <div className="max-w-2xl mx-auto px-4 py-14">
 
@@ -58,41 +49,51 @@ export default function BlogPost({ post }: { post: PostFull }) {
                     </Link>
                 </motion.div>
 
+                {/* Мета + заголовок + excerpt */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="space-y-4"
+                    className="space-y-4 mb-10"
                 >
-                    {/* Мета */}
                     <div className="flex items-center gap-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${cat?.color}`}>
-                            {cat?.label}
-                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${cat?.color}`}>{cat?.label}</span>
                         <span className="text-[10px] text-white/20">{post.read_time} хв читання</span>
                         <span className="text-[10px] text-white/20">
                             {new Date(post.created_at).toLocaleDateString("uk-UA", { day: "2-digit", month: "long", year: "numeric" })}
                         </span>
                     </div>
-
-                    {/* Заголовок */}
                     <h1 className="font-black text-white leading-tight"
                         style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "clamp(22px, 3.5vw, 36px)", letterSpacing: "-0.5px" }}>
                         {post.title}
                     </h1>
-
-                    {/* Excerpt */}
                     <p className="text-white/40 text-sm leading-relaxed border-l-2 border-orange-500/30 pl-4">
                         {post.excerpt}
                     </p>
                 </motion.div>
+
+                {/* Cover — під заголовком, повна ширина контенту, без обрізки */}
+                {post.cover_image && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className="mb-10 rounded-xl overflow-hidden border border-white/[0.06]"
+                    >
+                        <img
+                            src={post.cover_image}
+                            alt={post.title}
+                            className="w-full h-auto"
+                        />
+                    </motion.div>
+                )}
 
                 {/* Контент */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    className="mt-10 blog-content"
+                    className="blog-content"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
 
@@ -110,6 +111,6 @@ export default function BlogPost({ post }: { post: PostFull }) {
                     </a>
                 </motion.div>
             </div>
-        </main>
+        </>
     );
 }

@@ -1,5 +1,7 @@
+// app/blog/page.tsx
+
 import type { Metadata } from "next";
-import BlogList from "@/src/app/blog/BlogList.client";
+import BlogList from "@/src/app/blog/BlogList.client"; // твій правильний шлях
 
 export const metadata: Metadata = {
     title: "Блог FoxFlat — поради з оренди квартир в Україні",
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
     },
 };
 
-export const revalidate = 3600;
+export const revalidate = 300; // 5 хвилин — оптимально для блогу на старті
 
 export type Category = "tips" | "news" | "guide";
 
@@ -28,13 +30,22 @@ export interface Post {
 
 async function getPosts(): Promise<Post[]> {
     try {
-        const res = await fetch(
-            `https://api.foxflat.com.ua/blog/posts?published=true`,
-            { next: { revalidate: 3600 } }
-        );
-        if (!res.ok) return [];
+        const url = "https://api.foxflat.com.ua/blog/posts?published=true";
+        const res = await fetch(url, {
+            next: {
+                revalidate: 300,          // синхронізуй з export const revalidate
+                tags: ["blog-posts"]      // для майбутньої on-demand інвалідації
+            }
+        });
+
+        if (!res.ok) {
+            console.error("API помилка:", res.status);
+            return [];
+        }
+
         return res.json();
-    } catch {
+    } catch (err) {
+        console.error("Помилка fetch постів:", err);
         return [];
     }
 }
