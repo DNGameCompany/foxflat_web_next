@@ -90,7 +90,7 @@ export default function RegistrationsChart() {
     return (
         <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.05]">
-                <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase"
+                <p className="text-[11px] font-bold tracking-wide text-white/60"
                    style={{ fontFamily: "'Unbounded', sans-serif" }}>
                     Динаміка реєстрацій
                 </p>
@@ -100,7 +100,7 @@ export default function RegistrationsChart() {
                         <button
                             key={key}
                             onClick={() => setPeriod(key)}
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 ${
+                            className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all duration-150 ${
                                 period === key
                                     ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
                                     : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"
@@ -125,7 +125,7 @@ export default function RegistrationsChart() {
                                style={{ fontFamily: "'Unbounded', sans-serif" }}>
                                 {s.value}
                             </p>
-                            <p className="text-[10px] text-white/25">{s.label}</p>
+                            <p className="text-[11px] text-white/25">{s.label}</p>
                         </div>
                     ))}
                 </div>

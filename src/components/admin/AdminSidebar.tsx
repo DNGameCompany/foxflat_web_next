@@ -21,6 +21,7 @@ const tabs: { key: TabKey; label: string }[] = [
     { key: "collages", label: "Колажі" },
     { key: "stats", label: "Статистика" },
     { key: "channel", label: "Телеграм канал" },
+    { key: "indexing", label: "Google Індексація" },
 ];
 
 export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: AdminSidebarProps) {

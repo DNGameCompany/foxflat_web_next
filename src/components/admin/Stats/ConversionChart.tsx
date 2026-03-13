@@ -59,7 +59,7 @@ export default function ConversionChart() {
     return (
         <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
             <div className="px-5 py-3 border-b border-white/[0.05]">
-                <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase"
+                <p className="text-[11px] font-bold tracking-wide text-white/60"
                    style={{ fontFamily: "'Unbounded', sans-serif" }}>
                     Конверсія Free → Premium
                 </p>
@@ -103,7 +103,7 @@ export default function ConversionChart() {
                                    style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "22px" }}>
                                     {conversion}%
                                 </p>
-                                <p className="text-[10px] text-white/25 mt-1">конверсія</p>
+                                <p className="text-[11px] text-white/25 mt-1">конверсія</p>
                             </div>
                         </div>
 
@@ -115,14 +115,14 @@ export default function ConversionChart() {
                                        style={{ fontFamily: "'Unbounded', sans-serif" }}>
                                         {k.value}
                                     </p>
-                                    <p className="text-[10px] text-white/25">{k.label}</p>
+                                    <p className="text-[11px] text-white/25">{k.label}</p>
                                 </div>
                             ))}
                         </div>
 
                         {/* Прогрес бар */}
                         <div className="w-full lg:hidden">
-                            <div className="flex justify-between text-[10px] text-white/25 mb-2">
+                            <div className="flex justify-between text-[11px] text-white/25 mb-2">
                                 <span>Free</span>
                                 <span>Premium</span>
                             </div>
