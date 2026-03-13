@@ -1,4 +1,3 @@
-// app/blog/BlogList.client.tsx — клієнтський компонент
 "use client";
 
 import { useState } from "react";
