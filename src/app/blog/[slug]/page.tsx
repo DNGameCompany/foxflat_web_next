@@ -1,7 +1,8 @@
 // app/blog/[slug]/page.tsx — SSR
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import BlogPost from "@/src/app/blog/[slug]/BlogPost.client";
+import BlogPost from "./BlogPost.client";
+import BlogSidebar from "./BlogSidebar";
 
 export const revalidate = 3600;
 
@@ -19,7 +20,7 @@ export interface PostFull {
 async function getPost(slug: string): Promise<PostFull | null> {
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/blog/posts/${slug}`,
+            `https://api.foxflat.com.ua/blog/posts/${slug}`,
             { next: { revalidate: 3600 } }
         );
         if (!res.ok) return null;
@@ -53,5 +54,24 @@ export default async function BlogPostPage(
     const { slug } = await params;
     const post = await getPost(slug);
     if (!post) notFound();
-    return <BlogPost post={post} />;
+
+    return (
+        <div className="min-h-screen bg-black text-white">
+            <div className="max-w-5xl mx-auto px-4 py-14">
+                <div className="flex gap-12 items-start">
+
+                    {/* Основний контент */}
+                    <div className="flex-1 min-w-0">
+                        <BlogPost post={post} />
+                    </div>
+
+                    {/* Сайдбар */}
+                    <div className="hidden lg:block sticky top-8">
+                        <BlogSidebar currentSlug={slug} />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
 }
