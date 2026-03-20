@@ -12,6 +12,7 @@ export const metadata: Metadata = {
         title: "Блог FoxFlat — поради з оренди квартир",
         description: "Корисні статті про пошук житла в Україні",
         url: "https://foxflat.com.ua/blog",
+        images: [{ url: "https://foxflat.com.ua/og-image.png", width: 1200, height: 630, alt: "FoxFlat Blog" }],
     },
 };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
+import BlogImageUpload from "./BlogImageUpload";
 
 const API_URL = "https://api.foxflat.com.ua";
 
@@ -84,42 +85,21 @@ export default function BlogTab() {
 
     useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-    const openNew = () => {
-        setEditing({ id: "", ...EMPTY_POST });
-        setIsNew(true);
-        setPreview(false);
-    };
-
-    const openEdit = (post: BlogPost) => {
-        setEditing({ ...post });
-        setIsNew(false);
-        setPreview(false);
-    };
-
+    const openNew = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); setPreview(false); };
+    const openEdit = (post: BlogPost) => { setEditing({ ...post }); setIsNew(false); setPreview(false); };
     const closeEditor = () => { setEditing(null); setIsNew(false); };
 
     const handleSave = async () => {
         if (!editing) return;
         if (!editing.title.trim()) return alert("Вкажи заголовок");
         if (!editing.content.trim()) return alert("Додай контент");
-
         setSaving(true);
         try {
             const slug = editing.slug || slugify(editing.title);
             const body = { ...editing, slug };
-
             const res = isNew
-                ? await fetch(`${API_URL}/blog/posts`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body),
-                })
-                : await fetch(`${API_URL}/blog/posts/${editing.slug}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body),
-                });
-
+                ? await fetch(`${API_URL}/blog/posts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+                : await fetch(`${API_URL}/blog/posts/${editing.slug}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
             if (!res.ok) throw new Error(await res.text());
             await fetchPosts();
             closeEditor();
@@ -152,29 +132,21 @@ export default function BlogTab() {
 
     const filteredPosts = posts.filter((p) => filter === "all" || p.category === filter);
 
-    // ── EDITOR ──
     if (editing) return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <button onClick={closeEditor} className="text-white/30 hover:text-white/70 transition-colors text-sm">
-                        ← Назад
-                    </button>
+                    <button onClick={closeEditor} className="text-white/30 hover:text-white/70 transition-colors text-sm">← Назад</button>
                     <span className="text-white/15">|</span>
                     <span className="text-sm text-white/50">{isNew ? "Нова стаття" : "Редагувати"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => setPreview((v) => !v)}
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                preview ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
-                                    : "border-white/[0.07] text-white/30 hover:text-white/60"}`}>
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${preview ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/30 hover:text-white/60"}`}>
                         {preview ? "Редактор" : "Прев'ю"}
                     </button>
                     <button onClick={() => setEditing((e) => e ? { ...e, published: !e.published } : e)}
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                editing.published
-                                    ? "bg-green-500/15 border-green-500/40 text-green-400"
-                                    : "border-white/[0.07] text-white/30 hover:text-white/60"}`}>
+                            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${editing.published ? "bg-green-500/15 border-green-500/40 text-green-400" : "border-white/[0.07] text-white/30 hover:text-white/60"}`}>
                         {editing.published ? "✓ Опублікований" : "Чернетка"}
                     </button>
                     <button onClick={handleSave} disabled={saving}
@@ -205,10 +177,7 @@ export default function BlogTab() {
                         <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 space-y-3">
                             <input
                                 value={editing.title}
-                                onChange={(e) => setEditing((ed) => ed ? {
-                                    ...ed, title: e.target.value,
-                                    slug: ed.slug || slugify(e.target.value)
-                                } : ed)}
+                                onChange={(e) => setEditing((ed) => ed ? { ...ed, title: e.target.value, slug: ed.slug || slugify(e.target.value) } : ed)}
                                 placeholder="Заголовок статті"
                                 className="w-full bg-transparent text-white font-bold text-lg placeholder:text-white/20 outline-none border-b border-white/[0.06] pb-3"
                                 style={{ fontFamily: "'Unbounded', sans-serif" }}
@@ -235,10 +204,7 @@ export default function BlogTab() {
                                     {(Object.keys(CATEGORY_CONFIG) as Category[]).map((cat) => (
                                         <button key={cat}
                                                 onClick={() => setEditing((ed) => ed ? { ...ed, category: cat } : ed)}
-                                                className={`text-left text-[11px] font-bold px-3 py-2 rounded-lg border transition-all ${
-                                                    editing.category === cat
-                                                        ? CATEGORY_CONFIG[cat].color
-                                                        : "border-white/[0.07] text-white/30 hover:text-white/50"}`}>
+                                                className={`text-left text-[11px] font-bold px-3 py-2 rounded-lg border transition-all ${editing.category === cat ? CATEGORY_CONFIG[cat].color : "border-white/[0.07] text-white/30 hover:text-white/50"}`}>
                                             {CATEGORY_CONFIG[cat].label}
                                         </button>
                                     ))}
@@ -254,40 +220,29 @@ export default function BlogTab() {
                                 />
                                 <p className="text-[10px] text-white/15 mt-1">/blog/{editing.slug || "slug"}</p>
                             </div>
-                            <div>
-                                <p className="text-[11px] text-white/40 mb-1">Cover image URL</p>
-                                <input
-                                    value={editing.cover_image ?? ""}
-                                    onChange={(e) => setEditing((ed) => ed ? { ...ed, cover_image: e.target.value } : ed)}
-                                    placeholder="https://..."
-                                    className="w-full bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2 text-[11px] text-white/50 font-mono outline-none focus:border-orange-500/30"
-                                />
-                            </div>
+                            <BlogImageUpload
+                                value={editing.cover_image}
+                                onChange={(url) => setEditing((ed) => ed ? { ...ed, cover_image: url } : ed)}
+                            />
                         </div>
-
                     </div>
                 </div>
             )}
         </div>
     );
 
-    // ── СПИСОК ──
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1">
                     {([["all", "Всі"], ["tips", "Поради"], ["news", "Новини"], ["guide", "Гайди"]] as const).map(([key, label]) => (
                         <button key={key} onClick={() => setFilter(key as typeof filter)}
-                                className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                    filter === key
-                                        ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
-                                        : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"}`}>
+                                className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${filter === key ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"}`}>
                             {label}
                         </button>
                     ))}
                 </div>
-                <button onClick={openNew}
-                        className="ml-auto text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all">
+                <button onClick={openNew} className="ml-auto text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all">
                     + Нова стаття
                 </button>
             </div>
@@ -303,8 +258,7 @@ export default function BlogTab() {
             ) : filteredPosts.length === 0 ? (
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] py-16 text-center">
                     <p className="text-white/25 text-sm mb-3">Статей ще немає</p>
-                    <button onClick={openNew}
-                            className="text-[10px] font-bold px-4 py-2 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-all">
+                    <button onClick={openNew} className="text-[10px] font-bold px-4 py-2 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-all">
                         Написати першу
                     </button>
                 </div>
@@ -332,22 +286,17 @@ export default function BlogTab() {
                                 </td>
                                 <td className="px-4 py-3">
                                     <button onClick={() => togglePublished(post)}
-                                            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all ${
-                                                post.published
-                                                    ? "text-green-400 bg-green-400/10 border-green-400/20 hover:bg-green-400/20"
-                                                    : "text-white/30 bg-white/[0.03] border-white/[0.07] hover:border-white/20"}`}>
+                                            className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-all ${post.published ? "text-green-400 bg-green-400/10 border-green-400/20 hover:bg-green-400/20" : "text-white/30 bg-white/[0.03] border-white/[0.07] hover:border-white/20"}`}>
                                         {post.published ? "✓ Опублікована" : "Чернетка"}
                                     </button>
                                 </td>
                                 <td className="px-4 py-3 text-xs text-white/30">{formatDate(post.created_at)}</td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => openEdit(post)}
-                                                className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all">
+                                        <button onClick={() => openEdit(post)} className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all">
                                             Редагувати
                                         </button>
-                                        <button onClick={() => handleDelete(post.slug)}
-                                                disabled={deleting === post.slug}
+                                        <button onClick={() => handleDelete(post.slug)} disabled={deleting === post.slug}
                                                 className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-40">
                                             {deleting === post.slug ? "..." : "Видалити"}
                                         </button>
