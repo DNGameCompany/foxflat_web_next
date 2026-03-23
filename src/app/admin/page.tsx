@@ -10,7 +10,7 @@ import AdminDashboard from "@/src/components/admin/AdminDashboard";
 import Image from "next/image";
 
 // Тип вкладок
-export type TabKey = "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing";
+export type TabKey = "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing" | "system";
 
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<TabKey>("users");

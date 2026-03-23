@@ -8,7 +8,7 @@ import IndexingTab from "./Indexing/IndexingTab";
 import BlogTab from "@/src/components/admin/Blog/BlogTab";
 
 interface AdminDashboardProps {
-    activeTab: "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing";
+    activeTab: "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing" | "system";
 }
 
 export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
@@ -58,7 +58,14 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
 
             {activeTab === "indexing" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold text-orange-400 mb-4">Телеграм канал</h3>
+                    <h3 className="text-2xl font-bold text-orange-400 mb-4">Індексація Google</h3>
+                    <IndexingTab />
+                </section>
+            )}
+
+            {activeTab === "system" && (
+                <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-bold text-orange-400 mb-4">System</h3>
                     <IndexingTab />
                 </section>
             )}
