@@ -6,6 +6,7 @@ import StatsTab from "@/src/components/admin/Stats/Stats";
 import TGChannelSection from "@/src/components/admin/TGChannelSection";
 import IndexingTab from "./Indexing/IndexingTab";
 import BlogTab from "@/src/components/admin/Blog/BlogTab";
+import SystemTab from "@/src/components/admin/SystemTab";
 
 interface AdminDashboardProps {
     activeTab: "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing" | "system";
@@ -66,7 +67,7 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
             {activeTab === "system" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
                     <h3 className="text-2xl font-bold text-orange-400 mb-4">System</h3>
-                    <IndexingTab />
+                    <SystemTab />
                 </section>
             )}
         </div>
