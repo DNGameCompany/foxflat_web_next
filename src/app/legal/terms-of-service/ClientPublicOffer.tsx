@@ -246,7 +246,6 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                             </li>
                         </ul>
                     </div>
-
                     <div>
                         <h2 className="text-2xl font-semibold text-orange-400 mb-2">7. Права та обов&apos;язки сторін</h2>
                         <ul className="list-none space-y-1">
