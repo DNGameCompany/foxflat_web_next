@@ -8,7 +8,6 @@ interface PageData {
     description: string;
     lastUpdated: string;
     supportTelegram: string;
-    supportEmail: string;
     offerUrl: string;
     botUrl: string;
     aupUrl: string;
@@ -46,14 +45,21 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                         <p>
                             Уважно ознайомтеся з текстом цього Договору. Якщо ви не погоджуєтеся з умовами,
                             запропонованими Виконавцем, ви маєте право відмовитися від використання
-                            телеграм-бота. Додаткову інформацію можна отримати у службі підтримки за адресою:{' '}
-                            <a href={`mailto:${pageData.supportEmail}`} className="text-orange-400 hover:text-orange-300">
-                                {pageData.supportEmail}
-                            </a>{' '}
-                            або через Telegram:{' '}
+                            телеграм-бота. Додаткову інформацію можна отримати у службі підтримки
+                            через Telegram:{' '}
                             <a href={pageData.supportTelegram} className="text-orange-400 hover:text-orange-300">
                                 @FoxFlatSupport
                             </a>.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h2 className="text-2xl font-semibold text-orange-400 mb-2">Інформація-підтвердження</h2>
+                        <p>
+                            Сайт — відкритий для вільного візуального ознайомлення публічно доступний вебсайт{' '}
+                            <a href="https://foxflat.com.ua" className="text-orange-400 hover:text-orange-300">
+                                foxflat.com.ua
+                            </a>, що належить {pageData.executorDetails.name} та через який надаються послуги.
                         </p>
                     </div>
 
@@ -77,7 +83,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                             </li>
                             <li>
                                 1.2. Відповідно до ст. 633 Цивільного кодексу України цей Договір є публічною
-                                офертою, обов’язковою для виконання Виконавцем.
+                                офертою, обов&#39;язковою для виконання Виконавцем.
                             </li>
                             <li>
                                 1.3. Факт використання Бота, зокрема здійснення оплати, вважається повним і
@@ -111,9 +117,9 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                             <li>
                                 2.4. <strong>Успішна оплата</strong> — зарахування грошової суми, що відповідає
                                 вартості обраного тарифного плану, на рахунок Виконавця через платіжну систему
-                                Fondy.
+                                RozetkaPay.
                             </li>
-                            <li>2.5. <strong>Фінансовий агент</strong> — платіжна система Fondy, яка забезпечує переказ коштів.</li>
+                            <li>2.5. <strong>Фінансовий агент</strong> — платіжна система RozetkaPay, яка забезпечує переказ коштів.</li>
                             <li>
                                 2.6. <strong>Передплата</strong> — тимчасовий доступ до функціоналу телеграм-бота
                                 FoxFlat за щомісячну оплату.
@@ -132,7 +138,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 <a href={pageData.botUrl} className="text-orange-400 hover:text-orange-300">
                                     {pageData.botUrl}
                                 </a>
-                                ) на умовах обраного Тарифу, а Замовник зобов’язується сплатити абонентську
+                                ) на умовах обраного Тарифу, а Замовник зобов&#39;язується сплатити абонентську
                                 плату.
                             </li>
                             <li>
@@ -158,21 +164,21 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 4.1. Вартість тарифного плану визначається у телеграм-боті на момент акцепту
                                 Договору, враховуючи акційні пропозиції.
                             </li>
-                            <li>4.2. Оплата здійснюється в безготівковій формі через платіжну систему Fondy.</li>
+                            <li>4.2. Оплата здійснюється в безготівковій формі через платіжну систему RozetkaPay.</li>
                             <li>
                                 4.3. Оплата можлива лише після ознайомлення з умовами Договору та активації
                                 відповідної команди в боті.
                             </li>
                             <li>
-                                4.4. Зобов’язання Замовника щодо оплати вважаються виконаними після зарахування
+                                4.4. Зобов&#39;язання Замовника щодо оплати вважаються виконаними після зарахування
                                 повної суми на рахунок Виконавця.
                             </li>
                             <li>
-                                4.5. Підтвердження оплати зберігається у вигляді invoice від Fondy. Користувач
+                                4.5. Підтвердження оплати зберігається у вигляді invoice від RozetkaPay. Користувач
                                 отримує повідомлення про оплату через бот.
                             </li>
                             <li>
-                                4.6. Платіжне підтвердження від Fondy є доказом акцепту Договору та надання
+                                4.6. Платіжне підтвердження від RozetkaPay є доказом акцепту Договору та надання
                                 послуг.
                             </li>
                             <li>
@@ -222,13 +228,13 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 6.1. Процедура надання послуг:
                                 <ul className="list-none ml-4 space-y-1">
                                     <li>6.1.1. Перед оплатою Користувач отримує посилання на Договір у боті.</li>
-                                    <li>6.1.2. Після ознайомлення Користувач переходить на сторінку Fondy для оплати.</li>
+                                    <li>6.1.2. Після ознайомлення Користувач переходить на сторінку RozetkaPay для оплати.</li>
                                     <li>6.1.3. Передплата активується автоматично після зарахування оплати.</li>
                                     <li>
                                         6.1.4. Послуги надаються дистанційно через бот. Початком надання вважається
                                         активація передплати.
                                     </li>
-                                    <li>6.1.5. Матеріали в боті є авторськими та суб’єктивними.</li>
+                                    <li>6.1.5. Матеріали в боті є авторськими та суб&#39;єктивними.</li>
                                     <li>
                                         6.1.6. Послуги вважаються наданими після повідомлення про активацію передплати.
                                     </li>
@@ -242,7 +248,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                     </div>
 
                     <div>
-                        <h2 className="text-2xl font-semibold text-orange-400 mb-2">7. Права та обов’язки сторін</h2>
+                        <h2 className="text-2xl font-semibold text-orange-400 mb-2">7. Права та обов&apos;язки сторін</h2>
                         <ul className="list-none space-y-1">
                             <li>
                                 7.1. <strong>Замовник має право:</strong>
@@ -252,7 +258,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 </ul>
                             </li>
                             <li>
-                                7.2. <strong>Замовник зобов’язаний:</strong>
+                                7.2. <strong>Замовник зобов&apos;язаний:</strong>
                                 <ul className="list-none ml-4 space-y-1">
                                     <li>7.2.1. Ознайомитися з умовами Договору до акцепту.</li>
                                     <li>7.2.2. Відстежувати зміни умов та терміни передплати.</li>
@@ -275,7 +281,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 </ul>
                             </li>
                             <li>
-                                7.4. <strong>Виконавець зобов’язаний:</strong>
+                                7.4. <strong>Виконавець зобов&apos;язаний:</strong>
                                 <ul className="list-none ml-4 space-y-1">
                                     <li>7.4.1. Надавати достовірну інформацію про послуги.</li>
                                     <li>7.4.2. Забезпечити доступ до послуг через бот.</li>
@@ -316,9 +322,9 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 Закону України &quot;Про захист прав споживачів&quot;).
                             </li>
                             <li>
-                                9.3. Спірні питання щодо якості послуг розглядаються за зверненням до{' '}
-                                <a href={`mailto:${pageData.supportEmail}`} className="text-orange-400 hover:text-orange-300">
-                                    {pageData.supportEmail}
+                                9.3. Спірні питання щодо якості послуг розглядаються за зверненням через Telegram:{' '}
+                                <a href={pageData.supportTelegram} className="text-orange-400 hover:text-orange-300">
+                                    @FoxFlatSupport
                                 </a>.
                             </li>
                             <li>
@@ -336,7 +342,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                                 послуг.
                             </li>
                             <li>
-                                10.2. Виконавець не несе відповідальності за невиконання зобов’язань через
+                                10.2. Виконавець не несе відповідальності за невиконання зобов&apos;язань через
                                 форс-мажор. Сторони повідомляють про такі обставини протягом 5 робочих днів.
                             </li>
                             <li>
@@ -350,7 +356,7 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                         <ul className="list-none space-y-1">
                             <li>11.1. Використання бота регулюється Політикою AUP, яка є частиною Договору.</li>
                             <li>
-                                11.2. Замовник зобов’язується не:
+                                11.2. Замовник зобов&apos;язується не:
                                 <ul className="list-none ml-4 space-y-1">
                                     <li>11.2.1. Втручатися в роботу бота.</li>
                                     <li>11.2.2. Здійснювати автоматизований збір даних.</li>
@@ -391,11 +397,6 @@ export default function ClientPublicOffer({ pageData }: ClientPublicOfferProps) 
                             РНОКПП: {pageData.executorDetails.rnokpp}
                             <br />
                             Рахунок: {pageData.executorDetails.bankAccount}
-                            <br />
-                            Email:{' '}
-                            <a href={`mailto:${pageData.supportEmail}`} className="text-orange-400 hover:text-orange-300">
-                                {pageData.supportEmail}
-                            </a>
                             <br />
                             Telegram:{' '}
                             <a href={pageData.supportTelegram} className="text-orange-400 hover:text-orange-300">
