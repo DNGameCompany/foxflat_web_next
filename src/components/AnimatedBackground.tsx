@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react';
 
 interface AnimatedBackgroundProps {
-    color?: string; // Колір у форматі rgba
+    color?: string;
 }
 
 export default function AnimatedBackground({
-                                               color = 'rgba(255,165,0,0.4)', // 🔶 помаранчевий за замовчуванням
-                                           }: AnimatedBackgroundProps) {
+    color = 'rgba(255,165,0,0.4)',
+}: AnimatedBackgroundProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
@@ -19,7 +19,11 @@ export default function AnimatedBackground({
         canvas.width = width;
         canvas.height = height;
 
-        const points = Array.from({ length: 60 }, () => ({
+        const pointCount = width < 768 ? 25 : 40;
+        const maxDist = 120;
+        const maxDistSq = maxDist * maxDist;
+
+        const points = Array.from({ length: pointCount }, () => ({
             x: Math.random() * width,
             y: Math.random() * height,
             vx: (Math.random() - 0.5) * 0.3,
@@ -29,9 +33,15 @@ export default function AnimatedBackground({
         let animationFrameId: number;
 
         function draw() {
+            if (document.hidden) {
+                animationFrameId = requestAnimationFrame(draw);
+                return;
+            }
+
             width = canvas.width;
             height = canvas.height;
             ctx.clearRect(0, 0, width, height);
+            ctx.lineWidth = 0.5;
 
             for (let i = 0; i < points.length; i++) {
                 const p = points[i];
@@ -41,9 +51,8 @@ export default function AnimatedBackground({
                 if (p.x < 0 || p.x > width) p.vx *= -1;
                 if (p.y < 0 || p.y > height) p.vy *= -1;
 
-                // 🔶 Точка
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 1.5, 0, 2 * Math.PI);
+                ctx.arc(p.x, p.y, 1.5, 0, 6.283185);
                 ctx.fillStyle = color;
                 ctx.fill();
 
@@ -51,14 +60,13 @@ export default function AnimatedBackground({
                     const q = points[j];
                     const dx = p.x - q.x;
                     const dy = p.y - q.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        // 🔶 Лінія з прозорістю залежно від відстані
+                    const distSq = dx * dx + dy * dy;
+                    if (distSq < maxDistSq) {
+                        const alpha = 1 - Math.sqrt(distSq) / maxDist;
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(q.x, q.y);
-                        ctx.strokeStyle = color.replace(/,[\d.]*\)$/, `,${1 - dist / 100})`);
-                        ctx.lineWidth = 0.5;
+                        ctx.strokeStyle = color.replace(/,[\d.]*\)$/, `,${alpha})`);
                         ctx.stroke();
                     }
                 }
