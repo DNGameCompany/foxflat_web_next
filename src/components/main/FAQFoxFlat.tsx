@@ -113,7 +113,7 @@ export default function FaqFoxFlat() {
                         letterSpacing: '-1px',
                     }}
                 >
-                    Часті запитання
+                    Часті запитання про оренду квартир через FoxFlat
                 </motion.h2>
 
                 <motion.p

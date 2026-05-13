@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -22,16 +21,7 @@ interface Post {
     cover_image?: string;
 }
 
-export default function BlogPreviewFoxFlat() {
-    const [posts, setPosts] = useState<Post[]>([]);
-
-    useEffect(() => {
-        fetch("https://api.foxflat.com.ua/blog/posts?published=true&limit=3")
-            .then((r) => r.json())
-            .then(setPosts)
-            .catch(() => {});
-    }, []);
-
+export default function BlogPreviewFoxFlat({ posts }: { posts: Post[] }) {
     if (posts.length === 0) return null;
 
     return (
@@ -42,7 +32,7 @@ export default function BlogPreviewFoxFlat() {
                     <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-4">Блог</p>
                     <h2 className="font-black mb-4 leading-tight"
                         style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "clamp(24px, 3vw, 38px)", letterSpacing: "-1px" }}>
-                        Корисні статті
+                        Статті та поради з оренди квартир в Україні
                     </h2>
                     <p className="text-white/40 text-sm max-w-md mx-auto">
                         Поради, гайди та новини про оренду квартир в Україні

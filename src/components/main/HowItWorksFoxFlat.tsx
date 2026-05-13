@@ -104,7 +104,7 @@ export default function HowItWorksFoxFlat() {
                         letterSpacing: '-1px',
                     }}
                 >
-                    Квартира за 4 прості кроки
+                    Як знайти квартиру через Telegram: 4 прості кроки
                 </motion.h2>
 
                 <motion.p

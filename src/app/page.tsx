@@ -1,10 +1,23 @@
 import ClientHome from './ClientHome';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
 
+async function getBlogPreviewPosts() {
+    try {
+        const res = await fetch(
+            'https://api.foxflat.com.ua/blog/posts?published=true&limit=3',
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
 export const metadata = {
     title: 'FoxFlat — Telegram-бот для оренди квартир | Київ, Львів, Одеса, Харків',
     description:
-        'FoxFlat — Telegram-бот для пошуку квартир без посередників. Оновлення кожні 5 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
+        'FoxFlat — Telegram-бот для пошуку квартир без посередників. Оновлення кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
     keywords: [
         // Бренд
         'foxflat',
@@ -64,7 +77,7 @@ export const metadata = {
     openGraph: {
         title: 'FoxFlat — Знайди квартиру першим через Telegram',
         description:
-            'Бот моніторить оголошення кожні 5 хвилин у 22 містах України. Отримуй нові квартири без посередників прямо в Telegram — безкоштовно!',
+            'Бот моніторить оголошення кожні 15 хвилин у 22 містах України. Отримуй нові квартири без посередників прямо в Telegram — безкоштовно!',
         url: 'https://foxflat.com.ua/',
         siteName: 'FoxFlat',
         images: [
@@ -83,16 +96,18 @@ export const metadata = {
         card: 'summary_large_image',
         title: 'FoxFlat — Знайди квартиру першим через Telegram',
         description:
-            'Оновлення кожні 5 хвилин. 22 міста України. Без посередників. Запусти бота безкоштовно!',
+            'Оновлення кожні 15 хвилин. 22 міста України. Без посередників. Запусти бота безкоштовно!',
         images: ['https://foxflat.com.ua/og-image.png'],
     },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+    const blogPosts = await getBlogPreviewPosts();
+
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0f0f] text-white">
             <main>
-                <ClientHome />
+                <ClientHome blogPosts={blogPosts} />
 
                 <script
                     type="application/ld+json"
@@ -120,7 +135,7 @@ export default function HomePage() {
                                 applicationCategory: 'BusinessApplication',
                                 operatingSystem: 'Telegram',
                                 url: 'https://t.me/FoxFlat_bot',
-                                description: 'Telegram-бот для пошуку оренди квартир без посередників у 22 містах України. Оновлення кожні 5 хвилин.',
+                                description: 'Telegram-бот для пошуку оренди квартир без посередників у 22 містах України. Оновлення кожні 15 хвилин.',
                                 offers: {
                                     '@type': 'Offer',
                                     price: '0',

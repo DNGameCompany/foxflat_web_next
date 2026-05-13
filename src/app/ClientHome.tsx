@@ -20,7 +20,17 @@ import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
 import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
 import BlogPreviewFoxFlat from "@/src/components/main/BlogPreviewFoxFlat";
 
-export default function ClientHome() {
+interface BlogPost {
+    slug: string;
+    title: string;
+    excerpt: string;
+    category: 'tips' | 'news' | 'guide';
+    created_at: string;
+    read_time: number;
+    cover_image?: string;
+}
+
+export default function ClientHome({ blogPosts = [] }: { blogPosts?: BlogPost[] }) {
     const [showScrollHint, setShowScrollHint] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
@@ -126,7 +136,7 @@ export default function ClientHome() {
             </div>
 
             <motion.section {...fadeInSection}>
-                <BlogPreviewFoxFlat />
+                <BlogPreviewFoxFlat posts={blogPosts} />
             </motion.section>
 
             {/* тонкий розділювач */}

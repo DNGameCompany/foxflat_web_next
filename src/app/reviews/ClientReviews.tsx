@@ -167,7 +167,7 @@ export default function ClientReviews({ reviews, schemaData }: ClientReviewsProp
                             letterSpacing: "-1.5px",
                         }}
                     >
-                        Досвід наших користувачів
+                        Відгуки про FoxFlat — Telegram-бот для оренди квартир
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}

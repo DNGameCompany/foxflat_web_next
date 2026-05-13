@@ -62,8 +62,29 @@ export default async function BlogPostPage(
     const post = await getPost(slug);
     if (!post) notFound();
 
+    const articleSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description: post.excerpt,
+        datePublished: post.created_at,
+        author: { '@type': 'Organization', name: 'FoxFlat', url: 'https://foxflat.com.ua' },
+        publisher: {
+            '@type': 'Organization',
+            name: 'FoxFlat',
+            url: 'https://foxflat.com.ua',
+            logo: { '@type': 'ImageObject', url: 'https://foxflat.com.ua/og-image.png' },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': `https://foxflat.com.ua/blog/${post.slug}` },
+        ...(post.cover_image ? { image: post.cover_image } : {}),
+    };
+
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+            />
             <HeaderFoxFlat />
             <div className="min-h-screen bg-black text-white">
                 <div className="max-w-5xl mx-auto px-4 py-14">

@@ -75,7 +75,7 @@ export default function PricingFoxFlat() {
                         letterSpacing: "-1px",
                     }}
                 >
-                    Швидкий доступ до нових квартир
+                    Тарифи FoxFlat — оренда квартир через Telegram
                 </motion.h2>
 
                 <motion.p

@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     return {
         title: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
-        description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat. Оновлення кожні 5 хвилин, без посередників і комісій. Запусти безкоштовно!`,
+        description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat. Оновлення кожні 15 хвилин, без посередників і комісій. Запусти безкоштовно!`,
         keywords: [
             `оренда квартир ${city.name}`,
             `оренда квартир ${city.name} телеграм`,
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         alternates: { canonical: `https://foxflat.com.ua/misto/${slug}` },
         openGraph: {
             title: `Оренда квартир у ${city.nameGen} — FoxFlat`,
-            description: `Telegram-бот FoxFlat надсилає нові квартири у ${city.nameGen} кожні 5 хвилин. Без посередників!`,
+            description: `Telegram-бот FoxFlat надсилає нові квартири у ${city.nameGen} кожні 15 хвилин. Без посередників!`,
             url: `https://foxflat.com.ua/misto/${slug}`,
             siteName: 'FoxFlat',
             locale: 'uk_UA',
@@ -125,7 +125,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                         Оренда квартир у {city.nameGen}
                     </h1>
                     <p className="text-white/40 text-base leading-relaxed max-w-lg mx-auto mb-10">
-                        FoxFlat надсилає нові оголошення у {city.nameGen} кожні 5 хвилин прямо в Telegram.
+                        FoxFlat надсилає нові оголошення у {city.nameGen} кожні 15 хвилин прямо в Telegram.
                         Без посередників, без реєстрації — просто запусти бота.
                     </p>
                     <a
@@ -147,7 +147,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
             <section className="px-6 pb-20 max-w-4xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                        { num: '5 хв', label: `Оновлення у ${city.nameGen}` },
+                        { num: '15 хв', label: `Оновлення у ${city.nameGen}` },
                         { num: '0 грн', label: 'Безкоштовний старт' },
                         { num: '24/7', label: 'Моніторинг оголошень' },
                     ].map((s, i) => (
@@ -176,7 +176,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                     {[
                         { n: '01', t: 'Запусти бота', d: <span>Відкрий <a href={`https://t.me/FoxFlat_bot?start=website_${slug}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2">@FoxFlat_bot</a> у Telegram</span> },
                         { n: '02', t: `Обери ${city.name}`, d: `Вкажи місто ${city.name} і налаштуй фільтри — ціна, район, кімнати` },
-                        { n: '03', t: 'Отримуй квартири', d: `Нові оголошення у ${city.nameGen} приходять кожні 5 хвилин прямо в Telegram` },
+                        { n: '03', t: 'Отримуй квартири', d: `Нові оголошення у ${city.nameGen} приходять кожні 15 хвилин прямо в Telegram` },
                     ].map((step, i) => (
                         <div key={i} className="flex gap-5 p-6 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
                             <span

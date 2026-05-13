@@ -105,7 +105,7 @@ export default function FeatureFoxFlat() {
                         }}
                     >
                         Все що потрібно для{" "}
-                        <span className="text-orange-500">швидкого пошуку</span>
+                        <span className="text-orange-500">оренди квартири через Telegram</span>
                     </motion.h2>
 
                     <motion.p
