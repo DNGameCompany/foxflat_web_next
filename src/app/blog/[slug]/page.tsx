@@ -41,11 +41,16 @@ export async function generateMetadata(
     return {
         title: `${post.title} — FoxFlat Blog`,
         description: post.excerpt,
+        alternates: { canonical: `https://foxflat.com.ua/blog/${post.slug}` },
+        robots: { index: true, follow: true },
         openGraph: {
             title: post.title,
             description: post.excerpt,
             url: `https://foxflat.com.ua/blog/${post.slug}`,
-            ...(post.cover_image ? { images: [post.cover_image] } : {}),
+            siteName: 'FoxFlat',
+            locale: 'uk_UA',
+            type: 'article',
+            ...(post.cover_image ? { images: [{ url: post.cover_image, width: 1200, height: 630 }] } : {}),
         },
     };
 }

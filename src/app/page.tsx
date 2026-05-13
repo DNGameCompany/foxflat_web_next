@@ -92,10 +92,6 @@ export default function HomePage() {
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0f0f] text-white">
             <main>
-                <h1 className="sr-only">
-                    FoxFlat — Telegram-бот для оренди квартир без посередників у Києві, Львові, Одесі та 22 містах України
-                </h1>
-
                 <ClientHome />
 
                 <script
@@ -224,7 +220,7 @@ export default function HomePage() {
                                 thumbnailUrl: 'https://foxflat.com.ua/images/video-thumb.jpg',
                                 uploadDate: '2025-01-01T00:00:00+02:00',
                                 contentUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
-                                embedUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
+                                embedUrl: 'https://foxflat.com.ua/',
                                 duration: 'PT12S',
                                 inLanguage: 'uk-UA',
                                 publisher: {

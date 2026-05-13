@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Script from "next/script";
 
 export const metadata: Metadata = {
-    title: 'FoxFlat',
-    description: 'Оренда квартир через Telegram',
+    title: 'FoxFlat — Telegram-бот для оренди квартир в Україні',
+    description: 'FoxFlat — Telegram-бот для пошуку квартир без посередників у 22 містах України. Оновлення оголошень кожні 5 хвилин.',
 }
 
 export default function RootLayout({

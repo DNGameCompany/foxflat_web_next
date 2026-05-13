@@ -8,6 +8,8 @@ import FooterFoxFlat from "@/src/components/FooterFoxFlat"; // твій прав
 export const metadata: Metadata = {
     title: "Блог FoxFlat — поради з оренди квартир в Україні",
     description: "Корисні статті, поради та гайди про оренду квартир в Україні. Як знайти квартиру швидко, на що звертати увагу, як не переплатити.",
+    alternates: { canonical: 'https://foxflat.com.ua/blog' },
+    robots: { index: true, follow: true },
     openGraph: {
         title: "Блог FoxFlat — поради з оренди квартир",
         description: "Корисні статті про пошук житла в Україні",

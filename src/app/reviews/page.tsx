@@ -14,7 +14,7 @@ export const metadata: Metadata = {
         title: 'Відгуки користувачів FoxFlat 🦊',
         description:
             'Реальні історії людей, які знайшли квартири за допомогою Telegram-бота FoxFlat.',
-        url: 'https://foxflat.app/reviews',
+        url: 'https://foxflat.com.ua/reviews',
         siteName: 'FoxFlat',
         locale: 'uk_UA',
         type: 'website',

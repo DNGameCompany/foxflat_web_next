@@ -76,8 +76,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
     if (!city) notFound();
 
     const otherCities = Object.entries(cities)
-        .filter(([s]) => s !== slug)
-        .slice(0, 8);
+        .filter(([s]) => s !== slug);
 
     const jsonLd = {
         '@context': 'https://schema.org',
