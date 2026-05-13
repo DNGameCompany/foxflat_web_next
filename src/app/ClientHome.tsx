@@ -83,6 +83,7 @@ export default function ClientHome({
         <main className="relative min-h-screen w-full overflow-hidden bg-black">
             <AnimatedBackground />
             <HeaderFoxFlat />
+            <div className="h-14" />
             <HeroFoxFlat />
 
             {/* тонкий розділювач */}
