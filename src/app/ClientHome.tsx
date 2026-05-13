@@ -30,12 +30,19 @@ interface BlogPost {
     cover_image?: string;
 }
 
-export default function ClientHome({ blogPosts = [] }: { blogPosts?: BlogPost[] }) {
+export default function ClientHome({
+    blogPosts = [],
+    initialReviews = [],
+}: {
+    blogPosts?: BlogPost[];
+    initialReviews?: Review[];
+}) {
     const [showScrollHint, setShowScrollHint] = useState(true);
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [reviews, setReviews] = useState<Review[]>(initialReviews);
+    const [loading, setLoading] = useState(initialReviews.length === 0);
 
     useEffect(() => {
+        if (initialReviews.length > 0) return;
         const fetchReviews = async () => {
             try {
                 const querySnapshot = await getDocs(collection(db, 'reviews'));
@@ -55,7 +62,7 @@ export default function ClientHome({ blogPosts = [] }: { blogPosts?: BlogPost[] 
         };
 
         fetchReviews();
-    }, []);
+    }, [initialReviews.length]);
 
     useEffect(() => {
         const handleScroll = () => {

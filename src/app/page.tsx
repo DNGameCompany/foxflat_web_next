@@ -1,5 +1,9 @@
 import ClientHome from './ClientHome';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+export const revalidate = 3600;
 
 async function getBlogPreviewPosts() {
     try {
@@ -9,6 +13,22 @@ async function getBlogPreviewPosts() {
         );
         if (!res.ok) return [];
         return res.json();
+    } catch {
+        return [];
+    }
+}
+
+async function getHomePageReviews() {
+    try {
+        const q = query(collection(db, 'reviews'), orderBy('date', 'desc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name || '',
+            text: doc.data().text || '',
+            rating: doc.data().rating || 0,
+            date: doc.data().date?.toDate?.().toISOString() || null,
+        }));
     } catch {
         return [];
     }
@@ -102,12 +122,20 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-    const blogPosts = await getBlogPreviewPosts();
+    const [blogPosts, reviews] = await Promise.all([
+        getBlogPreviewPosts(),
+        getHomePageReviews(),
+    ]);
+
+    const ratingCount = reviews.length;
+    const avgRating = ratingCount > 0
+        ? (reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / ratingCount).toFixed(1)
+        : '4.9';
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0f0f] text-white">
             <main>
-                <ClientHome blogPosts={blogPosts} />
+                <ClientHome blogPosts={blogPosts} initialReviews={reviews} />
 
                 <script
                     type="application/ld+json"
@@ -142,11 +170,13 @@ export default async function HomePage() {
                                     priceCurrency: 'UAH',
                                     description: 'Безкоштовний базовий доступ. Преміум — 200 грн/міс.',
                                 },
-                                aggregateRating: {
-                                    '@type': 'AggregateRating',
-                                    ratingValue: '4.9',
-                                    ratingCount: '2400',
-                                },
+                                ...(ratingCount > 0 ? {
+                                    aggregateRating: {
+                                        '@type': 'AggregateRating',
+                                        ratingValue: avgRating,
+                                        ratingCount,
+                                    },
+                                } : {}),
                             },
                             // Organization schema
                             {
