@@ -221,21 +221,50 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
     const otherCities = Object.entries(cities)
         .filter(([s]) => s !== slug);
 
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        name: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
-        description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat.`,
-        url: `https://foxflat.com.ua/misto/${slug}`,
-        breadcrumb: {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Головна', item: 'https://foxflat.com.ua/' },
-                { '@type': 'ListItem', position: 2, name: 'Міста', item: 'https://foxflat.com.ua/misto' },
-                { '@type': 'ListItem', position: 3, name: city.name, item: `https://foxflat.com.ua/misto/${slug}` },
-            ],
+    const jsonLd = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
+            description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat.`,
+            url: `https://foxflat.com.ua/misto/${slug}`,
+            breadcrumb: {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: 'Головна', item: 'https://foxflat.com.ua/' },
+                    { '@type': 'ListItem', position: 2, name: 'Міста', item: 'https://foxflat.com.ua/misto' },
+                    { '@type': 'ListItem', position: 3, name: city.name, item: `https://foxflat.com.ua/misto/${slug}` },
+                ],
+            },
         },
-    };
+        {
+            '@context': 'https://schema.org',
+            '@type': 'Service',
+            name: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
+            description: `Telegram-бот для пошуку квартир у ${city.nameGen} без посередників. Оновлення кожні 15 хвилин.`,
+            url: `https://foxflat.com.ua/misto/${slug}`,
+            provider: {
+                '@type': 'Organization',
+                name: 'FoxFlat',
+                url: 'https://foxflat.com.ua',
+            },
+            areaServed: {
+                '@type': 'City',
+                name: city.name,
+                containedInPlace: {
+                    '@type': 'AdministrativeArea',
+                    name: city.region,
+                },
+            },
+            serviceType: 'Пошук квартир для оренди',
+            offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'UAH',
+                description: 'Безкоштовний базовий доступ. Преміум — 200 грн/міс.',
+            },
+        },
+    ];
 
     return (
         <div className="bg-[#0f0f0f] text-white min-h-screen">
