@@ -143,8 +143,8 @@ export default function ClientPrivacyPolicy({ pageData }: ClientPrivacyPolicyPro
                             FoxFlat залишає за собою право змінювати цю Політику. Про суттєві зміни ми
                             повідомимо шляхом оновлення цього документа. Актуальна версія завжди доступна за
                             запитом через бот або на сайті{' '}
-                            <a href="/privacy-policy" className="text-orange-400 hover:text-orange-300">
-                                flatfox.com/privacy-policy
+                            <a href="/legal/privacy-policy" className="text-orange-400 hover:text-orange-300">
+                                foxflat.com.ua/legal/privacy-policy
                             </a>.
                         </p>
                     </div>

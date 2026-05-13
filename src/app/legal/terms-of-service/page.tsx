@@ -35,14 +35,14 @@ export default async function TermsOfServicePage() {
         lastUpdated: '28 липня 2025 року',
         supportTelegram: 'https://t.me/FoxFlatSupport',
         supportEmail: 'support@foxflat.com',
-        offerUrl: 'https://flatfox.com/offer',
+        offerUrl: 'https://foxflat.com.ua/legal/terms-of-service',
         botUrl: 'https://t.me/FoxFlat_bot',
-        aupUrl: 'https://flatfox.com/aup',
-        privacyPolicyUrl: 'https://flatfox.com/privacy-policy',
+        aupUrl: 'https://foxflat.com.ua/legal/acceptable-use-policy',
+        privacyPolicyUrl: 'https://flatfox.com/legal/privacy-policy',
         executorDetails: {
             name: 'ФОП Айдогдиєв Дмитро Романович',
-            rnokpp: '[вкажіть номер]',
-            bankAccount: '[вкажіть банківські реквізити]',
+            rnokpp: '3646203653',
+            bankAccount: 'UA643220010000026007320089293',
         },
     };
 
