@@ -88,7 +88,41 @@ export default function PricingFoxFlat() {
                     Обери план і отримуй нові оголошення першим
                 </motion.p>
 
-                {/* Банер акції */} <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="relative mb-12 mx-auto max-w-2xl" > {/* gradient border */} <div className="absolute inset-0 rounded-2xl" style={{ padding: "1px", background: "linear-gradient(135deg, rgba(249,115,22,0.55), rgba(249,115,22,0.1), rgba(249,115,22,0.45))" }}> </div> <div className="relative rounded-2xl bg-[#0f0f0f] overflow-hidden"> {/* glow left */} <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 0% 50%, rgba(249,115,22,0.1) 0%, transparent 55%)" }} /> <div className="relative flex items-center gap-5 px-7 py-5"> {/* іконка подарунку */} <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center text-orange-400"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"> <polyline points="20 12 20 22 4 22 4 12" /> <rect x="2" y="7" width="20" height="5" rx="1" /> <line x1="12" y1="22" x2="12" y2="7" /> <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /> <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /> </svg> </div> {/* текст */} <div className="flex-1 min-w-0"> <p className="text-white font-bold text-sm mb-1" style={{ fontFamily: "'Unbounded', sans-serif" }}> Преміум зараз безкоштовно </p> <p className="text-white/40 text-xs leading-relaxed"> Звичайна вартість{" "} <span className="line-through text-white/25">200 грн/міс</span> {" "}— отримай повний доступ без оплати </p> </div> {/* бейдж */} <div className="flex-shrink-0 hidden sm:block"> <span className="text-[10px] font-black text-orange-500 border border-orange-500/40 bg-orange-500/10 px-3 py-1.5 rounded-full tracking-widest uppercase" style={{ fontFamily: "'Unbounded', sans-serif" }}> 0 грн </span> </div> </div> </div> </motion.div>
+                {/* Банер акції */}
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    className="relative mb-12 mx-auto max-w-2xl"
+                >
+                    <div className="absolute inset-0 rounded-2xl" style={{ padding: "1px", background: "linear-gradient(135deg, rgba(249,115,22,0.55), rgba(249,115,22,0.1), rgba(249,115,22,0.45))" }} />
+                    <div className="relative rounded-2xl bg-[#0f0f0f] overflow-hidden">
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 0% 50%, rgba(249,115,22,0.1) 0%, transparent 55%)" }} />
+                        <div className="relative flex items-center gap-5 px-7 py-5">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center text-orange-400">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="8" r="3" /><path d="M6 20v-2a6 6 0 0 1 12 0v2" /><line x1="12" y1="11" x2="12" y2="14" />
+                                </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white font-bold text-sm mb-1" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                                    Акційна ціна на преміум
+                                </p>
+                                <p className="text-white/40 text-xs leading-relaxed">
+                                    Звичайна вартість{" "}
+                                    <span className="line-through text-white/25">200 грн/міс</span>
+                                    {" "}— підписка оформлюється через Telegram-бота
+                                </p>
+                            </div>
+                            <div className="flex-shrink-0 hidden sm:block">
+                                <span className="text-[10px] font-black text-orange-500 border border-orange-500/40 bg-orange-500/10 px-3 py-1.5 rounded-full tracking-widest uppercase" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                                    99 грн
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.7fr] gap-4 items-stretch">
 
@@ -130,14 +164,19 @@ export default function PricingFoxFlat() {
                             ))}
                         </ul>
 
-                        <a
-                            href="https://t.me/FoxFlat_bot?start=website"
-                            target="_blank"
-                            onClick={() => handleBotClick("tier-free", "Безкоштовно")}
-                            className="block text-center text-sm font-bold text-orange-500 border border-orange-500 px-4 py-3 rounded-xl"
-                        >
-                            Спробувати безкоштовно
-                        </a>
+                        <div>
+                            <a
+                                href="https://t.me/FoxFlat_bot?start=website"
+                                target="_blank"
+                                onClick={() => handleBotClick("tier-free", "Безкоштовно")}
+                                className="block text-center text-sm font-bold text-orange-500 border border-orange-500 px-4 py-3 rounded-xl hover:bg-orange-500/10 transition-all"
+                            >
+                                Відкрити у Telegram
+                            </a>
+                            <p className="text-center text-xs text-white/20 mt-2.5">
+                                Реєстрація через Telegram-бота
+                            </p>
+                        </div>
 
                     </motion.div>
 
@@ -164,7 +203,7 @@ export default function PricingFoxFlat() {
 
                             <div className="flex items-end gap-2 mb-1">
                                 <span className="font-black text-white text-[56px] leading-none">
-                                    0
+                                    99
                                 </span>
 
                                 <div className="mb-2">
@@ -191,14 +230,19 @@ export default function PricingFoxFlat() {
                             ))}
                         </ul>
 
-                        <a
-                            href="https://t.me/FoxFlat_bot?start=website"
-                            target="_blank"
-                            onClick={() => handleBotClick("tier-premium", "Місячна підписка")}
-                            className="block text-center font-bold text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 px-6 py-4 rounded-xl transition-all"
-                        >
-                            Оформити підписку →
-                        </a>
+                        <div>
+                            <a
+                                href="https://t.me/FoxFlat_bot?start=website"
+                                target="_blank"
+                                onClick={() => handleBotClick("tier-premium", "Місячна підписка")}
+                                className="block text-center font-bold text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 px-6 py-4 rounded-xl transition-all"
+                            >
+                                Відкрити FoxFlat у Telegram →
+                            </a>
+                            <p className="text-center text-xs text-white/25 mt-2.5">
+                                Підписка оформлюється безпосередньо в Telegram-боті
+                            </p>
+                        </div>
 
                     </motion.div>
 
