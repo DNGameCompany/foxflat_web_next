@@ -293,20 +293,31 @@ export default function BlogTab() {
                                                     <span className="text-[10px] text-white/20">без обкладинки</span>
                                                 </div>
                                             )}
-                                            <div className="px-3 py-2.5 space-y-1.5">
+                                            <div className="px-3 py-3 space-y-2">
                                                 <p className="text-[12px] font-bold text-white leading-snug">
-                                                    📰 {editing.title || "Заголовок статті"}
+                                                    {editing.category === "tips" ? "💡" : editing.category === "news" ? "📣" : "📖"}{" "}
+                                                    {editing.title || "Заголовок статті"}
                                                 </p>
                                                 {editing.excerpt && (
                                                     <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>
                                                         {editing.excerpt.length > 120 ? editing.excerpt.slice(0, 120) + "…" : editing.excerpt}
                                                     </p>
                                                 )}
+                                                <p className="text-[10px] tracking-widest" style={{ color: "#3d5163" }}>━━━━━━━━━━━━</p>
                                                 <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
-                                                    👉 foxflat.com.ua/blog/{editing.slug || "slug"}
+                                                    🔗 Читати статтю повністю →
                                                 </p>
+                                                <p className="text-[10px] tracking-widest" style={{ color: "#3d5163" }}>━━━━━━━━━━━━</p>
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-white">🏠 Шукаєш квартиру в оренду?</p>
+                                                    <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>
+                                                        Підписуйся на{" "}
+                                                        <span style={{ color: "#5bb2f9" }}>@FoxFlat_bot</span>
+                                                        {" "}— отримуй найкращі пропозиції першим!
+                                                    </p>
+                                                </div>
                                                 <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
-                                                    {editing.category === "tips" ? "#поради" : editing.category === "news" ? "#новини" : "#гайд"} #нерухомість #foxflat
+                                                    {editing.category === "tips" ? "#поради #нерухомість #лайфхаки" : editing.category === "news" ? "#новини #нерухомість #ринок" : "#гайд #нерухомість #корисно"} #foxflat
                                                 </p>
                                                 <div className="flex items-center justify-end gap-1 pt-0.5">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="#637b8c"/></svg>
@@ -357,6 +368,30 @@ export default function BlogTab() {
                                     )}
                                 </div>
                             )}
+
+                            <div className="pt-1 border-t border-blue-500/10">
+                                <a
+                                    href="https://t.me/FoxFlat_bot"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between w-full group px-2.5 py-2 rounded-lg border border-transparent hover:border-blue-500/20 hover:bg-blue-500/[0.06] transition-all"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.19-1.82 6.98-3.02 8.38-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.45-.02.06-.02.13-.03.2z" fill="#60a5fa"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-semibold text-blue-400/80 group-hover:text-blue-400 leading-none transition-colors">@FoxFlat_bot</p>
+                                            <p className="text-[9px] text-white/20 mt-0.5 leading-none">Telegram бот</p>
+                                        </div>
+                                    </div>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-white/20 group-hover:text-blue-400/50 transition-colors flex-shrink-0">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

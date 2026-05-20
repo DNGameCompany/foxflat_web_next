@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CATEGORY_HASHTAGS: Record<string, string> = {
-    tips:  "#поради #нерухомість #foxflat",
-    news:  "#новини #нерухомість #foxflat",
-    guide: "#гайд #нерухомість #foxflat",
+const CATEGORY_META: Record<string, { emoji: string; hashtags: string }> = {
+    tips:  { emoji: "💡", hashtags: "#поради #нерухомість #лайфхаки #foxflat" },
+    news:  { emoji: "📣", hashtags: "#новини #нерухомість #ринок #foxflat" },
+    guide: { emoji: "📖", hashtags: "#гайд #нерухомість #корисно #foxflat" },
 };
 
 export async function POST(req: NextRequest) {
@@ -20,9 +20,24 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "title and slug are required" }, { status: 400 });
     }
 
-    const hashtags = CATEGORY_HASHTAGS[category] ?? "#нерухомість #foxflat";
+    const meta = CATEGORY_META[category] ?? { emoji: "📰", hashtags: "#нерухомість #foxflat" };
     const postUrl = `https://foxflat.com.ua/blog/${slug}`;
-    const caption = `📰 <b>${escapeHtml(title)}</b>\n\n${escapeHtml(excerpt ?? "")}\n\n👉 <a href="${postUrl}">Читати повністю</a>\n\n${hashtags}`;
+    const caption = [
+        `${meta.emoji} <b>${escapeHtml(title)}</b>`,
+        ``,
+        `${escapeHtml(excerpt ?? "")}`,
+        ``,
+        `━━━━━━━━━━━━━━`,
+        ``,
+        `🔗 <a href="${postUrl}">Читати статтю повністю →</a>`,
+        ``,
+        `━━━━━━━━━━━━━━`,
+        ``,
+        `🏠 <b>Шукаєш квартиру в оренду?</b>`,
+        `Підписуйся на <a href="https://t.me/FoxFlat_bot">@FoxFlat_bot</a> — отримуй найкращі пропозиції першим!`,
+        ``,
+        meta.hashtags,
+    ].join("\n");
 
     const tgUrl = `https://api.telegram.org/bot${token}`;
 
