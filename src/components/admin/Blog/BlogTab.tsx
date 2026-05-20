@@ -47,10 +47,11 @@ function slugify(text: string) {
 }
 
 function extractFirstParagraph(html: string, maxLen = 220): string {
-    const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-    const raw = match ? match[1] : html;
-    const text = raw.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim();
-    if (!text || text.length < 20) return "";
+    if (!html) return "";
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const p = doc.querySelector("p");
+    const text = p?.textContent?.trim() ?? "";
+    if (text.length < 20) return "";
     if (text.length <= maxLen) return text;
     return text.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
 }
