@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 import BlogImageUpload from "./BlogImageUpload";
 
@@ -48,9 +48,9 @@ function slugify(text: string) {
 
 function extractFirstParagraph(html: string, maxLen = 220): string {
     if (!html) return "";
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const p = doc.querySelector("p");
-    const text = p?.textContent?.trim() ?? "";
+    const match = html.match(/<p(?:[^>]*)>([\s\S]*?)<\/p>/i);
+    if (!match) return "";
+    const text = match[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
     if (text.length < 20) return "";
     if (text.length <= maxLen) return text;
     return text.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
@@ -86,6 +86,7 @@ export default function BlogTab() {
     const [tgPosting, setTgPosting] = useState(false);
     const [tgResult, setTgResult] = useState<{ ok: boolean; messageUrl?: string; error?: string } | null>(null);
     const [tgPreview, setTgPreview] = useState(false);
+    const tgFirstPara = useMemo(() => extractFirstParagraph(editing?.content ?? ""), [editing?.content]);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
@@ -311,14 +312,9 @@ export default function BlogTab() {
                                                 <p className="text-[11px] leading-relaxed" style={{ color: editing.excerpt ? "#a8b8c8" : "#3d5163", fontStyle: editing.excerpt ? "normal" : "italic" }}>
                                                     {editing.excerpt || "короткий опис (excerpt)..."}
                                                 </p>
-                                                {(() => {
-                                                    const para = extractFirstParagraph(editing.content);
-                                                    return (
-                                                        <p className="text-[11px] leading-relaxed" style={{ color: para ? "#a8b8c8" : "#3d5163", fontStyle: para ? "normal" : "italic" }}>
-                                                            {para || "перший абзац статті..."}
-                                                        </p>
-                                                    );
-                                                })()}
+                                                <p className="text-[11px] leading-relaxed" style={{ color: tgFirstPara ? "#a8b8c8" : "#3d5163", fontStyle: tgFirstPara ? "normal" : "italic" }}>
+                                                    {tgFirstPara || "перший абзац статті..."}
+                                                </p>
                                                 <p className="text-[10px] tracking-widest" style={{ color: "#3d5163" }}>━━━━━━━━━━━━</p>
                                                 <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
                                                     🔗 Читати статтю повністю →
