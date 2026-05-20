@@ -46,6 +46,15 @@ function slugify(text: string) {
         .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+function extractFirstParagraph(html: string, maxLen = 220): string {
+    const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    const raw = match ? match[1] : html;
+    const text = raw.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim();
+    if (!text || text.length < 20) return "";
+    if (text.length <= maxLen) return text;
+    return text.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
+}
+
 function MarkdownPreview({ content }: { content: string }) {
     const html = content
         .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-white mt-4 mb-2">$1</h3>')
@@ -113,7 +122,7 @@ export default function BlogTab() {
                     const tgRes = await fetch("/api/telegram/publish", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ title: body.title, excerpt: body.excerpt, slug, cover_image: body.cover_image, category: body.category }),
+                        body: JSON.stringify({ title: body.title, excerpt: body.excerpt, slug, cover_image: body.cover_image, category: body.category, content: body.content }),
                     });
                     const tgData = await tgRes.json();
                     setTgResult(tgData.ok ? { ok: true, messageUrl: tgData.messageUrl } : { ok: false, error: tgData.error });
@@ -299,10 +308,14 @@ export default function BlogTab() {
                                                     {editing.title || "Заголовок статті"}
                                                 </p>
                                                 {editing.excerpt && (
-                                                    <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>
-                                                        {editing.excerpt.length > 120 ? editing.excerpt.slice(0, 120) + "…" : editing.excerpt}
-                                                    </p>
+                                                    <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>{editing.excerpt}</p>
                                                 )}
+                                                {(() => {
+                                                    const para = extractFirstParagraph(editing.content);
+                                                    return para ? (
+                                                        <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>{para}</p>
+                                                    ) : null;
+                                                })()}
                                                 <p className="text-[10px] tracking-widest" style={{ color: "#3d5163" }}>━━━━━━━━━━━━</p>
                                                 <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
                                                     🔗 Читати статтю повністю →
