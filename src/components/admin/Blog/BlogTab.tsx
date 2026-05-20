@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 import BlogImageUpload from "./BlogImageUpload";
 
@@ -48,10 +48,14 @@ function slugify(text: string) {
 
 function extractFirstParagraph(html: string, maxLen = 220): string {
     if (!html) return "";
-    const match = html.match(/<p(?:[^>]*)>([\s\S]*?)<\/p>/i);
-    if (!match) return "";
-    const text = match[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
-    if (text.length < 20) return "";
+    const start = html.indexOf("<p");
+    if (start === -1) return "";
+    const tagEnd = html.indexOf(">", start);
+    const closeTag = html.indexOf("</p>", tagEnd);
+    if (tagEnd === -1 || closeTag === -1) return "";
+    const inner = html.slice(tagEnd + 1, closeTag);
+    const text = inner.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+    if (!text) return "";
     if (text.length <= maxLen) return text;
     return text.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
 }
@@ -86,7 +90,11 @@ export default function BlogTab() {
     const [tgPosting, setTgPosting] = useState(false);
     const [tgResult, setTgResult] = useState<{ ok: boolean; messageUrl?: string; error?: string } | null>(null);
     const [tgPreview, setTgPreview] = useState(false);
-    const tgFirstPara = useMemo(() => extractFirstParagraph(editing?.content ?? ""), [editing?.content]);
+    const [tgFirstPara, setTgFirstPara] = useState("");
+
+    useEffect(() => {
+        setTgFirstPara(extractFirstParagraph(editing?.content ?? ""));
+    }, [editing?.content]);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
