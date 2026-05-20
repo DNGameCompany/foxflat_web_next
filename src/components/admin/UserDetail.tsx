@@ -91,19 +91,6 @@ export default function UserDetail({ userId }: UserDetailProps) {
     return (
         <div className="space-y-4 pb-8">
 
-            {/* Видалений юзер */}
-            {user.deleted_info && (
-                <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-red-500/30 bg-red-500/[0.07]">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-red-400 flex-shrink-0">
-                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-sm text-red-400 font-medium">
-                        Користувач видалений — {formatDate(user.deleted_info.deleted_at)}
-                        {user.deleted_info.deleted_by ? ` · ${user.deleted_info.deleted_by}` : ""}
-                    </p>
-                </div>
-            )}
 
             {/* Основна інформація */}
             <Section title="Основна інформація">

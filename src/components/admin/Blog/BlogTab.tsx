@@ -72,6 +72,10 @@ export default function BlogTab() {
     const [deleting, setDeleting] = useState<string | null>(null);
     const [preview, setPreview] = useState(false);
     const [filter, setFilter] = useState<Category | "all">("all");
+    const [postToTelegram, setPostToTelegram] = useState(false);
+    const [tgPosting, setTgPosting] = useState(false);
+    const [tgResult, setTgResult] = useState<{ ok: boolean; messageUrl?: string; error?: string } | null>(null);
+    const [tgPreview, setTgPreview] = useState(false);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
@@ -85,9 +89,9 @@ export default function BlogTab() {
 
     useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-    const openNew = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); setPreview(false); };
-    const openEdit = (post: BlogPost) => { setEditing({ ...post }); setIsNew(false); setPreview(false); };
-    const closeEditor = () => { setEditing(null); setIsNew(false); };
+    const openNew = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); setPreview(false); setPostToTelegram(false); setTgResult(null); };
+    const openEdit = (post: BlogPost) => { setEditing({ ...post }); setIsNew(false); setPreview(false); setPostToTelegram(false); setTgResult(null); };
+    const closeEditor = () => { setEditing(null); setIsNew(false); setPostToTelegram(false); setTgResult(null); };
 
     const handleSave = async () => {
         if (!editing) return;
@@ -102,6 +106,25 @@ export default function BlogTab() {
                 : await fetch(`${API_URL}/blog/posts/${editing.slug}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
             if (!res.ok) throw new Error(await res.text());
             await fetchPosts();
+
+            if (postToTelegram) {
+                setTgPosting(true);
+                try {
+                    const tgRes = await fetch("/api/telegram/publish", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: body.title, excerpt: body.excerpt, slug, cover_image: body.cover_image, category: body.category }),
+                    });
+                    const tgData = await tgRes.json();
+                    setTgResult(tgData.ok ? { ok: true, messageUrl: tgData.messageUrl } : { ok: false, error: tgData.error });
+                } catch {
+                    setTgResult({ ok: false, error: "Мережева помилка" });
+                } finally {
+                    setTgPosting(false);
+                }
+                return;
+            }
+
             closeEditor();
         } catch (e) { console.error(e); alert("Помилка збереження"); }
         finally { setSaving(false); }
@@ -224,6 +247,116 @@ export default function BlogTab() {
                                 value={editing.cover_image}
                                 onChange={(url) => setEditing((ed) => ed ? { ...ed, cover_image: url } : ed)}
                             />
+                        </div>
+
+                        <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.03] p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={() => { setPostToTelegram((v) => !v); setTgResult(null); setTgPreview(false); }}
+                                    className="flex items-center gap-2.5"
+                                >
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all ${postToTelegram ? "bg-blue-500 border-blue-400" : "border-white/20"}`}>
+                                        {postToTelegram && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    </div>
+                                    <span className={`text-[11px] font-bold transition-colors ${postToTelegram ? "text-blue-400" : "text-white/30"}`}>
+                                        Запостити в Telegram
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTgPreview((v) => !v)}
+                                    className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${tgPreview ? "bg-blue-500/15 border-blue-500/40 text-blue-400" : "border-white/[0.07] text-white/25 hover:text-white/50"}`}
+                                >
+                                    {tgPreview ? "Сховати" : "Прев'ю"}
+                                </button>
+                            </div>
+
+                            {tgPreview && (
+                                <div className="rounded-xl overflow-hidden" style={{ background: "#17212b", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
+                                    <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
+                                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.19-1.82 6.98-3.02 8.38-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.45-.02.06-.02.13-.03.2z"/></svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-[12px] font-semibold text-white leading-none">FoxFlatNews</p>
+                                            <p className="text-[10px] text-white/40 mt-0.5">канал</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-1">
+                                        <div className="rounded-lg overflow-hidden" style={{ background: "#242f3d" }}>
+                                            {editing.cover_image ? (
+                                                <img src={editing.cover_image} alt="" className="w-full object-cover max-h-36" />
+                                            ) : (
+                                                <div className="w-full h-20 flex items-center justify-center" style={{ background: "#1c2733" }}>
+                                                    <span className="text-[10px] text-white/20">без обкладинки</span>
+                                                </div>
+                                            )}
+                                            <div className="px-3 py-2.5 space-y-1.5">
+                                                <p className="text-[12px] font-bold text-white leading-snug">
+                                                    📰 {editing.title || "Заголовок статті"}
+                                                </p>
+                                                {editing.excerpt && (
+                                                    <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>
+                                                        {editing.excerpt.length > 120 ? editing.excerpt.slice(0, 120) + "…" : editing.excerpt}
+                                                    </p>
+                                                )}
+                                                <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
+                                                    👉 foxflat.com.ua/blog/{editing.slug || "slug"}
+                                                </p>
+                                                <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
+                                                    {editing.category === "tips" ? "#поради" : editing.category === "news" ? "#новини" : "#гайд"} #нерухомість #foxflat
+                                                </p>
+                                                <div className="flex items-center justify-end gap-1 pt-0.5">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="#637b8c"/></svg>
+                                                    <span className="text-[10px]" style={{ color: "#637b8c" }}>1</span>
+                                                    <span className="text-[10px] ml-1" style={{ color: "#637b8c" }}>
+                                                        {new Date().toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!tgResult && !tgPosting && postToTelegram && !tgPreview && (
+                                <p className="text-[10px] text-blue-400/50">
+                                    {editing.cover_image ? "Фото + текст" : "Тільки текст (немає обкладинки)"} після збереження
+                                </p>
+                            )}
+                            {tgPosting && (
+                                <p className="text-[10px] text-blue-400/70 flex items-center gap-1.5">
+                                    <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25"/><path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                                    Публікуємо...
+                                </p>
+                            )}
+                            {tgResult && (
+                                <div className="space-y-1.5">
+                                    {tgResult.ok ? (
+                                        <>
+                                            <p className="text-[10px] text-green-400 font-bold">✓ Опубліковано в Telegram</p>
+                                            {tgResult.messageUrl && (
+                                                <a href={tgResult.messageUrl} target="_blank" rel="noopener noreferrer"
+                                                   className="text-[10px] text-blue-400 underline break-all block">
+                                                    {tgResult.messageUrl}
+                                                </a>
+                                            )}
+                                            <button onClick={closeEditor} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-green-500/15 border border-green-500/30 text-green-400 hover:bg-green-500/25 transition-all">
+                                                Закрити
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-[10px] text-red-400">✗ Помилка: {tgResult.error}</p>
+                                            <button onClick={closeEditor} className="text-[10px] text-white/30 hover:text-white/60 transition-colors">
+                                                Закрити без ТГ
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
