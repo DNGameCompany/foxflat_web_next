@@ -307,14 +307,16 @@ export default function BlogTab() {
                                                     {editing.category === "tips" ? "💡" : editing.category === "news" ? "📣" : "📖"}{" "}
                                                     {editing.title || "Заголовок статті"}
                                                 </p>
-                                                {editing.excerpt && (
-                                                    <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>{editing.excerpt}</p>
-                                                )}
+                                                <p className="text-[11px] leading-relaxed" style={{ color: editing.excerpt ? "#a8b8c8" : "#3d5163", fontStyle: editing.excerpt ? "normal" : "italic" }}>
+                                                    {editing.excerpt || "короткий опис (excerpt)..."}
+                                                </p>
                                                 {(() => {
                                                     const para = extractFirstParagraph(editing.content);
-                                                    return para ? (
-                                                        <p className="text-[11px] leading-relaxed" style={{ color: "#a8b8c8" }}>{para}</p>
-                                                    ) : null;
+                                                    return (
+                                                        <p className="text-[11px] leading-relaxed" style={{ color: para ? "#a8b8c8" : "#3d5163", fontStyle: para ? "normal" : "italic" }}>
+                                                            {para || "перший абзац статті..."}
+                                                        </p>
+                                                    );
                                                 })()}
                                                 <p className="text-[10px] tracking-widest" style={{ color: "#3d5163" }}>━━━━━━━━━━━━</p>
                                                 <p className="text-[11px]" style={{ color: "#5bb2f9" }}>
