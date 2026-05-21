@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, updateDoc, doc, deleteDoc, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import BlogImageUpload from "./Blog/BlogImageUpload";
 
 type TGStatus = "published" | "scheduled" | "needs_review" | "blocked";
 
@@ -11,6 +12,7 @@ interface TGPost {
     label: string;
     excerpt: string;
     text: string;
+    cover_image: string;
     messageUrl: string;
     date: string;
     status: TGStatus;
@@ -27,7 +29,7 @@ const STATUS_CONFIG: Record<TGStatus, { label: string; color: string }> = {
 const STATUS_KEYS = Object.keys(STATUS_CONFIG) as TGStatus[];
 
 const EMPTY_POST: Omit<TGPost, "id"> = {
-    label: "", excerpt: "", text: "", messageUrl: "",
+    label: "", excerpt: "", text: "", cover_image: "", messageUrl: "",
     date: new Date().toISOString().split("T")[0],
     status: "published",
 };
@@ -47,13 +49,14 @@ export default function TGChannel() {
         const unsubscribe = onSnapshot(collection(db, "TGChanel"), (snapshot) => {
             const data: TGPost[] = snapshot.docs.map((d) => ({
                 id: d.id,
-                label:      d.data().label ?? "",
-                excerpt:    d.data().excerpt ?? "",
-                text:       d.data().text ?? "",
-                messageUrl: d.data().messageUrl ?? "",
-                date:       d.data().date ?? "",
-                status:     d.data().status ?? "published",
-                blogSlug:   d.data().blogSlug,
+                label:       d.data().label ?? "",
+                excerpt:     d.data().excerpt ?? "",
+                text:        d.data().text ?? "",
+                cover_image: d.data().cover_image ?? "",
+                messageUrl:  d.data().messageUrl ?? "",
+                date:        d.data().date ?? "",
+                status:      d.data().status ?? "published",
+                blogSlug:    d.data().blogSlug,
             }));
             data.sort((a, b) => b.date.localeCompare(a.date));
             setPosts(data);
@@ -72,23 +75,72 @@ export default function TGChannel() {
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, ...data } = editing;
+            const original = posts.find((p) => p.id === editing.id);
 
-            // Якщо статус змінився з published на інший — видалити пост з Telegram
-            if (!isNew && editing.status !== "published") {
-                const original = posts.find((p) => p.id === editing.id);
-                if (original?.status === "published" && original.messageUrl) {
-                    const res = await fetch("/api/telegram/delete", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ messageUrl: original.messageUrl }),
-                    });
-                    const result = await res.json();
-                    if (!result.ok) {
-                        const proceed = confirm(`Не вдалось видалити з Telegram: ${result.error}\nЗберегти все одно?`);
-                        if (!proceed) { setSaving(false); return; }
-                    }
-                    data.messageUrl = "";
+            const postToTelegram = async (d: typeof data) => {
+                const res = await fetch("/api/telegram/publish", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title:       editing.label,
+                        excerpt:     editing.excerpt,
+                        slug:        editing.blogSlug ?? "",
+                        content:     editing.text ? `<p>${editing.text}</p>` : "",
+                        cover_image: editing.cover_image || undefined,
+                        category:    "tips",
+                    }),
+                });
+                const result = await res.json();
+                if (result.ok) {
+                    d.messageUrl = result.messageUrl;
+                    return true;
                 }
+                return confirm(`Не вдалось опублікувати в Telegram: ${result.error}\nЗберегти все одно?`);
+            };
+
+            const deleteTelegram = async (url: string) => {
+                const res = await fetch("/api/telegram/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ messageUrl: url }),
+                });
+                const result = await res.json();
+                if (!result.ok) {
+                    return confirm(`Не вдалось видалити з Telegram: ${result.error}\nЗберегти все одно?`);
+                }
+                return true;
+            };
+
+            if (!isNew) {
+                if (editing.status === "published" && original?.status === "published" && original.messageUrl) {
+                    // Статус не змінився але контент міг змінитись → перепостити
+                    const contentChanged =
+                        editing.label       !== original.label       ||
+                        editing.excerpt     !== original.excerpt     ||
+                        editing.text        !== original.text        ||
+                        editing.cover_image !== original.cover_image;
+
+                    if (contentChanged) {
+                        const deleted = await deleteTelegram(original.messageUrl);
+                        if (!deleted) { setSaving(false); return; }
+                        data.messageUrl = "";
+                        const posted = await postToTelegram(data);
+                        if (!posted) { setSaving(false); return; }
+                    }
+                } else if (editing.status !== "published" && original?.status === "published" && original.messageUrl) {
+                    // Статус змінився з published → видалити з Telegram
+                    const deleted = await deleteTelegram(original.messageUrl);
+                    if (!deleted) { setSaving(false); return; }
+                    data.messageUrl = "";
+                } else if (editing.status === "published" && original?.status !== "published") {
+                    // Статус змінився на published → опублікувати
+                    const posted = await postToTelegram(data);
+                    if (!posted) { setSaving(false); return; }
+                }
+            } else if (editing.status === "published") {
+                // Новий пост одразу зі статусом published → опублікувати
+                const posted = await postToTelegram(data);
+                if (!posted) { setSaving(false); return; }
             }
 
             if (isNew) {
@@ -244,6 +296,12 @@ export default function TGChannel() {
                                 className="w-full bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2 text-[11px] text-white/50 font-mono outline-none focus:border-orange-500/30"
                             />
                         </div>
+
+                        {/* Зображення */}
+                        <BlogImageUpload
+                            value={editing.cover_image}
+                            onChange={(url) => setEditing((ed) => ed ? { ...ed, cover_image: url } : ed)}
+                        />
 
                         {/* Прив'язка до блогу */}
                         {editing.blogSlug && (
