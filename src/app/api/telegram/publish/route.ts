@@ -122,10 +122,12 @@ function firstParagraph(html: string): string {
     return stripHtml(html).trim();
 }
 
+const SENTENCE_END = /[.!?…]$/;
+
 function truncateWords(text: string, maxLen: number): string {
-    if (text.length <= maxLen) return text;
+    if (text.length <= maxLen) return SENTENCE_END.test(text) ? text : text + "…";
     const cut = text.slice(0, maxLen).replace(/\s+\S*$/, "");
-    return cut + "…";
+    return SENTENCE_END.test(cut) ? cut : cut + "…";
 }
 
 function buildIntro(content: string | undefined, excerpt: string | undefined, maxLen: number): string {

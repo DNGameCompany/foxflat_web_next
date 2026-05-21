@@ -46,18 +46,20 @@ function slugify(text: string) {
         .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+const SENTENCE_END_PREVIEW = /[.!?…]$/;
+
 function extractFirstParagraph(html: string, maxLen = 220): string {
     if (!html) return "";
-    const start = html.indexOf("<p");
-    if (start === -1) return "";
-    const tagEnd = html.indexOf(">", start);
-    const closeTag = html.indexOf("</p>", tagEnd);
-    if (tagEnd === -1 || closeTag === -1) return "";
-    const inner = html.slice(tagEnd + 1, closeTag);
-    const text = inner.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
-    if (!text) return "";
-    if (text.length <= maxLen) return text;
-    return text.slice(0, maxLen).replace(/\s+\S*$/, "") + "…";
+    const regex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+        const text = match[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+        if (!text) continue;
+        if (text.length <= maxLen) return SENTENCE_END_PREVIEW.test(text) ? text : text + "…";
+        const cut = text.slice(0, maxLen).replace(/\s+\S*$/, "");
+        return SENTENCE_END_PREVIEW.test(cut) ? cut : cut + "…";
+    }
+    return "";
 }
 
 function MarkdownPreview({ content }: { content: string }) {
