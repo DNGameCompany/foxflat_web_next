@@ -194,7 +194,7 @@ ${searchCtx}
    - Якщо стаття про місто — локальні деталі: райони, орієнтовні ціни, особливості ринку
    - НІЯКИХ вигаданих цитат, статистики "за даними аналітиків" без джерела
 
-Поверни ТІЛЬКИ валідний JSON без markdown:
+Поверни ТІЛЬКИ валідний JSON без markdown. ВАЖЛИВО: у полі content НЕ використовуй реальні символи переносу рядка — замість них пиши HTML теги, пробіли або \n як escape-послідовність.
 {
   "plan_updates": [
     {
@@ -226,7 +226,15 @@ ${searchCtx}
         .replace(/^```json?\s*/i, "")
         .replace(/\s*```$/, "");
 
-    return JSON.parse(raw);
+    try {
+        return JSON.parse(raw);
+    } catch {
+        // Claude sometimes includes literal newlines inside JSON strings — fix them
+        const fixed = raw.replace(/("(?:[^"\\]|\\.)*")/g, (m) =>
+            m.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
+        );
+        return JSON.parse(fixed);
+    }
 }
 
 async function generateCoverImage(title: string): Promise<string | null> {
