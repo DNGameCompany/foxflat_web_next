@@ -98,8 +98,9 @@ export async function POST(req: NextRequest) {
     }
 
     const messageId = result.result!.message_id;
-    const username = channelId.startsWith("@") ? channelId.slice(1) : channelId;
-    const messageUrl = `https://t.me/${username}/${messageId}`;
+    const messageUrl = channelId.startsWith("@")
+        ? `https://t.me/${channelId.slice(1)}/${messageId}`
+        : `https://t.me/c/${channelId.replace(/^-100/, "")}/${messageId}`;
 
     return NextResponse.json({ ok: true, messageUrl });
 }
