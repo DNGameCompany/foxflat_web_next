@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, addDoc, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 import BlogImageUpload from "./BlogImageUpload";
@@ -227,6 +227,21 @@ export default function BlogTab() {
         if (!confirm("Видалити статтю?")) return;
         setDeleting(slug);
         try {
+            // Видаляємо TG пост якщо є
+            const tgSnap = await getDocs(query(collection(db, "TGChanel"), where("blogSlug", "==", slug)));
+            if (!tgSnap.empty) {
+                const tgDoc = tgSnap.docs[0];
+                const tgData = tgDoc.data();
+                if (tgData.messageUrl) {
+                    await fetch("/api/telegram/delete", {
+                        method:  "POST",
+                        headers: { "content-type": "application/json" },
+                        body:    JSON.stringify({ messageUrl: tgData.messageUrl }),
+                    });
+                }
+                await deleteDoc(doc(db, "TGChanel", tgDoc.id));
+            }
+
             await fetch(`${API_URL}/blog/posts/${slug}`, { method: "DELETE" });
             setPosts((p) => p.filter((x) => x.slug !== slug));
         } catch (e) { console.error(e); }
