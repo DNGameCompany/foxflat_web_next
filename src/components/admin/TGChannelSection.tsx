@@ -1,483 +1,330 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, updateDoc, doc, deleteDoc, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+type TGStatus = "published" | "scheduled" | "needs_review" | "blocked";
 
 interface TGPost {
     id: string;
     label: string;
+    excerpt: string;
+    text: string;
     messageUrl: string;
     date: string;
+    status: TGStatus;
+    blogSlug?: string;
 }
 
-type SortColumn = "label" | "messageUrl" | "date";
-type SortDirection = "asc" | "desc";
+const STATUS_CONFIG: Record<TGStatus, { label: string; color: string }> = {
+    published:    { label: "Опубліковано",     color: "text-green-400 bg-green-400/10 border-green-400/20" },
+    scheduled:    { label: "Заплановано",       color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
+    needs_review: { label: "Потрібен перегляд", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+    blocked:      { label: "Заблоковано",       color: "text-red-400 bg-red-400/10 border-red-400/20" },
+};
+
+const STATUS_KEYS = Object.keys(STATUS_CONFIG) as TGStatus[];
+
+const EMPTY_POST: Omit<TGPost, "id"> = {
+    label: "", excerpt: "", text: "", messageUrl: "",
+    date: new Date().toISOString().split("T")[0],
+    status: "published",
+};
 
 export default function TGChannel() {
     const [posts, setPosts] = useState<TGPost[]>([]);
-    const [newLabel, setNewLabel] = useState("");
-    const [newUrl, setNewUrl] = useState("");
-    const [newDate, setNewDate] = useState("");
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editingLabel, setEditingLabel] = useState("");
-    const [editingUrl, setEditingUrl] = useState("");
-    const [editingDate, setEditingDate] = useState("");
-    const [error, setError] = useState("");
-
-    const [sortColumn, setSortColumn] = useState<SortColumn>("date");
-    const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-
-    // Пагінація
-    const [currentPage, setCurrentPage] = useState(1);
-    const postsPerPage = 5;
-
-    // Пошук і фільтр
-    const [searchLabel, setSearchLabel] = useState("");
-    const [filterFromDate, setFilterFromDate] = useState("");
-    const [filterToDate, setFilterToDate] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState<TGPost | null>(null);
+    const [isNew, setIsNew] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [filter, setFilter] = useState<TGStatus | "all">("all");
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, "TGChanel"), (snapshot) => {
-            const data: TGPost[] = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                label: doc.data().label,
-                messageUrl: doc.data().messageUrl,
-                date: doc.data().date || "",
+            const data: TGPost[] = snapshot.docs.map((d) => ({
+                id: d.id,
+                label:      d.data().label ?? "",
+                excerpt:    d.data().excerpt ?? "",
+                text:       d.data().text ?? "",
+                messageUrl: d.data().messageUrl ?? "",
+                date:       d.data().date ?? "",
+                status:     d.data().status ?? "published",
+                blogSlug:   d.data().blogSlug,
             }));
+            data.sort((a, b) => b.date.localeCompare(a.date));
             setPosts(data);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
-    const isValidTelegramUrl = (url: string) => /^https:\/\/t\.me\/FoxFlatNews\/\d+$/.test(url);
+    const openNew  = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); };
+    const openEdit = (p: TGPost) => { setEditing({ ...p }); setIsNew(false); };
+    const closeEditor = () => { setEditing(null); setIsNew(false); };
 
-    const handleSaveNew = async () => {
-        if (!newLabel.trim() || !newUrl.trim() || !newDate.trim()) return;
-
-        if (!isValidTelegramUrl(newUrl)) {
-            setError("URL має бути у форматі https://t.me/FoxFlatNews/номер");
-            return;
+    const handleSave = async () => {
+        if (!editing || !editing.label.trim()) return;
+        setSaving(true);
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...data } = editing;
+            if (isNew) {
+                await addDoc(collection(db, "TGChanel"), data);
+            } else {
+                await updateDoc(doc(db, "TGChanel", id), data);
+            }
+            closeEditor();
+        } finally {
+            setSaving(false);
         }
-
-        await addDoc(collection(db, "TGChanel"), {
-            label: newLabel,
-            messageUrl: newUrl,
-            date: newDate,
-        });
-
-        setNewLabel("");
-        setNewUrl("");
-        setNewDate("");
-        setError("");
-        setCurrentPage(1);
-    };
-
-    const handleSaveEdit = async (id: string) => {
-        if (!editingLabel.trim() || !editingUrl.trim() || !editingDate.trim()) return;
-        if (!isValidTelegramUrl(editingUrl)) {
-            setError("URL має бути у форматі https://t.me/FoxFlatNews/номер");
-            return;
-        }
-
-        const docRef = doc(db, "TGChanel", id);
-        await updateDoc(docRef, {
-            label: editingLabel,
-            messageUrl: editingUrl,
-            date: editingDate,
-        });
-
-        setEditingId(null);
-        setEditingLabel("");
-        setEditingUrl("");
-        setEditingDate("");
-        setError("");
-    };
-
-    // Функція для скидання фільтрів
-    const handleResetFilters = () => {
-        setSearchLabel("");
-        setFilterFromDate("");
-        setFilterToDate("");
-        setCurrentPage(1); // Опційно: повертати на першу сторінку
     };
 
     const handleDelete = async (id: string) => {
-        const docRef = doc(db, "TGChanel", id);
-        await deleteDoc(docRef);
+        if (!confirm("Видалити пост?")) return;
+        setDeleting(id);
+        try { await deleteDoc(doc(db, "TGChanel", id)); }
+        finally { setDeleting(null); }
     };
 
-    const handleSort = (column: SortColumn) => {
-        if (sortColumn === column) setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-        else {
-            setSortColumn(column);
-            setSortDirection("asc");
-        }
-        setCurrentPage(1);
-    };
+    const formatDate = (d: string) =>
+        d ? new Date(d).toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
 
-    // Фільтруємо по пошуку і даті
     const filteredPosts = posts.filter((p) => {
-        const matchesLabel = p.label.toLowerCase().includes(searchLabel.toLowerCase());
-        const matchesFrom = filterFromDate ? p.date >= filterFromDate : true;
-        const matchesTo = filterToDate ? p.date <= filterToDate : true;
-        return matchesLabel && matchesFrom && matchesTo;
+        const matchStatus = filter === "all" || p.status === filter;
+        const matchSearch = p.label.toLowerCase().includes(search.toLowerCase());
+        return matchStatus && matchSearch;
     });
 
-    // Сортуємо
-    const sortedPosts = [...filteredPosts].sort((a, b) => {
-        let compare = 0;
-        if (sortColumn === "label") compare = a.label.localeCompare(b.label);
-        else if (sortColumn === "messageUrl") compare = a.messageUrl.localeCompare(b.messageUrl);
-        else if (sortColumn === "date") compare = a.date.localeCompare(b.date);
-        return sortDirection === "asc" ? compare : -compare;
-    });
-
-    // Пагінація
-    const indexOfLastPost = currentPage * postsPerPage;
-    const indexOfFirstPost = indexOfLastPost - postsPerPage;
-    const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
-    const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
-
-    const getVisiblePages = () => {
-        if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
-
-        let start = Math.max(currentPage - 2, 1);
-        let end = Math.min(currentPage + 2, totalPages);
-
-        if (currentPage <= 2) {
-            start = 1;
-            end = 5;
-        } else if (currentPage >= totalPages - 1) {
-            start = totalPages - 4;
-            end = totalPages;
-        }
-
-        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    };
-
-    return (
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-            <h2 className="text-3xl font-bold text-gray-100 text-center mb-4">Телеграм Канал</h2>
-
-            {/* Форма створення */}
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-center">
-                <input
-                    type="text"
-                    placeholder="Назва"
-                    value={newLabel}
-                    onChange={(e) => setNewLabel(e.target.value)}
-                    className="flex-1 min-w-[150px] max-w-[300px] p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-                <input
-                    type="text"
-                    placeholder="Посилання"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    className="flex-1 min-w-[200px] max-w-[400px] p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-                <input
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    className="flex-1 min-w-[150px] max-w-[200px] p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
+    /* ─── Режим редагування ─── */
+    if (editing) return (
+        <div className="space-y-4">
+            {/* Топ-бар */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <button onClick={closeEditor} className="text-white/30 hover:text-white/70 transition-colors text-sm">← Назад</button>
+                    <span className="text-white/15">|</span>
+                    <span className="text-sm text-white/50">{isNew ? "Новий пост" : "Редагувати"}</span>
+                </div>
                 <button
-                    onClick={handleSaveNew}
-                    className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition whitespace-nowrap"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all disabled:opacity-50"
                 >
-                    Додати
+                    {saving ? "Збереження..." : "Зберегти"}
                 </button>
             </div>
 
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {/* Форма */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-
-            {/* Пошук і фільтр */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-5">
-                <input
-                    type="text"
-                    placeholder="Пошук по назві"
-                    value={searchLabel}
-                    onChange={(e) => setSearchLabel(e.target.value)}
-                    className="flex-1 min-w-[150px] max-w-[300px] p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                />
-
-                <div className="flex items-center gap-2">
-                    <span className="text-gray-300">Від:</span>
-                    <input
-                        type="date"
-                        placeholder="Від дати"
-                        value={filterFromDate}
-                        onChange={(e) => setFilterFromDate(e.target.value)}
-                        className="p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    />
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <span className="text-gray-300">До:</span>
-                    <input
-                        type="date"
-                        placeholder="До дати"
-                        value={filterToDate}
-                        onChange={(e) => setFilterToDate(e.target.value)}
-                        className="p-3 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    />
-                </div>
-
-                <button
-                    onClick={handleResetFilters}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition"
-                >
-                    Скинути фільтри
-                </button>
-            </div>
-
-
-
-            {sortedPosts.length === 0 ? (
-                <p className="text-gray-400 text-center py-10">Пости не знайдено</p>
-            ) : (
-                <>
-                    {/* Desktop table */}
-                    <div className="hidden md:block bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
-                        <div className="grid grid-cols-4 gap-4 p-4 bg-gray-800 font-semibold text-gray-200">
-                            <button onClick={() => handleSort("label")} className="text-left hover:underline">
-                                Назва {sortColumn === "label" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-                            </button>
-                            <button onClick={() => handleSort("messageUrl")} className="text-left hover:underline">
-                                Посилання {sortColumn === "messageUrl" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-                            </button>
-                            <button onClick={() => handleSort("date")} className="text-left hover:underline">
-                                Дата {sortColumn === "date" ? (sortDirection === "asc" ? "▲" : "▼") : ""}
-                            </button>
-                            <span className="text-right">Дії</span>
-                        </div>
-
-                        <div className="divide-y divide-gray-700">
-                            {currentPosts.map((post) => (
-                                <div
-                                    key={post.id}
-                                    className="grid grid-cols-4 gap-4 p-4 items-center hover:bg-gray-800 transition"
-                                >
-                                    {editingId === post.id ? (
-                                        <>
-                                            <input
-                                                type="text"
-                                                value={editingLabel}
-                                                onChange={(e) => setEditingLabel(e.target.value)}
-                                                placeholder="Назва"
-                                                className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={editingUrl}
-                                                onChange={(e) => setEditingUrl(e.target.value)}
-                                                placeholder="Посилання"
-                                                className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                            />
-                                            <input
-                                                type="date"
-                                                value={editingDate}
-                                                onChange={(e) => setEditingDate(e.target.value)}
-                                                className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                            />
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleSaveEdit(post.id)}
-                                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-                                                >
-                                                    Зберегти
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="text-gray-100 font-semibold">{post.label}</span>
-                                            <a
-                                                href={post.messageUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-gray-300 underline hover:text-gray-100 break-words"
-                                            >
-                                                {post.messageUrl}
-                                            </a>
-                                            <span className="text-gray-300">{post.date}</span>
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingId(post.id);
-                                                        setEditingLabel(post.label);
-                                                        setEditingUrl(post.messageUrl);
-                                                        setEditingDate(post.date);
-                                                    }}
-                                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-                                                >
-                                                    Редагувати
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(post.id)}
-                                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-                                                >
-                                                    Видалити
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Пагінація Desktop */}
-                        <div className="flex flex-wrap justify-center gap-2 p-4 bg-gray-800">
-                            <button
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
-                            >
-                                Попередня
-                            </button>
-
-                            {getVisiblePages().map((num) => (
-                                <button
-                                    key={num}
-                                    onClick={() => setCurrentPage(num)}
-                                    className={`px-3 py-1 rounded-lg transition ${
-                                        currentPage === num
-                                            ? "bg-gray-600 text-white font-bold"
-                                            : "bg-gray-700 hover:bg-gray-600 text-white"
-                                    }`}
-                                >
-                                    {num}
-                                </button>
-                            ))}
-
-                            <button
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
-                            >
-                                Наступна
-                            </button>
-                        </div>
-
-                        <div className="text-center text-gray-300 py-2">
-                            {currentPage} з {totalPages}
-                        </div>
+                {/* Ліва колонка — основний контент */}
+                <div className="lg:col-span-2 space-y-3">
+                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 space-y-3">
+                        <input
+                            value={editing.label}
+                            onChange={(e) => setEditing((ed) => ed ? { ...ed, label: e.target.value } : ed)}
+                            placeholder="Заголовок посту"
+                            className="w-full bg-transparent text-white font-bold text-lg placeholder:text-white/20 outline-none border-b border-white/[0.06] pb-3"
+                            style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        />
+                        <input
+                            value={editing.excerpt}
+                            onChange={(e) => setEditing((ed) => ed ? { ...ed, excerpt: e.target.value } : ed)}
+                            placeholder="Короткий опис"
+                            className="w-full bg-transparent text-sm text-white/50 placeholder:text-white/20 outline-none"
+                        />
                     </div>
 
-                    {/* Mobile cards */}
-                    <div className="md:hidden flex flex-col gap-4">
-                        {currentPosts.map((post) => (
-                            <div
-                                key={post.id}
-                                className="bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col gap-2 hover:bg-gray-800 transition"
+                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+                        <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase mb-3">Текст поста</p>
+                        <textarea
+                            value={editing.text}
+                            onChange={(e) => setEditing((ed) => ed ? { ...ed, text: e.target.value } : ed)}
+                            placeholder="Текст що відображається в Telegram пості..."
+                            rows={6}
+                            className="w-full bg-transparent text-sm text-white/70 placeholder:text-white/20 outline-none resize-none leading-relaxed"
+                        />
+                    </div>
+                </div>
+
+                {/* Права колонка — налаштування */}
+                <div className="space-y-3">
+                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 space-y-4">
+                        <p className="text-[10px] font-bold tracking-widest text-white/25 uppercase">Параметри</p>
+
+                        {/* Статус */}
+                        <div>
+                            <p className="text-[11px] text-white/40 mb-2">Статус</p>
+                            <div className="flex flex-col gap-1.5">
+                                {STATUS_KEYS.map((s) => (
+                                    <button
+                                        key={s}
+                                        type="button"
+                                        onClick={() => setEditing((ed) => ed ? { ...ed, status: s } : ed)}
+                                        className={`text-left text-[11px] font-bold px-3 py-2 rounded-lg border transition-all ${editing.status === s ? STATUS_CONFIG[s].color : "border-white/[0.07] text-white/30 hover:text-white/50"}`}
+                                    >
+                                        {STATUS_CONFIG[s].label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Дата */}
+                        <div>
+                            <p className="text-[11px] text-white/40 mb-1">Дата</p>
+                            <input
+                                type="date"
+                                value={editing.date}
+                                onChange={(e) => setEditing((ed) => ed ? { ...ed, date: e.target.value } : ed)}
+                                className="w-full bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2 text-[11px] text-white/50 outline-none focus:border-orange-500/30"
+                            />
+                        </div>
+
+                        {/* Посилання */}
+                        <div>
+                            <p className="text-[11px] text-white/40 mb-1">Посилання на пост</p>
+                            <input
+                                value={editing.messageUrl}
+                                onChange={(e) => setEditing((ed) => ed ? { ...ed, messageUrl: e.target.value } : ed)}
+                                placeholder="https://t.me/FoxFlatNews/..."
+                                className="w-full bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2 text-[11px] text-white/50 font-mono outline-none focus:border-orange-500/30"
+                            />
+                        </div>
+
+                        {/* Прив'язка до блогу */}
+                        {editing.blogSlug && (
+                            <div>
+                                <p className="text-[11px] text-white/40 mb-1">Блог-пост</p>
+                                <p className="text-[11px] font-mono text-white/30 bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2">
+                                    /blog/{editing.blogSlug}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    /* ─── Список ─── */
+    return (
+        <div className="space-y-4">
+            {/* Фільтри + пошук */}
+            <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap gap-1">
+                    {([["all", "Всі"], ...STATUS_KEYS.map((k) => [k, STATUS_CONFIG[k].label])] as [string, string][]).map(([key, label]) => {
+                        const count = key === "all" ? posts.length : posts.filter((p) => p.status === key).length;
+                        const isActive = filter === key;
+                        return (
+                            <button
+                                key={key}
+                                onClick={() => setFilter(key as typeof filter)}
+                                className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${isActive ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] bg-white/[0.02] text-white/30 hover:text-white/50"}`}
                             >
-                                {editingId === post.id ? (
-                                    <>
-                                        <input
-                                            type="text"
-                                            value={editingLabel}
-                                            onChange={(e) => setEditingLabel(e.target.value)}
-                                            placeholder="Назва"
-                                            className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={editingUrl}
-                                            onChange={(e) => setEditingUrl(e.target.value)}
-                                            placeholder="Посилання"
-                                            className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                        />
-                                        <input
-                                            type="date"
-                                            value={editingDate}
-                                            onChange={(e) => setEditingDate(e.target.value)}
-                                            className="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                        />
-                                        <div className="flex gap-2 justify-end mt-2">
+                                {label}
+                                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${isActive ? "bg-orange-500/20 text-orange-400" : "bg-white/[0.05] text-white/20"}`}>
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <input
+                    type="text"
+                    placeholder="Пошук по заголовку..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="ml-auto min-w-[180px] px-3 py-1.5 rounded-lg border border-white/[0.07] bg-white/[0.02] text-white/70 text-xs placeholder-white/20 focus:outline-none focus:border-orange-500/50 transition-colors"
+                />
+
+                <button
+                    onClick={openNew}
+                    className="text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all"
+                >
+                    + Новий пост
+                </button>
+            </div>
+
+            {/* Таблиця */}
+            {loading ? (
+                <div className="flex items-center justify-center py-16 gap-3 text-orange-400">
+                    <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25"/>
+                        <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <span className="text-sm">Завантаження...</span>
+                </div>
+            ) : filteredPosts.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] py-16 text-center">
+                    <p className="text-white/25 text-sm mb-3">Постів не знайдено</p>
+                    <button onClick={openNew} className="text-[10px] font-bold px-4 py-2 rounded-lg bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-all">
+                        Створити перший
+                    </button>
+                </div>
+            ) : (
+                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="border-b border-white/[0.05]">
+                                {["Пост", "Статус", "Дата", "Посилання", "Дії"].map((h) => (
+                                    <th key={h} className="text-left text-[10px] font-bold tracking-widest text-white/25 uppercase px-4 py-3">{h}</th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredPosts.map((post) => (
+                                <tr key={post.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                                    <td className="px-4 py-3 max-w-[280px]">
+                                        <p className="text-sm text-white/70 font-medium truncate">{post.label || "—"}</p>
+                                        {post.excerpt && (
+                                            <p className="text-[11px] text-white/25 truncate mt-0.5">{post.excerpt}</p>
+                                        )}
+                                        {post.blogSlug && (
+                                            <p className="text-[10px] font-mono text-white/15 mt-0.5">/blog/{post.blogSlug}</p>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${STATUS_CONFIG[post.status]?.color ?? "text-white/30 border-white/10"}`}>
+                                            {STATUS_CONFIG[post.status]?.label ?? post.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-white/30 whitespace-nowrap">{formatDate(post.date)}</td>
+                                    <td className="px-4 py-3">
+                                        {post.messageUrl ? (
+                                            <a href={post.messageUrl} target="_blank" rel="noopener noreferrer"
+                                               className="text-[10px] text-blue-400/60 hover:text-blue-400 transition-colors">
+                                                ↗ t.me
+                                            </a>
+                                        ) : (
+                                            <span className="text-[10px] text-white/15">—</span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => handleSaveEdit(post.id)}
-                                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-                                            >
-                                                Зберегти
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="text-gray-100 font-semibold">{post.label}</span>
-                                        <a
-                                            href={post.messageUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-gray-300 underline hover:text-gray-100 break-words"
-                                        >
-                                            {post.messageUrl}
-                                        </a>
-                                        <span className="text-gray-300">{post.date}</span>
-                                        <div className="flex gap-2 justify-end mt-2">
-                                            <button
-                                                onClick={() => {
-                                                    setEditingId(post.id);
-                                                    setEditingLabel(post.label);
-                                                    setEditingUrl(post.messageUrl);
-                                                    setEditingDate(post.date);
-                                                }}
-                                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+                                                onClick={() => openEdit(post)}
+                                                className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 transition-all"
                                             >
                                                 Редагувати
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(post.id)}
-                                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+                                                disabled={deleting === post.id}
+                                                className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-40"
                                             >
-                                                Видалити
+                                                {deleting === post.id ? "..." : "Видалити"}
                                             </button>
                                         </div>
-                                    </>
-                                )}
-                            </div>
-                        ))}
-
-                        {/* Пагінація Mobile */}
-                        <div className="flex flex-wrap justify-center gap-2 p-4">
-                            <button
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
-                            >
-                                Попередня
-                            </button>
-
-                            {getVisiblePages().map((num) => (
-                                <button
-                                    key={num}
-                                    onClick={() => setCurrentPage(num)}
-                                    className={`px-3 py-1 rounded-lg transition ${
-                                        currentPage === num
-                                            ? "bg-gray-600 text-white font-bold"
-                                            : "bg-gray-700 hover:bg-gray-600 text-white"
-                                    }`}
-                                >
-                                    {num}
-                                </button>
+                                    </td>
+                                </tr>
                             ))}
-
-                            <button
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition disabled:opacity-50"
-                            >
-                                Наступна
-                            </button>
-                        </div>
-
-                        <div className="text-center text-gray-300 py-2">
-                            {currentPage} з {totalPages}
-                        </div>
-                    </div>
-                </>
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
