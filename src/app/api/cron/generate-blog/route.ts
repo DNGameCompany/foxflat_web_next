@@ -237,6 +237,7 @@ ${searchCtx}
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildImagePrompt(title: string, category: string, keywords: string[]): string {
     const cityMatch = title.match(/(Київ|Львів|Одеса|Харків|Дніпро|Запоріжжя|Вінниця|Миколаїв|Херсон|Чернігів|Полтава|Черкаси|Суми|Житомир|Рівне|Луцьк|Тернопіль|Хмельницький|Кропивницький|Ужгород|Івано-Франківськ|Чернівці)/i);
     const city = cityMatch ? cityMatch[1] : null;
@@ -254,17 +255,18 @@ function buildImagePrompt(title: string, category: string, keywords: string[]): 
     return `${style}${cityCtx}, topic: ${keyword}. Color palette: orange and white and dark grey. Wide banner 16:9. No text, no letters, no words. Clean vector art style.`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function generateCoverImage(title: string, category: string, keywords: string[]): Promise<string | null> {
     try {
         const prompt = buildImagePrompt(title, category, keywords);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${process.env.GEMINI_API_KEY}`,
             {
                 method:  "POST",
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
+                    instances:  [{ prompt }],
+                    parameters: { sampleCount: 1, aspectRatio: "16:9" },
                 }),
             }
         );
@@ -275,15 +277,13 @@ async function generateCoverImage(title: string, category: string, keywords: str
         }
 
         const data   = await res.json();
-        const base64 = data.candidates?.[0]?.content?.parts?.find(
-            (p: { inlineData?: { data: string } }) => p.inlineData
-        )?.inlineData?.data;
+        const base64 = data.predictions?.[0]?.bytesBase64Encoded;
 
         if (!base64) return null;
 
         const buffer     = Buffer.from(base64, "base64");
-        const storageRef = ref(storage, `blog/auto-${Date.now()}.png`);
-        await uploadBytes(storageRef, buffer, { contentType: "image/png" });
+        const storageRef = ref(storage, `blog/auto-${Date.now()}.jpg`);
+        await uploadBytes(storageRef, buffer, { contentType: "image/jpeg" });
         return await getDownloadURL(storageRef);
     } catch (e) {
         console.error("Image generation failed:", e);
@@ -291,20 +291,24 @@ async function generateCoverImage(title: string, category: string, keywords: str
     }
 }
 
-async function sendApprovalMessage(params: {
+async function sendDraftNotification(params: {
     title:           string;
     excerpt:         string;
     slug:            string;
-    coverImage:      string | null;
     selectionReason: string;
     seoKeywords:     string[];
     planUpdated:     number;
 }) {
     const token   = process.env.TELEGRAM_BOT_TOKEN!;
-    const adminId = process.env.ADMIN_TELEGRAM_ID!;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://foxflat.com.ua";
 
-    const caption = [
-        `🤖 *Авто-пост на перевірку*`,
+    const recipients = (process.env.TELEGRAM_NOTIFY_IDS ?? process.env.ADMIN_TELEGRAM_ID ?? "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
+
+    const text = [
+        `🤖 *Нова чернетка в блозі*`,
         ``,
         `📝 *${params.title}*`,
         ``,
@@ -315,36 +319,22 @@ async function sendApprovalMessage(params: {
         ``,
         `🔑 ${params.seoKeywords.join(" · ")}`,
         `📋 Контент-план оновлено: +${params.planUpdated} тем`,
+        ``,
+        `✏️ [Відкрити в адмінці](${siteUrl}/admin)`,
     ].join("\n");
 
-    const keyboard = {
-        inline_keyboard: [[
-            { text: "✅ Опублікувати", callback_data: `approve_${params.slug}` },
-            { text: "❌ Відхилити",    callback_data: `reject_${params.slug}` },
-        ]],
-    };
-
-    if (params.coverImage) {
-        await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+    await Promise.all(recipients.map((chatId) =>
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method:  "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
-                chat_id:   adminId,
-                photo:     params.coverImage,
+                chat_id:                  chatId,
+                text,
+                parse_mode:               "Markdown",
+                disable_web_page_preview: true,
             }),
-        });
-    }
-
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method:  "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            chat_id:      adminId,
-            text:         params.coverImage ? caption : `${caption}\n📷 Без обкладинки`,
-            parse_mode:   "Markdown",
-            reply_markup: keyboard,
-        }),
-    });
+        })
+    ));
 }
 
 export async function GET(req: NextRequest) {
@@ -363,10 +353,8 @@ export async function GET(req: NextRequest) {
         // Зберігаємо оновлений контент-план
         await saveContentPlan({ items: result.plan_updates, updatedAt: new Date().toISOString() });
 
-        // Генеруємо зображення паралельно зі збереженням чернетки
-        const [coverImage] = await Promise.all([
-            generateCoverImage(result.post.title, result.post.category, result.post.seo_keywords ?? []),
-        ]);
+        // TODO: генерація зображення через Imagen API (потребує білінг)
+        // const coverImage = await generateCoverImage(result.post.title, result.post.category, result.post.seo_keywords ?? []);
 
         const wordCount = result.post.content.replace(/<[^>]+>/g, "").split(/\s+/).length;
         const blogRes = await fetch(`${BLOG_API}/blog/posts`, {
@@ -374,7 +362,7 @@ export async function GET(req: NextRequest) {
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
                 ...result.post,
-                cover_image: coverImage ?? "",
+                cover_image: "",
                 published:   false,
                 read_time:   Math.max(1, Math.round(wordCount / 200)),
             }),
@@ -382,11 +370,10 @@ export async function GET(req: NextRequest) {
 
         if (!blogRes.ok) throw new Error(`Blog API: ${await blogRes.text()}`);
 
-        await sendApprovalMessage({
+        await sendDraftNotification({
             title:           result.post.title,
             excerpt:         result.post.excerpt,
             slug:            result.post.slug,
-            coverImage,
             selectionReason: result.selection_reason,
             seoKeywords:     result.post.seo_keywords ?? [],
             planUpdated:     result.plan_updates.filter((i: PlanItem) => i.status === "planned").length,
