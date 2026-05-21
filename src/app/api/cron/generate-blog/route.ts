@@ -242,29 +242,48 @@ function buildImagePrompt(title: string, category: string, keywords: string[]): 
     const city = cityMatch ? cityMatch[1] : null;
 
     const categoryStyles: Record<string, string> = {
-        news:  "real estate market news concept, modern Ukrainian city skyline, business atmosphere, editorial photography",
-        guide: "Ukrainian apartment rental process, modern bright apartment interior, professional real estate photography",
-        tips:  "cozy Ukrainian apartment interior, warm natural light, practical home living, lifestyle photography",
+        news:  "abstract infographic illustration, real estate market data visualization, bar charts and trend arrows, Ukrainian city silhouette in background, flat design",
+        guide: "modern flat design infographic, step-by-step process icons, document and key and contract symbols, clean minimal style",
+        tips:  "flat design illustration, checklist and lightbulb and home icons, practical tips concept, modern minimal style",
     };
 
     const style = categoryStyles[category] ?? categoryStyles.tips;
-    const cityCtx = city ? `${city} Ukraine architecture and neighborhood,` : "Ukrainian city,";
+    const cityCtx = city ? `, ${city} Ukraine minimal city silhouette accent` : "";
     const keyword = keywords[0] ?? title;
 
-    return `${style}, ${cityCtx} ${keyword}, photorealistic, high quality DSLR photo, 16:9, no text, no watermark, no people`;
+    return `${style}${cityCtx}, topic: ${keyword}. Color palette: orange and white and dark grey. Wide banner 16:9. No text, no letters, no words. Clean vector art style.`;
 }
 
 async function generateCoverImage(title: string, category: string, keywords: string[]): Promise<string | null> {
     try {
-        const prompt    = encodeURIComponent(buildImagePrompt(title, category, keywords));
-        const imageUrl  = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=630&model=flux&nologo=true&seed=${Date.now()}`;
+        const prompt = buildImagePrompt(title, category, keywords);
+        const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            {
+                method:  "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseModalities: ["IMAGE"] },
+                }),
+            }
+        );
 
-        const res = await fetch(imageUrl);
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.error("Gemini image error:", await res.text());
+            return null;
+        }
 
-        const buffer     = Buffer.from(await res.arrayBuffer());
-        const storageRef = ref(storage, `blog/auto-${Date.now()}.jpg`);
-        await uploadBytes(storageRef, buffer, { contentType: "image/jpeg" });
+        const data   = await res.json();
+        const base64 = data.candidates?.[0]?.content?.parts?.find(
+            (p: { inlineData?: { data: string } }) => p.inlineData
+        )?.inlineData?.data;
+
+        if (!base64) return null;
+
+        const buffer     = Buffer.from(base64, "base64");
+        const storageRef = ref(storage, `blog/auto-${Date.now()}.png`);
+        await uploadBytes(storageRef, buffer, { contentType: "image/png" });
         return await getDownloadURL(storageRef);
     } catch (e) {
         console.error("Image generation failed:", e);
