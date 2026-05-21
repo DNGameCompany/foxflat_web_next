@@ -237,12 +237,27 @@ ${searchCtx}
     }
 }
 
-async function generateCoverImage(title: string): Promise<string | null> {
+function buildImagePrompt(title: string, category: string, keywords: string[]): string {
+    const cityMatch = title.match(/(Київ|Львів|Одеса|Харків|Дніпро|Запоріжжя|Вінниця|Миколаїв|Херсон|Чернігів|Полтава|Черкаси|Суми|Житомир|Рівне|Луцьк|Тернопіль|Хмельницький|Кропивницький|Ужгород|Івано-Франківськ|Чернівці)/i);
+    const city = cityMatch ? cityMatch[1] : null;
+
+    const categoryStyles: Record<string, string> = {
+        news:  "real estate market news concept, modern Ukrainian city skyline, business atmosphere, editorial photography",
+        guide: "Ukrainian apartment rental process, modern bright apartment interior, professional real estate photography",
+        tips:  "cozy Ukrainian apartment interior, warm natural light, practical home living, lifestyle photography",
+    };
+
+    const style = categoryStyles[category] ?? categoryStyles.tips;
+    const cityCtx = city ? `${city} Ukraine architecture and neighborhood,` : "Ukrainian city,";
+    const keyword = keywords[0] ?? title;
+
+    return `${style}, ${cityCtx} ${keyword}, photorealistic, high quality DSLR photo, 16:9, no text, no watermark, no people`;
+}
+
+async function generateCoverImage(title: string, category: string, keywords: string[]): Promise<string | null> {
     try {
-        const prompt = encodeURIComponent(
-            `Modern Ukrainian apartment interior, cozy and bright, natural daylight, minimal style, real estate blog, no text, no people, ${title}`
-        );
-        const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1280&height=720&nologo=true&seed=${Date.now()}`;
+        const prompt    = encodeURIComponent(buildImagePrompt(title, category, keywords));
+        const imageUrl  = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=630&model=flux&nologo=true&seed=${Date.now()}`;
 
         const res = await fetch(imageUrl);
         if (!res.ok) return null;
@@ -334,7 +349,7 @@ export async function GET(req: NextRequest) {
 
         // Генеруємо зображення паралельно зі збереженням чернетки
         const [coverImage] = await Promise.all([
-            generateCoverImage(result.post.title),
+            generateCoverImage(result.post.title, result.post.category, result.post.seo_keywords ?? []),
         ]);
 
         const wordCount = result.post.content.replace(/<[^>]+>/g, "").split(/\s+/).length;
