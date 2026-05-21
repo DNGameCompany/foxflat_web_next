@@ -41,6 +41,8 @@ type TGStatus = "published" | "scheduled" | "needs_review" | "blocked";
 interface TGRecord {
     id: string;
     label: string;
+    excerpt: string;
+    text: string;
     messageUrl: string;
     date: string;
     status: TGStatus;
@@ -173,7 +175,7 @@ export default function BlogTab() {
 
                 // Чернетка → зберегти як needs_review без відправки
                 if (!body.published) {
-                    const record = { label: body.title, messageUrl: "", date: today, status: "needs_review" as TGStatus, blogSlug: slug };
+                    const record = { label: body.title, excerpt: body.excerpt ?? "", text: tgFirstPara, messageUrl: "", date: today, status: "needs_review" as TGStatus, blogSlug: slug };
                     if (tgRecord) {
                         await updateDoc(doc(db, "TGChanel", tgRecord.id), record);
                         setTgRecord({ ...tgRecord, ...record });
@@ -195,7 +197,7 @@ export default function BlogTab() {
                     });
                     const tgData = await tgRes.json();
                     if (tgData.ok) {
-                        const record = { label: body.title, messageUrl: tgData.messageUrl, date: today, status: "published" as TGStatus, blogSlug: slug };
+                        const record = { label: body.title, excerpt: body.excerpt ?? "", text: tgFirstPara, messageUrl: tgData.messageUrl, date: today, status: "published" as TGStatus, blogSlug: slug };
                         if (tgRecord) {
                             await updateDoc(doc(db, "TGChanel", tgRecord.id), record);
                             setTgRecord({ ...tgRecord, ...record });
