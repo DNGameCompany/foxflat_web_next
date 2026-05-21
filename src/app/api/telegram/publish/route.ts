@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const excerptLen = excerpt ? escapeHtml(excerpt).length + 2 : 0;
     const availableChars = CAPTION_LIMIT - FIXED_PARTS.length - excerptLen - 4;
-    const intro = buildIntro(content, undefined, availableChars);
+    const intro = buildIntro(content, excerpt, availableChars);
 
     const caption = [
         `${meta.emoji} <b>${escapeHtml(title)}</b>`,
@@ -113,8 +113,13 @@ function stripHtml(html: string): string {
 }
 
 function firstParagraph(html: string): string {
-    const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-    return match ? stripHtml(match[1]) : stripHtml(html);
+    const regex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+        const text = stripHtml(match[1]).trim();
+        if (text.length > 0) return text;
+    }
+    return stripHtml(html).trim();
 }
 
 function truncateWords(text: string, maxLen: number): string {
