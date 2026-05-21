@@ -10,10 +10,24 @@ import AdminDashboard from "@/src/components/admin/AdminDashboard";
 import Image from "next/image";
 
 // Тип вкладок
-export type TabKey = "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing" | "system";
+export type TabKey = "users" | "messages" | "blogs" | "stats" | "channel" | "system";
+
+const VALID_TABS: TabKey[] = ["users", "messages", "blogs", "stats", "channel", "system"];
+const TAB_STORAGE_KEY = "adminActiveTab";
+
+function getSavedTab(): TabKey {
+    if (typeof window === "undefined") return "users";
+    const saved = localStorage.getItem(TAB_STORAGE_KEY) as TabKey;
+    return VALID_TABS.includes(saved) ? saved : "users";
+}
 
 export default function AdminPage() {
-    const [activeTab, setActiveTab] = useState<TabKey>("users");
+    const [activeTab, setActiveTab] = useState<TabKey>(getSavedTab);
+
+    const handleSetActiveTab = (tab: TabKey) => {
+        setActiveTab(tab);
+        localStorage.setItem(TAB_STORAGE_KEY, tab);
+    };
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -80,7 +94,7 @@ export default function AdminPage() {
             <div className="relative z-10 flex flex-col md:flex-row">
                 <AdminSidebar
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    setActiveTab={handleSetActiveTab}
                     isOpen={sidebarOpen}
                     setIsOpen={setSidebarOpen}
                 />

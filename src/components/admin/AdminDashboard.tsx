@@ -4,12 +4,11 @@ import UserTab from "@/src/components/admin/UserTab";         // ← прави�
 import MessageTab from "@/src/components/admin/MessageTab";
 import StatsTab from "@/src/components/admin/Stats/Stats";
 import TGChannelSection from "@/src/components/admin/TGChannelSection";
-import IndexingTab from "./Indexing/IndexingTab";
 import BlogTab from "@/src/components/admin/Blog/BlogTab";
 import SystemTab from "@/src/components/admin/SystemTab";
 
 interface AdminDashboardProps {
-    activeTab: "users" | "messages" | "blogs" | "collages" | "stats" | "channel" | "indexing" | "system";
+    activeTab: "users" | "messages" | "blogs" | "stats" | "channel" | "system";
 }
 
 export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
@@ -35,13 +34,6 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
                 </section>
             )}
 
-            {activeTab === "collages" && (
-                <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold text-orange-400 mb-4">Генерація колажів</h3>
-                    {/* Тут генератор колажів */}
-                    <p className="text-neutral-300">Тут буде форма генерації колажів.</p>
-                </section>
-            )}
 
             {activeTab === "stats" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
@@ -57,12 +49,6 @@ export default function AdminDashboard({ activeTab }: AdminDashboardProps) {
                 </section>
             )}
 
-            {activeTab === "indexing" && (
-                <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">
-                    <h3 className="text-2xl font-bold text-orange-400 mb-4">Індексація Google</h3>
-                    <IndexingTab />
-                </section>
-            )}
 
             {activeTab === "system" && (
                 <section className="bg-neutral-900/70 backdrop-blur-md border border-orange-500/20 rounded-xl p-6">

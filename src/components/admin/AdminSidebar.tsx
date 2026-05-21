@@ -15,14 +15,12 @@ interface AdminSidebarProps {
 }
 
 const tabs: { key: TabKey; label: string }[] = [
-    { key: "users", label: "Користувачі" },
+    { key: "users",    label: "Користувачі" },
     { key: "messages", label: "Повідомлення" },
-    { key: "blogs", label: "Блоги" },
-    { key: "collages", label: "Колажі" },
-    { key: "stats", label: "Статистика" },
-    { key: "channel", label: "Телеграм канал" },
-    { key: "indexing", label: "Google Індексація" },
-    { key: "system", label: "System" },
+    { key: "blogs",    label: "Блоги" },
+    { key: "stats",    label: "Статистика" },
+    { key: "channel",  label: "Телеграм канал" },
+    { key: "system",   label: "System" },
 ];
 
 export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: AdminSidebarProps) {
