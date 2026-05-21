@@ -258,13 +258,13 @@ async function generateCoverImage(title: string, category: string, keywords: str
     try {
         const prompt = buildImagePrompt(title, category, keywords);
         const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
             {
                 method:  "POST",
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseModalities: ["IMAGE"] },
+                    generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
                 }),
             }
         );
