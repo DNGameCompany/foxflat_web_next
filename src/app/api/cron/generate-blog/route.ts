@@ -231,22 +231,15 @@ ${searchCtx}
 
 async function generateCoverImage(title: string): Promise<string | null> {
     try {
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${process.env.GEMINI_API_KEY}`,
-            {
-                method:  "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
-                    instances:  [{ prompt: `Modern Ukrainian apartment interior, cozy and bright, natural daylight, minimal style, real estate blog illustration, no text, no people, ${title}` }],
-                    parameters: { sampleCount: 1, aspectRatio: "16:9" },
-                }),
-            }
+        const prompt = encodeURIComponent(
+            `Modern Ukrainian apartment interior, cozy and bright, natural daylight, minimal style, real estate blog, no text, no people, ${title}`
         );
-        const data   = await res.json();
-        const base64 = data.predictions?.[0]?.bytesBase64Encoded;
-        if (!base64) return null;
+        const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1280&height=720&nologo=true&seed=${Date.now()}`;
 
-        const buffer     = Buffer.from(base64, "base64");
+        const res = await fetch(imageUrl);
+        if (!res.ok) return null;
+
+        const buffer     = Buffer.from(await res.arrayBuffer());
         const storageRef = ref(storage, `blog/auto-${Date.now()}.jpg`);
         await uploadBytes(storageRef, buffer, { contentType: "image/jpeg" });
         return await getDownloadURL(storageRef);
