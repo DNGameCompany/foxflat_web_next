@@ -39,6 +39,7 @@ export default function TGChannel() {
     const [isNew, setIsNew] = useState(false);
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [deletingTG, setDeletingTG] = useState<string | null>(null);
     const [filter, setFilter] = useState<TGStatus | "all">("all");
     const [search, setSearch] = useState("");
 
@@ -71,6 +72,25 @@ export default function TGChannel() {
         try {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, ...data } = editing;
+
+            // Якщо статус змінився з published на інший — видалити пост з Telegram
+            if (!isNew && editing.status !== "published") {
+                const original = posts.find((p) => p.id === editing.id);
+                if (original?.status === "published" && original.messageUrl) {
+                    const res = await fetch("/api/telegram/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ messageUrl: original.messageUrl }),
+                    });
+                    const result = await res.json();
+                    if (!result.ok) {
+                        const proceed = confirm(`Не вдалось видалити з Telegram: ${result.error}\nЗберегти все одно?`);
+                        if (!proceed) { setSaving(false); return; }
+                    }
+                    data.messageUrl = "";
+                }
+            }
+
             if (isNew) {
                 await addDoc(collection(db, "TGChanel"), data);
             } else {
@@ -82,11 +102,42 @@ export default function TGChannel() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Видалити пост?")) return;
-        setDeleting(id);
-        try { await deleteDoc(doc(db, "TGChanel", id)); }
-        finally { setDeleting(null); }
+    const handleDelete = async (post: TGPost) => {
+        if (!confirm("Видалити пост з каналу і бази даних?")) return;
+        setDeleting(post.id);
+        try {
+            if (post.messageUrl) {
+                await fetch("/api/telegram/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ messageUrl: post.messageUrl }),
+                });
+            }
+            await deleteDoc(doc(db, "TGChanel", post.id));
+        } finally {
+            setDeleting(null);
+        }
+    };
+
+    const handleDeleteFromTG = async (post: TGPost) => {
+        if (!post.messageUrl) return;
+        if (!confirm("Видалити пост з Telegram каналу?")) return;
+        setDeletingTG(post.id);
+        try {
+            const res = await fetch("/api/telegram/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messageUrl: post.messageUrl }),
+            });
+            const data = await res.json();
+            if (data.ok) {
+                await updateDoc(doc(db, "TGChanel", post.id), { messageUrl: "", status: "blocked" });
+            } else {
+                alert(`Помилка: ${data.error}`);
+            }
+        } finally {
+            setDeletingTG(null);
+        }
     };
 
     const formatDate = (d: string) =>
@@ -295,12 +346,25 @@ export default function TGChannel() {
                                     <td className="px-4 py-3 text-xs text-white/30 whitespace-nowrap">{formatDate(post.date)}</td>
                                     <td className="px-4 py-3">
                                         {post.messageUrl ? (
-                                            <a href={post.messageUrl} target="_blank" rel="noopener noreferrer"
-                                               className="w-7 h-7 rounded-full bg-blue-500/15 border border-blue-500/25 flex items-center justify-center hover:bg-blue-500/30 hover:border-blue-500/50 transition-all">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.19-1.82 6.98-3.02 8.38-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.45-.02.06-.02.13-.03.2z" fill="#60a5fa"/>
-                                                </svg>
-                                            </a>
+                                            <div className="flex items-center gap-2">
+                                                <a href={post.messageUrl} target="_blank" rel="noopener noreferrer"
+                                                   className="w-7 h-7 rounded-full bg-blue-500/15 border border-blue-500/25 flex items-center justify-center hover:bg-blue-500/30 hover:border-blue-500/50 transition-all flex-shrink-0">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.2-.04-.28-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.25.38-.51 1.07-.78 4.19-1.82 6.98-3.02 8.38-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.45-.02.06-.02.13-.03.2z" fill="#60a5fa"/>
+                                                    </svg>
+                                                </a>
+                                                <button
+                                                    onClick={() => handleDeleteFromTG(post)}
+                                                    disabled={deletingTG === post.id}
+                                                    title="Видалити з Telegram"
+                                                    className="w-7 h-7 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/25 hover:border-red-500/40 transition-all flex-shrink-0 disabled:opacity-40"
+                                                >
+                                                    {deletingTG === post.id
+                                                        ? <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#f87171" strokeWidth="2" strokeOpacity="0.25"/><path d="M12 3a9 9 0 0 1 9 9" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/></svg>
+                                                        : <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#f87171" strokeWidth="2" strokeLinecap="round"/></svg>
+                                                    }
+                                                </button>
+                                            </div>
                                         ) : (
                                             <span className="text-[10px] text-white/15">—</span>
                                         )}
@@ -314,7 +378,7 @@ export default function TGChannel() {
                                                 Редагувати
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(post.id)}
+                                                onClick={() => handleDelete(post)}
                                                 disabled={deleting === post.id}
                                                 className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-all disabled:opacity-40"
                                             >
