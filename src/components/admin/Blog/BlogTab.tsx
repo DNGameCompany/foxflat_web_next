@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 import BlogImageUpload from "./BlogImageUpload";
 
@@ -32,6 +34,24 @@ const EMPTY_POST: Omit<BlogPost, "id"> = {
     slug: "", title: "", excerpt: "", content: "",
     category: "tips", published: false,
     created_at: "", updated_at: "", read_time: 5,
+};
+
+type TGStatus = "published" | "scheduled" | "needs_review" | "blocked";
+
+interface TGRecord {
+    id: string;
+    label: string;
+    messageUrl: string;
+    date: string;
+    status: TGStatus;
+    blogSlug: string;
+}
+
+const TG_STATUS_CONFIG: Record<TGStatus, { label: string; color: string }> = {
+    published:    { label: "Опубліковано",     color: "text-green-400 bg-green-400/10 border-green-400/20" },
+    scheduled:    { label: "Заплановано",       color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
+    needs_review: { label: "Потрібен перегляд", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+    blocked:      { label: "Заблоковано",       color: "text-red-400 bg-red-400/10 border-red-400/20" },
 };
 
 function slugify(text: string) {
@@ -90,13 +110,27 @@ export default function BlogTab() {
     const [filter, setFilter] = useState<Category | "all">("all");
     const [postToTelegram, setPostToTelegram] = useState(false);
     const [tgPosting, setTgPosting] = useState(false);
-    const [tgResult, setTgResult] = useState<{ ok: boolean; messageUrl?: string; error?: string } | null>(null);
+    const [tgResult, setTgResult] = useState<{ ok: boolean; messageUrl?: string; error?: string; info?: string } | null>(null);
     const [tgPreview, setTgPreview] = useState(false);
     const [tgFirstPara, setTgFirstPara] = useState("");
+    const [tgRecord, setTgRecord] = useState<TGRecord | null>(null);
 
     useEffect(() => {
         setTgFirstPara(extractFirstParagraph(editing?.content ?? ""));
     }, [editing?.content]);
+
+    useEffect(() => {
+        if (!editing?.slug || isNew) { setTgRecord(null); return; }
+        const q = query(collection(db, "TGChanel"), where("blogSlug", "==", editing.slug));
+        getDocs(q).then((snap) => {
+            if (!snap.empty) {
+                const d = snap.docs[0];
+                setTgRecord({ id: d.id, ...(d.data() as Omit<TGRecord, "id">) });
+            } else {
+                setTgRecord(null);
+            }
+        });
+    }, [editing?.slug, isNew]);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
@@ -129,6 +163,29 @@ export default function BlogTab() {
             await fetchPosts();
 
             if (postToTelegram) {
+                // Не відправляти повторно якщо вже опубліковано
+                if (tgRecord?.status === "published") {
+                    closeEditor();
+                    return;
+                }
+
+                const today = new Date().toISOString().split("T")[0];
+
+                // Чернетка → зберегти як needs_review без відправки
+                if (!body.published) {
+                    const record = { label: body.title, messageUrl: "", date: today, status: "needs_review" as TGStatus, blogSlug: slug };
+                    if (tgRecord) {
+                        await updateDoc(doc(db, "TGChanel", tgRecord.id), record);
+                        setTgRecord({ ...tgRecord, ...record });
+                    } else {
+                        const ref = await addDoc(collection(db, "TGChanel"), record);
+                        setTgRecord({ id: ref.id, ...record });
+                    }
+                    setTgResult({ ok: false, info: "Чернетка — збережено зі статусом «Потрібен перегляд»" });
+                    return;
+                }
+
+                // Опублікований → відправити в Telegram
                 setTgPosting(true);
                 try {
                     const tgRes = await fetch("/api/telegram/publish", {
@@ -137,7 +194,19 @@ export default function BlogTab() {
                         body: JSON.stringify({ title: body.title, excerpt: body.excerpt, slug, cover_image: body.cover_image, category: body.category, content: body.content }),
                     });
                     const tgData = await tgRes.json();
-                    setTgResult(tgData.ok ? { ok: true, messageUrl: tgData.messageUrl } : { ok: false, error: tgData.error });
+                    if (tgData.ok) {
+                        const record = { label: body.title, messageUrl: tgData.messageUrl, date: today, status: "published" as TGStatus, blogSlug: slug };
+                        if (tgRecord) {
+                            await updateDoc(doc(db, "TGChanel", tgRecord.id), record);
+                            setTgRecord({ ...tgRecord, ...record });
+                        } else {
+                            const ref = await addDoc(collection(db, "TGChanel"), record);
+                            setTgRecord({ id: ref.id, ...record });
+                        }
+                        setTgResult({ ok: true, messageUrl: tgData.messageUrl });
+                    } else {
+                        setTgResult({ ok: false, error: tgData.error });
+                    }
                 } catch {
                     setTgResult({ ok: false, error: "Мережева помилка" });
                 } finally {
@@ -274,8 +343,12 @@ export default function BlogTab() {
                             <div className="flex items-center justify-between">
                                 <button
                                     type="button"
-                                    onClick={() => { setPostToTelegram((v) => !v); setTgResult(null); setTgPreview(false); }}
-                                    className="flex items-center gap-2.5"
+                                    onClick={() => {
+                                        if (tgRecord?.status === "published") return;
+                                        setPostToTelegram((v) => !v); setTgResult(null); setTgPreview(false);
+                                    }}
+                                    disabled={tgRecord?.status === "published"}
+                                    className={`flex items-center gap-2.5 ${tgRecord?.status === "published" ? "opacity-40 cursor-not-allowed" : ""}`}
                                 >
                                     <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all ${postToTelegram ? "bg-blue-500 border-blue-400" : "border-white/20"}`}>
                                         {postToTelegram && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -292,6 +365,16 @@ export default function BlogTab() {
                                     {tgPreview ? "Сховати" : "Прев'ю"}
                                 </button>
                             </div>
+
+                            {tgRecord && (
+                                <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold ${TG_STATUS_CONFIG[tgRecord.status]?.color ?? "text-white/30 border-white/10"}`}>
+                                    <span>TG:</span>
+                                    <span>{TG_STATUS_CONFIG[tgRecord.status]?.label}</span>
+                                    {tgRecord.messageUrl && (
+                                        <a href={tgRecord.messageUrl} target="_blank" rel="noopener noreferrer" className="ml-auto opacity-60 hover:opacity-100 transition-opacity">↗</a>
+                                    )}
+                                </div>
+                            )}
 
                             {tgPreview && (
                                 <div className="rounded-xl overflow-hidden" style={{ background: "#17212b", fontFamily: "-apple-system, 'Segoe UI', sans-serif" }}>
@@ -377,6 +460,13 @@ export default function BlogTab() {
                                                 </a>
                                             )}
                                             <button onClick={closeEditor} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-green-500/15 border border-green-500/30 text-green-400 hover:bg-green-500/25 transition-all">
+                                                Закрити
+                                            </button>
+                                        </>
+                                    ) : tgResult.info ? (
+                                        <>
+                                            <p className="text-[10px] text-yellow-400 font-bold">⚠ {tgResult.info}</p>
+                                            <button onClick={closeEditor} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/25 transition-all">
                                                 Закрити
                                             </button>
                                         </>
