@@ -269,7 +269,7 @@ async function sendApprovalMessage(params: {
     const token   = process.env.TELEGRAM_BOT_TOKEN!;
     const adminId = process.env.ADMIN_TELEGRAM_ID!;
 
-    const lines = [
+    const caption = [
         `🤖 *Авто-пост на перевірку*`,
         ``,
         `📝 *${params.title}*`,
@@ -281,24 +281,39 @@ async function sendApprovalMessage(params: {
         ``,
         `🔑 ${params.seoKeywords.join(" · ")}`,
         `📋 Контент-план оновлено: +${params.planUpdated} тем`,
-        params.coverImage ? `🖼 Обкладинка згенерована` : `📷 Без обкладинки`,
-    ];
+    ].join("\n");
 
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method:  "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-            chat_id:      adminId,
-            text:         lines.join("\n"),
-            parse_mode:   "Markdown",
-            reply_markup: {
-                inline_keyboard: [[
-                    { text: "✅ Опублікувати", callback_data: `approve_${params.slug}` },
-                    { text: "❌ Відхилити",    callback_data: `reject_${params.slug}` },
-                ]],
-            },
-        }),
-    });
+    const keyboard = {
+        inline_keyboard: [[
+            { text: "✅ Опублікувати", callback_data: `approve_${params.slug}` },
+            { text: "❌ Відхилити",    callback_data: `reject_${params.slug}` },
+        ]],
+    };
+
+    if (params.coverImage) {
+        await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+            method:  "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                chat_id:      adminId,
+                photo:        params.coverImage,
+                caption,
+                parse_mode:   "Markdown",
+                reply_markup: keyboard,
+            }),
+        });
+    } else {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method:  "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                chat_id:      adminId,
+                text:         `${caption}\n📷 Без обкладинки`,
+                parse_mode:   "Markdown",
+                reply_markup: keyboard,
+            }),
+        });
+    }
 }
 
 export async function GET(req: NextRequest) {
