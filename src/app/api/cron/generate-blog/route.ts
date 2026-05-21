@@ -310,25 +310,22 @@ async function sendApprovalMessage(params: {
             method:  "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
-                chat_id:      adminId,
-                photo:        params.coverImage,
-                caption,
-                parse_mode:   "Markdown",
-                reply_markup: keyboard,
-            }),
-        });
-    } else {
-        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-            method:  "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-                chat_id:      adminId,
-                text:         `${caption}\n📷 Без обкладинки`,
-                parse_mode:   "Markdown",
-                reply_markup: keyboard,
+                chat_id:   adminId,
+                photo:     params.coverImage,
             }),
         });
     }
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method:  "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+            chat_id:      adminId,
+            text:         params.coverImage ? caption : `${caption}\n📷 Без обкладинки`,
+            parse_mode:   "Markdown",
+            reply_markup: keyboard,
+        }),
+    });
 }
 
 export async function GET(req: NextRequest) {
