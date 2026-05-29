@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 
 const API_URL = "https://api.foxflat.com.ua";
 
-type Section = "bot" | "site";
+type Section = "bot" | "site" | "content";
 
 interface BotStatus {
     online: boolean;
@@ -30,6 +30,12 @@ interface ActionState {
     loading: boolean;
     success: boolean | null;
     message: string;
+}
+
+interface CronResult {
+    ok: boolean;
+    slug?: string;
+    topic?: string;
 }
 
 const EMPTY_ACTION: ActionState = { loading: false, success: null, message: "" };
@@ -79,6 +85,15 @@ function IconSpinner({ className }: { className?: string }) {
         <svg className={`animate-spin ${className}`} width="14" height="14" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.2"/>
             <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+    );
+}
+
+function IconPen({ className }: { className?: string }) {
+    return (
+        <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
     );
 }
@@ -191,6 +206,10 @@ export default function SystemTab() {
     const [sitemapAction, setSitemapAction] = useState<ActionState>(EMPTY_ACTION);
     const [cacheAction, setCacheAction] = useState<ActionState>(EMPTY_ACTION);
 
+    // ── Content cron state ──
+    const [cronAction, setCronAction] = useState<ActionState>(EMPTY_ACTION);
+    const [cronResult, setCronResult] = useState<CronResult | null>(null);
+
     const fetchBotStatus = useCallback(async () => {
         setBotLoading(true);
         try {
@@ -240,6 +259,31 @@ export default function SystemTab() {
         }
     };
 
+    // ── Cron runner (GET + Bearer, relative URL) ──
+    const runCron = async () => {
+        setCronAction({ loading: true, success: null, message: "" });
+        setCronResult(null);
+        try {
+            const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET ?? "";
+            const r = await fetch("/api/cron/generate", {
+                method: "GET",
+                headers: { Authorization: `Bearer ${cronSecret}` },
+            });
+            if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+            const data: CronResult = await r.json();
+            setCronResult(data);
+            setCronAction({ loading: false, success: true, message: "Статтю створено" });
+            setTimeout(() => setCronAction(EMPTY_ACTION), 6000);
+        } catch (e) {
+            setCronAction({
+                loading: false,
+                success: false,
+                message: e instanceof Error ? e.message : "Помилка",
+            });
+            setTimeout(() => setCronAction(EMPTY_ACTION), 6000);
+        }
+    };
+
     const fmt = (iso?: string | null) => {
         if (!iso) return "—";
         return new Date(iso).toLocaleString("uk-UA", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -254,7 +298,7 @@ export default function SystemTab() {
 
             {/* Таби */}
             <div className="flex gap-1">
-                {([["bot", "Бот"], ["site", "Сайт"]] as const).map(([key, label]) => (
+                {([["bot", "Бот"], ["site", "Сайт"], ["content", "Контент"]] as const).map(([key, label]) => (
                     <button key={key} onClick={() => setSection(key)}
                             className={`text-[11px] font-bold px-4 py-1.5 rounded-lg border transition-all ${
                                 section === key
@@ -370,6 +414,73 @@ export default function SystemTab() {
                             state={cacheAction}
                             onClick={() => runAction("/system/site/clear-cache", setCacheAction, "Кеш очищено")}
                         />
+                    </Card>
+                </div>
+            )}
+
+            {/* ── КОНТЕНТ ── */}
+            {section === "content" && (
+                <div className="space-y-4">
+                    <Card title="Генерація статті">
+                        <div className="space-y-4">
+                            <p className="text-[11px] text-white/30 leading-relaxed">
+                                Запускає AI-крон вручну: аналізує контент-план, обирає тему, генерує статтю і зберігає її як чернетку. Після завершення надходить Telegram-сповіщення.
+                            </p>
+
+                            <div className="flex items-center justify-between py-3 border-t border-white/[0.04]">
+                                <div>
+                                    <p className="text-sm text-white/70 font-medium">Згенерувати нову статтю</p>
+                                    <p className="text-[11px] text-white/25 mt-0.5">
+                                        Займає 20–60 секунд — очікуйте до завершення
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {cronAction.message && (
+                                        <span className={`text-[10px] font-semibold ${cronAction.success ? "text-green-400" : "text-red-400"}`}>
+                                            {cronAction.success ? "Виконано" : cronAction.message}
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={runCron}
+                                        disabled={cronAction.loading}
+                                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed border-orange-500/25 text-orange-400/70 hover:bg-orange-500/8 hover:text-orange-400 hover:border-orange-500/50"
+                                    >
+                                        {cronAction.loading ? <IconSpinner /> : <IconPen />}
+                                        {cronAction.loading ? "Генерується" : "Запустити"}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Результат після успішного запуску */}
+                            {cronAction.success && cronResult && (
+                                <div className="rounded-lg border border-green-500/15 bg-green-500/[0.04] px-4 py-3 space-y-1.5">
+                                    <p className="text-[10px] font-bold tracking-[0.12em] text-green-400/60 uppercase">Результат</p>
+                                    {cronResult.topic && (
+                                        <p className="text-xs text-white/60">
+                                            <span className="text-white/25">Тема: </span>{cronResult.topic}
+                                        </p>
+                                    )}
+                                    {cronResult.slug && (
+                                        <p className="text-xs font-mono text-white/40">/{cronResult.slug}</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+
+                    <Card title="Інформація">
+                        <div className="space-y-2.5">
+                            {[
+                                { label: "Маршрут",    value: "GET /api/cron/generate" },
+                                { label: "Авторизація", value: "Bearer CRON_SECRET" },
+                                { label: "Розклад",     value: "Автоматично — раз на день" },
+                            ].map(({ label, value }) => (
+                                <div key={label} className="flex justify-between items-center">
+                                    <p className="text-[11px] text-white/25">{label}</p>
+                                    <p className="text-[11px] text-white/50 font-mono">{value}</p>
+                                </div>
+                            ))}
+                        </div>
                     </Card>
                 </div>
             )}
