@@ -38,6 +38,8 @@ interface CronResult {
     topic?: string;
 }
 
+
+
 const EMPTY_ACTION: ActionState = { loading: false, success: null, message: "" };
 
 // ── Icons ──────────────────────────────────────────────────────────────────
@@ -264,9 +266,7 @@ export default function SystemTab() {
         setCronAction({ loading: true, success: null, message: "" });
         setCronResult(null);
         try {
-            const r = await fetch(`${API_URL}/cron/generate`, {
-                method: "GET",
-            });
+            const r = await fetch("/api/admin/run-cron", { method: "POST" });
             if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
             const data: CronResult = await r.json();
             setCronResult(data);
@@ -469,8 +469,8 @@ export default function SystemTab() {
                     <Card title="Інформація">
                         <div className="space-y-2.5">
                             {[
-                                { label: "Маршрут",    value: "GET /cron/generate" },
-                                { label: "Хост",        value: "api.foxflat.com.ua" },
+                                { label: "Маршрут",   value: "POST /api/admin/run-cron" },
+                                { label: "Проксі до",  value: "GET /api/cron/generate" },
                                 { label: "Розклад",     value: "Автоматично — раз на день" },
                             ].map(({ label, value }) => (
                                 <div key={label} className="flex justify-between items-center">
