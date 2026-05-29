@@ -264,10 +264,8 @@ export default function SystemTab() {
         setCronAction({ loading: true, success: null, message: "" });
         setCronResult(null);
         try {
-            const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET ?? "";
-            const r = await fetch("/api/cron/generate", {
+            const r = await fetch(`${API_URL}/cron/generate`, {
                 method: "GET",
-                headers: { Authorization: `Bearer ${cronSecret}` },
             });
             if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
             const data: CronResult = await r.json();
@@ -471,8 +469,8 @@ export default function SystemTab() {
                     <Card title="Інформація">
                         <div className="space-y-2.5">
                             {[
-                                { label: "Маршрут",    value: "GET /api/cron/generate" },
-                                { label: "Авторизація", value: "Bearer CRON_SECRET" },
+                                { label: "Маршрут",    value: "GET /cron/generate" },
+                                { label: "Хост",        value: "api.foxflat.com.ua" },
                                 { label: "Розклад",     value: "Автоматично — раз на день" },
                             ].map(({ label, value }) => (
                                 <div key={label} className="flex justify-between items-center">
