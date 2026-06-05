@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { jsPDF } from "jspdf";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
 import * as gTag from "@/lib/gtag";
 
@@ -58,7 +57,7 @@ const faqs = [
     },
     {
         q: "Скільки грошей потрібно мати при заселенні в квартиру?",
-        a: "Зазвичай у первый день підписання договору необхідно сплатити вартість першого місяця оренди, страхову заставу (депозит, який найчастіше дорівнює ціні одного місяця) та комісію рієлтора (якщо об'єкт здається через посередника — зазвичай 50% або 100%). Калькулятор виводить цю фінальну суму в блоці «Потрібно мати».",
+        a: "Зазвичай у перший день підписання договору необхідно сплатити вартість першого місяця оренди, страхову заставу (депозит, який найчастіше дорівнює ціні одного місяця) та комісію рієлтора (якщо об'єкт здається через посередника — зазвичай 50% або 100%). Калькулятор виводить цю фінальну суму в блоці «Потрібно мати».",
     },
     {
         q: "Навіщо потрібна страхова застава (депозит) і чи повертається вона?",
@@ -74,7 +73,7 @@ const faqs = [
     },
     {
         q: "Як зафіксувати ціну оренди в договору, щоб її не підняли через місяць?",
-        a: "У договорі оренди обов'язково має бути пункт про те, що зазначена вартість є фіксованою на певний термін (зазвичай на 6 або 11 місяців). Також пропишіть умову, що зміна вартості можлива лише за згодою сторін і з письмовим попередженням не менше ніж за 30 днів.",
+        a: "У договору оренди обов'язково має бути пункт про те, що зазначена вартість є фіксованою на певний термін (зазвичай на 6 або 11 місяців). Також пропишіть умову, що зміна вартості можлива лише за згодою сторін і з письмовим попередженням не менше ніж за 30 днів.",
     },
     {
         q: "Що робити, якщо в орендованій квартирі зламався холодильник чи пральна машина?",
@@ -120,21 +119,26 @@ function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
                 open ? "border-orange-500/30 bg-orange-500/[0.04]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"
             }`}
         >
-            <button onClick={handleToggle} className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left">
-                <span className={`text-sm font-semibold leading-snug transition-colors ${open ? "text-orange-400" : "text-white"}`} style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "13px" }}>
+            <button
+                onClick={handleToggle}
+                className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+                aria-expanded={open}
+            >
+                <h3 className={`text-sm font-semibold leading-snug transition-colors ${open ? "text-orange-400" : "text-white"}`} style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "13px" }}>
                     {item.q}
-                </span>
+                </h3>
                 <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${open ? "bg-orange-500 text-black rotate-45" : "bg-white/[0.06] text-white/40"}`}>
                     +
                 </span>
             </button>
-            <AnimatePresence initial={false}>
-                {open && (
-                    <motion.div key="content" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
-                        <p className="px-6 pb-5 text-xs sm:text-sm text-white/50 leading-relaxed">{item.a}</p>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+            <div
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                    open ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+                }`}
+            >
+                <p className="px-6 pb-5 text-xs sm:text-sm text-white/50 leading-relaxed">{item.a}</p>
+            </div>
         </motion.div>
     );
 }
@@ -162,7 +166,6 @@ function Slider({ field, value, onChange }: { field: SliderField; value: number;
     const pct = ((value - field.min) / (field.max - field.min)) * 100;
     const isFirstMount = useRef(true);
 
-    // Унікальний дебаунс для кожного окремого слайдера
     useEffect(() => {
         if (isFirstMount.current) {
             isFirstMount.current = false;
@@ -274,6 +277,9 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
         });
 
         try {
+            // Безпечний динамічний імпорт jspdf для уникнення проблем із SSR
+            const { jsPDF } = await import("jspdf");
+
             const doc = new jsPDF({
                 orientation: "portrait",
                 unit: "mm",
@@ -301,7 +307,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
             doc.setFont("Roboto", "normal");
 
-            // 1. Брендований хедер
             doc.setFillColor(249, 115, 22);
             doc.rect(0, 0, 210, 35, "F");
 
@@ -312,7 +317,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             doc.setFontSize(10);
             doc.text(`Дата генерації: ${dateStr} | Telegram: @FoxFlat_bot`, 15, 25);
 
-            // 2. Головний результат
             doc.setFillColor(245, 245, 245);
             doc.rect(15, 45, 180, 25, "F");
 
@@ -327,7 +331,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             doc.setTextColor(100, 100, 100);
             doc.text(`+${overpayPct}% до ціни з оголошення (+${fmt(overpay)} грн)`, 120, 60);
 
-            // 3. Таблиця щомісячних витрат
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(13);
             doc.text("1. Щомісячні витрати (деталізація):", 15, 85);
@@ -344,7 +347,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                 currentY += 10;
             });
 
-            // 4. Одноразові витрати при заселенні
             currentY += 5;
             doc.setFontSize(13);
             doc.text("2. Витрати при заселенні (одноразово):", 15, currentY);
@@ -366,13 +368,11 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                 currentY += 10;
             });
 
-            // Разом для договору
             doc.setFillColor(254, 242, 242);
             doc.rect(15, currentY - 5, 180, 12, "F");
             doc.text("РАЗОМ ДЛЯ ЗАСЕЛЕННЯ:", 20, currentY + 2);
             doc.text(`${fmt(moveIn)} грн`, 165, currentY + 2);
 
-            // 5. Перспектива на рік
             currentY += 20;
             doc.setFontSize(13);
             doc.text("3. Довгострокова перспектива:", 15, currentY);
@@ -386,7 +386,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             doc.text("ПОВНА ВАРТІСТЬ ЗА РІК (з урахуванням заселення):", 15, currentY);
             doc.text(`${fmt(annual + moveIn)} грн`, 165, currentY);
 
-            // Спрощений футер у PDF
             doc.setDrawColor(249, 115, 22);
             doc.setLineWidth(0.5);
             doc.line(15, 272, 195, 272);
@@ -541,7 +540,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                     </motion.div>
                 </div>
 
-                {/* ─── ЕКСПЕРТНА ПОРАДА ВІД FOXFLAT ─────────────────────────────────────── */}
                 <motion.div {...fadeIn(0.25)} className="rounded-2xl border border-orange-500/20 bg-orange-500/[0.02] p-5 mb-8">
                     <h2 className="text-sm font-bold tracking-wider text-orange-400 uppercase mb-2 flex items-center gap-2">⭐ Експертна порада від FoxFlat</h2>
                     <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
@@ -549,7 +547,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                     </p>
                 </motion.div>
 
-                {/* ─── ДИНАМІЧНИЙ БЛОК: СВІЖІ СТАТТІ З ВАШОГО API ─────────── */}
                 {initialPosts.length > 0 && (
                     <motion.div {...fadeIn(0.3)} className="space-y-4 mb-16">
                         <h2 className="text-[10px] font-bold tracking-[0.2em] text-orange-500 uppercase">
@@ -588,7 +585,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                     </motion.div>
                 )}
 
-                {/* ─── ОНОВЛЕНИЙ ФІРМОВИЙ СЕО БЛОК: FAQ ─── */}
                 <section className="relative py-4 px-0">
                     <div className="space-y-4 max-w-4xl mx-auto">
                         {faqs.map((item, index) => (
@@ -597,6 +593,38 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                     </div>
                 </section>
             </div>
+            <motion.section
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="mt-20 max-w-4xl mx-auto text-white/60 space-y-8 border-t border-white/10 pt-12"
+            >
+                <div>
+                    <h2 className="text-xl font-black text-white mb-4">Як правильно розрахувати бюджет на оренду квартири у 2026 році</h2>
+                    <p className="leading-relaxed">
+                        Планування бюджету — це перший і найважливіший крок у пошуку житла. Багато орендарів припускаються помилки, орієнтуючись лише на &#34;чисту&#34; ціну оренди, зазначену в оголошенні. Проте реальна вартість оренди квартири в Києві чи інших містах України складається з декількох факторів. Окрім щомісячних платежів, важливо враховувати одноразові витрати при заселенні: страховий депозит, комісію рієлтора та витрати на облаштування. Наш калькулятор дозволяє побачити повну картину витрат і обрати житло, яке не стане фінансовим тягарем.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 className="text-xl font-black text-white mb-4">Приховані платежі при оренді житла</h2>
+                    <p className="leading-relaxed mb-4">
+                        Досвідчені орендарі знають, що комунальні послуги — це лише частина витрат. Часто орендарі забувають про додаткові витрати, які можуть суттєво вплинути на гаманець:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li><strong>Обслуговування будинку (ОСББ/ЖЕК):</strong> у новобудовах ці платежі можуть сягати 1000+ грн на місяць.</li>
+                        <li><strong>Послуги інтернет-провайдерів:</strong> інколи інтернет та ТБ підключені до дорогих пакетів, які не можна змінили.</li>
+                        <li><strong>Опалення:</strong> в зимовий період це найбільша стаття витрат, яку часто не враховують при літньому перегляді квартири.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 className="text-xl font-black text-white mb-4">Чому FoxFlat — ваш головний інструмент пошуку</h2>
+                    <p className="leading-relaxed">
+                        Самостійний моніторинг сайтів оголошень забирає надто багато часу, особливо в умовах дефіциту якісних квартир. FoxFlat автоматизує цей процес, збираючи пропозиції з десятків джерела. За допомогою нашого Telegram-бота ви можете не лише налаштувати параметри пошуку, а й отримувати миттєві сповіщення про нові квартири, які ідеально вписуються у ваш розрахований бюджет. Економте свій час та гроші, обираючи житло ефективно.
+                    </p>
+                </div>
+            </motion.section>
         </main>
     );
 }

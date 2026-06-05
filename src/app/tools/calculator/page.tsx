@@ -83,7 +83,7 @@ export default async function RentalCalculatorPage() {
                 "@type": "BreadcrumbList",
                 "itemListElement": [
                     { "@type": "ListItem", "position": 1, "name": "Головна", "item": "https://foxflat.com.ua/" },
-                    { "@type": "ListItem", "position": 3, "name": "Калькулятор оренди", "item": "https://foxflat.com.ua/tools/calculator" }
+                    { "@type": "ListItem", "position": 2, "name": "Калькулятор оренди", "item": "https://foxflat.com.ua/tools/calculator" }
                 ]
             },
             {
