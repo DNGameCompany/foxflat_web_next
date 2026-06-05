@@ -73,12 +73,12 @@ const faqs = [
         a: "Згідно з ринковою практикою в Україні, поточні витрати (ОСББ, консьєрж, вивіз сміття, прибирання території) оплачує орендар, оскільки він безпосередньо користується цими послугами. Проте внески у фонд капітального ремонту будинку або заміну ліфтів має сплачувати виключно власник квартири.",
     },
     {
-        q: "Як зафіксувати ціну оренди в договорі, щоб її не підняли через місяць?",
+        q: "Як зафіксувати ціну оренди в договору, щоб її не підняли через місяць?",
         a: "У договорі оренди обов'язково має бути пункт про те, що зазначена вартість є фіксованою на певний термін (зазвичай на 6 або 11 місяців). Також пропишіть умову, що зміна вартості можлива лише за згодою сторін і з письмовим попередженням не менше ніж за 30 днів.",
     },
     {
         q: "Що робити, якщо в орендованій квартирі зламався холодильник чи пральна машина?",
-        a: "Якщо поломка сталася через природний знос техніки (вона була стара або вийшла з ладу плата), ремонт або заміну оплачує власник. Якщо ж поломка сталася з вини орендаря (наприклад, механічне пошкодження), ремонт здійснюється за кошт мешканця. Обов'язково фіксуйте стан техніки в акті прийому-передачі.",
+        a: "Якщо поломка сталася через природний знос техніки (вона була стара або вийшла з ладу плата), ремонт або заміну оплачує власник. Якщо же поломка сталася з вини орендаря (наприклад, механічне пошкодження), ремонт здійснюється за кошт мешканця. Обов'язково фіксуйте стан техніки в акті прийому-передачі.",
     },
     {
         q: "Чи входять лічильники у фіксовану вартість комунальних послуг?",
@@ -141,10 +141,10 @@ function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
 
 function AnimatedNumber({ value, className, style }: { value: number; className?: string; style?: React.CSSProperties }) {
     const [display, setDisplay] = useState(value);
-    const prevRef = useRef(value);
+    const useRefPrev = useRef(value);
 
     useEffect(() => {
-        const from = prevRef.current; const to = value; prevRef.current = value;
+        const from = useRefPrev.current; const to = value; useRefPrev.current = value;
         if (from === to) return;
         const steps = 12; let i = 0;
         const timer = setInterval(() => {
@@ -160,6 +160,27 @@ function AnimatedNumber({ value, className, style }: { value: number; className?
 
 function Slider({ field, value, onChange }: { field: SliderField; value: number; onChange: (v: number) => void }) {
     const pct = ((value - field.min) / (field.max - field.min)) * 100;
+    const isFirstMount = useRef(true);
+
+    // Унікальний дебаунс для кожного окремого слайдера
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            gTag.event({
+                action: `slider_${field.id}_updated`,
+                category: "calculator_page",
+                label: `${field.label}: ${value} ${field.unit}`,
+                value: value
+            });
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [value, field.id, field.label, field.unit]);
+
     return (
         <div className="space-y-1.5 relative select-none">
             <div className="flex items-baseline justify-between gap-2">
@@ -218,27 +239,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const [depositMul, setDepositMul] = useState(1);
     const [agentFee, setAgentFee] = useState(0);
     const [isGenerating, setIsGenerating] = useState(false);
-
-    const isFirstMount = useRef(true);
-
-    // Debounce для відстеження змін слайдерів без спаму в аналітику
-    useEffect(() => {
-        if (isFirstMount.current) {
-            isFirstMount.current = false;
-            return;
-        }
-
-        const timer = setTimeout(() => {
-            gTag.event({
-                action: "calculator_sliders_updated",
-                category: "calculator_page",
-                label: `Rent: ${values.rent} | Comm: ${monthly - values.rent}`,
-                value: monthly
-            });
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [values]);
 
     const monthly  = Object.values(values).reduce((a, b) => a + b, 0);
     const deposit  = values.rent * depositMul;
