@@ -199,6 +199,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const deposit  = values.rent * depositMul;
     const agent    = values.rent * agentFee;
     const moveIn   = deposit + agent + values.rent;
+    const annual = monthly * 12;
     const overpay  = monthly - values.rent;
     const overpayPct = values.rent > 0 ? ((overpay / values.rent) * 100).toFixed(0) : "0";
 
@@ -219,40 +220,136 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const handleDownloadPDF = async () => {
         if (isGenerating) return;
         setIsGenerating(true);
+
         try {
-            const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+            const doc = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4",
+            });
+
             const dateStr = new Date().toLocaleDateString("uk-UA");
+
+            // Завантажуємо локальний повноцінний шрифт з папки public/fonts/
             const response = await fetch("/fonts/Roboto-Regular.ttf");
-            if (!response.ok) throw new Error("Шрифт не знайдено");
+            if (!response.ok) {
+                throw new Error("Файл шрифту не знайдено в папці public/fonts/");
+            }
             const blob = await response.blob();
+
             const reader = new FileReader();
-            await new Promise<void>((res, rej) => { reader.onloadend = () => res(); reader.onerror = rej; reader.readAsDataURL(blob); });
+            await new Promise<void>((resolve, reject) => {
+                reader.onloadend = () => resolve();
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
             const fontBase64 = (reader.result as string).split(",")[1];
 
             doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
             doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
             doc.setFont("Roboto", "normal");
 
-            doc.setFillColor(249, 115, 22); doc.rect(0, 0, 210, 35, "F");
-            doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.text("FOXFLAT : РОЗРАХУНОК ВАРТОСТІ ОРЕНДИ", 15, 15);
-            doc.setFontSize(10); doc.text(`Дата: ${dateStr} | Telegram: @FoxFlat_bot`, 15, 25);
+            // 1. Брендований хедер
+            doc.setFillColor(249, 115, 22);
+            doc.rect(0, 0, 210, 35, "F");
 
-            doc.setFillColor(245, 245, 245); doc.rect(15, 45, 180, 25, "F");
-            doc.setTextColor(0, 0, 0); doc.setFontSize(11); doc.text("РЕАЛЬНА ВАРТІСТЬ НА МІСЯЦЬ:", 20, 53);
-            doc.setFontSize(16); doc.setTextColor(249, 115, 22); doc.text(`${fmt(monthly)} грн / міс.`, 20, 63);
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("FOXFLAT : РОЗРАХУНОК ВАРТОСТІ ОРЕНДИ", 15, 15);
 
+            doc.setFontSize(10);
+            doc.text(`Дата генерації: ${dateStr} | Telegram: @FoxFlat_bot`, 15, 25);
+
+            // 2. Головний результат
+            doc.setFillColor(245, 245, 245);
+            doc.rect(15, 45, 180, 25, "F");
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.text("РЕАЛЬНА ВАРТІСТЬ НА МІСЯЦЬ:", 20, 53);
+            doc.setFontSize(16);
+            doc.setTextColor(249, 115, 22);
+            doc.text(`${fmt(monthly)} грн / міс.`, 20, 63);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`+${overpayPct}% до ціни з оголошення (+${fmt(overpay)} грн)`, 120, 60);
+
+            // 3. Таблиця щомісячних витрат
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(13);
+            doc.text("1. Щомісячні витрати (деталізація):", 15, 85);
+
+            doc.setFontSize(10);
             let currentY = 95;
+
             FIELDS.forEach(f => {
-                doc.setDrawColor(230, 230, 230); doc.line(15, currentY + 2, 195, currentY + 2);
-                doc.text(f.label, 15, currentY); doc.text(`${fmt(values[f.id])} грн`, 165, currentY);
+                doc.setDrawColor(230, 230, 230);
+                doc.line(15, currentY + 2, 195, currentY + 2);
+
+                doc.text(f.label, 15, currentY);
+                doc.text(`${fmt(values[f.id])} грн`, 165, currentY);
                 currentY += 10;
             });
 
+            // 4. Одноразові витрати при заселенні
+            currentY += 5;
+            doc.setFontSize(13);
+            doc.text("2. Витрати при заселенні (одноразово):", 15, currentY);
+            currentY += 10;
+
+            doc.setFontSize(10);
+
+            const moveInRows = [
+                ["Перший місяць (оренда)", values.rent],
+                [`Застава (депозит х${depositMul})`, deposit],
+                [`Комісія рієлтора (${agentFee * 100}%)`, agent]
+            ];
+
+            moveInRows.forEach(([lbl, val]) => {
+                doc.setDrawColor(230, 230, 230);
+                doc.line(15, currentY + 2, 195, currentY + 2);
+                doc.text(lbl as string, 15, currentY);
+                doc.text(`${fmt(val as number)} грн`, 165, currentY);
+                currentY += 10;
+            });
+
+            // Разом для договору
+            doc.setFillColor(254, 242, 242);
+            doc.rect(15, currentY - 5, 180, 12, "F");
+            doc.text("РАЗОМ ДЛЯ ЗАСЕЛЕННЯ:", 20, currentY + 2);
+            doc.text(`${fmt(moveIn)} грн`, 165, currentY + 2);
+
+            // 5. Перспектива на рік
+            currentY += 20;
+            doc.setFontSize(13);
+            doc.text("3. Довгострокова перспектива:", 15, currentY);
+            currentY += 10;
+
+            doc.setFontSize(10);
+            doc.text("Лише щомісячні платежі за 12 місяців:", 15, currentY);
+            doc.text(`${fmt(annual)} грн`, 165, currentY);
+            currentY += 8;
+
+            doc.text("ПОВНА ВАРТІСТЬ ЗА РІК (з урахуванням заселення):", 15, currentY);
+            doc.text(`${fmt(annual + moveIn)} грн`, 165, currentY);
+
+            // Спрощений футер у PDF
+            doc.setDrawColor(249, 115, 22);
+            doc.setLineWidth(0.5);
+            doc.line(15, 272, 195, 272);
+            doc.setFontSize(9);
+            doc.setTextColor(120, 120, 120);
+            doc.text("Пошук свіжих оголошень про оренду квартир на foxflat.com.ua", 15, 280);
+
             doc.save(`foxflat-zvit-${values.rent}uan.pdf`);
-        } catch (e) {
-            console.error(e);
-            alert("Помилка генерації PDF");
-        } finally { setIsGenerating(false); }
+        } catch (error) {
+            console.error("Помилка генерації PDF:", error);
+            alert("Помилка: перевірте, чи файл Roboto-Regular.ttf дійсно лежить у папці public/fonts/");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const fadeIn = (delay = 0) => ({
@@ -354,6 +451,33 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                                     <span className="text-xs font-bold text-white/70">Потрібно мати</span>
                                     <AnimatedNumber value={moveIn} className="text-sm font-bold text-white tabular-nums" />
                                 </div>
+                            </div>
+                        </Card>
+                        <Card>
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-baseline">
+            <span className="text-xs text-white/50">
+                За рік (щомісячні)
+            </span>
+                                    <AnimatedNumber
+                                        value={annual}
+                                        className="text-sm font-bold text-white/80 tabular-nums"
+                                    />
+                                </div>
+
+                                <div className="flex justify-between items-baseline">
+            <span className="text-xs text-white/50">
+                Повна вартість за рік
+            </span>
+                                    <AnimatedNumber
+                                        value={annual + moveIn}
+                                        className="text-sm font-bold text-white tabular-nums"
+                                    />
+                                </div>
+
+                                <p className="text-xs text-white/30 pt-0.5">
+                                    З урахуванням одноразових витрат
+                                </p>
                             </div>
                         </Card>
 
