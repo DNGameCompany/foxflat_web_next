@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { jsPDF } from "jspdf";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
+import * as gTag from "@/lib/gtag";
 
 const CATEGORY_CONFIG = {
     tips:  { label: "Поради",  color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
@@ -96,6 +97,19 @@ function fmt(n: number) {
 function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
     const [open, setOpen] = useState(false);
 
+    const handleToggle = () => {
+        const nextState = !open;
+        setOpen(nextState);
+
+        if (nextState) {
+            gTag.event({
+                action: "faq_open",
+                category: "calculator_page",
+                label: item.q
+            });
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -106,7 +120,7 @@ function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
                 open ? "border-orange-500/30 bg-orange-500/[0.04]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"
             }`}
         >
-            <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left">
+            <button onClick={handleToggle} className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left">
                 <span className={`text-sm font-semibold leading-snug transition-colors ${open ? "text-orange-400" : "text-white"}`} style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "13px" }}>
                     {item.q}
                 </span>
@@ -169,11 +183,21 @@ function Slider({ field, value, onChange }: { field: SliderField; value: number;
     );
 }
 
-function ToggleGroup<T extends number>({ options, value, onChange }: { options: { label: string; value: T }[]; value: T; onChange: (v: T) => void }) {
+function ToggleGroup<T extends number>({ options, value, onChange, fieldType }: { options: { label: string; value: T }[]; value: T; onChange: (v: T) => void, fieldType: "deposit" | "agent_fee" }) {
+    const handleToggleChange = (optValue: T, optLabel: string) => {
+        onChange(optValue);
+        gTag.event({
+            action: `change_${fieldType}`,
+            category: "calculator_page",
+            label: optLabel,
+            value: Number(optValue)
+        });
+    };
+
     return (
         <div className="flex gap-2">
             {options.map(opt => (
-                <button key={opt.value} onClick={() => onChange(opt.value)} className={`flex-1 text-xs sm:text-sm font-bold py-3 px-2 rounded-xl border transition-all duration-150 ${value === opt.value ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}>
+                <button key={opt.value} onClick={() => handleToggleChange(opt.value, opt.label)} className={`flex-1 text-xs sm:text-sm font-bold py-3 px-2 rounded-xl border transition-all duration-150 ${value === opt.value ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}>
                     {opt.label}
                 </button>
             ))}
@@ -194,6 +218,27 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const [depositMul, setDepositMul] = useState(1);
     const [agentFee, setAgentFee] = useState(0);
     const [isGenerating, setIsGenerating] = useState(false);
+
+    const isFirstMount = useRef(true);
+
+    // Debounce для відстеження змін слайдерів без спаму в аналітику
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            gTag.event({
+                action: "calculator_sliders_updated",
+                category: "calculator_page",
+                label: `Rent: ${values.rent} | Comm: ${monthly - values.rent}`,
+                value: monthly
+            });
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [values]);
 
     const monthly  = Object.values(values).reduce((a, b) => a + b, 0);
     const deposit  = values.rent * depositMul;
@@ -221,6 +266,13 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
         if (isGenerating) return;
         setIsGenerating(true);
 
+        gTag.event({
+            action: "export_pdf_click",
+            category: "calculator_page",
+            label: `Rent total monthly: ${monthly} UAH`,
+            value: monthly
+        });
+
         try {
             const doc = new jsPDF({
                 orientation: "portrait",
@@ -230,7 +282,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
             const dateStr = new Date().toLocaleDateString("uk-UA");
 
-            // Завантажуємо локальний повноцінний шрифт з папки public/fonts/
             const response = await fetch("/fonts/Roboto-Regular.ttf");
             if (!response.ok) {
                 throw new Error("Файл шрифту не знайдено в папці public/fonts/");
@@ -301,13 +352,13 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
             doc.setFontSize(10);
 
-            const moveInRows = [
+            const moveInRowsPdf = [
                 ["Перший місяць (оренда)", values.rent],
                 [`Застава (депозит х${depositMul})`, deposit],
                 [`Комісія рієлтора (${agentFee * 100}%)`, agent]
             ];
 
-            moveInRows.forEach(([lbl, val]) => {
+            moveInRowsPdf.forEach(([lbl, val]) => {
                 doc.setDrawColor(230, 230, 230);
                 doc.line(15, currentY + 2, 195, currentY + 2);
                 doc.text(lbl as string, 15, currentY);
@@ -344,6 +395,12 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             doc.text("Пошук свіжих оголошень про оренду квартир на foxflat.com.ua", 15, 280);
 
             doc.save(`foxflat-zvit-${values.rent}uan.pdf`);
+
+            gTag.event({
+                action: "export_pdf_success",
+                category: "calculator_page",
+                label: `File generated successfully`
+            });
         } catch (error) {
             console.error("Помилка генерації PDF:", error);
             alert("Помилка: перевірте, чи файл Roboto-Regular.ttf дійсно лежить у папці public/fonts/");
@@ -360,7 +417,6 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
     return (
         <main className="relative min-h-screen bg-black text-white overflow-hidden">
-            {/* Підключення клієнтського Хедера як на головній */}
             <HeaderFoxFlat />
             <div className="h-14" />
 
@@ -394,11 +450,11 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
                                     <div className="flex items-baseline justify-between"><span className="text-xs font-bold text-white/60">Застава (депозит)</span><span className="text-sm font-bold text-white">{fmt(deposit)} грн</span></div>
-                                    <ToggleGroup options={DEPOSIT_MULTIPLIER} value={depositMul} onChange={setDepositMul} />
+                                    <ToggleGroup options={DEPOSIT_MULTIPLIER} value={depositMul} onChange={setDepositMul} fieldType="deposit" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-baseline justify-between"><span className="text-xs font-bold text-white/60">Комісія рієлтора</span><span className="text-sm font-bold text-white">{fmt(agent)} грн</span></div>
-                                    <ToggleGroup options={AGENT_FEE} value={agentFee} onChange={setAgentFee} />
+                                    <ToggleGroup options={AGENT_FEE} value={agentFee} onChange={setAgentFee} fieldType="agent_fee" />
                                 </div>
                             </div>
                         </Card>
@@ -456,34 +512,29 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                         <Card>
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-baseline">
-            <span className="text-xs text-white/50">
-                За рік (щомісячні)
-            </span>
-                                    <AnimatedNumber
-                                        value={annual}
-                                        className="text-sm font-bold text-white/80 tabular-nums"
-                                    />
+                                    <span className="text-xs text-white/50">За рік (щомісячні)</span>
+                                    <AnimatedNumber value={annual} className="text-sm font-bold text-white/80 tabular-nums" />
                                 </div>
 
                                 <div className="flex justify-between items-baseline">
-            <span className="text-xs text-white/50">
-                Повна вартість за рік
-            </span>
-                                    <AnimatedNumber
-                                        value={annual + moveIn}
-                                        className="text-sm font-bold text-white tabular-nums"
-                                    />
+                                    <span className="text-xs text-white/50">Повна вартість за рік</span>
+                                    <AnimatedNumber value={annual + moveIn} className="text-sm font-bold text-white tabular-nums" />
                                 </div>
 
-                                <p className="text-xs text-white/30 pt-0.5">
-                                    З урахуванням одноразових витрат
-                                </p>
+                                <p className="text-xs text-white/30 pt-0.5">З урахуванням одноразових витрат</p>
                             </div>
                         </Card>
 
                         <div className="relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 overflow-hidden">
                             <p className="text-xs font-medium text-white/70 leading-relaxed mb-3">🏠 FoxFlat знаходить нові оголошення кожні 15 хвилин — налаштуйте фільтри та отримуйте сповіщення відразу.</p>
-                            <a href="https://t.me/FoxFlat_bot?start=website_calc" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                            <a
+                                href="https://t.me/FoxFlat_bot?start=website_calc"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => gTag.event({ action: "click_telegram_bot", category: "calculator_page", label: "website_calc_banner" })}
+                                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all"
+                                style={{ fontFamily: "'Unbounded', sans-serif" }}
+                            >
                                 Запустити @FoxFlat_bot
                             </a>
                         </div>
@@ -508,7 +559,12 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                             {initialPosts.map((post) => {
                                 const cat = CATEGORY_CONFIG[post.category];
                                 return (
-                                    <Link key={post.slug} href={`/blog/${post.slug}`} className="group flex flex-col gap-3 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-orange-500/25 hover:bg-orange-500/[0.03] transition-all duration-200">
+                                    <Link
+                                        key={post.slug}
+                                        href={`/blog/${post.slug}`}
+                                        onClick={() => gTag.event({ action: "blog_card_click", category: "calculator_page", label: post.title })}
+                                        className="group flex flex-col gap-3 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-orange-500/25 hover:bg-orange-500/[0.03] transition-all duration-200"
+                                    >
                                         <div className="aspect-video w-full rounded-lg overflow-hidden bg-white/[0.04] relative">
                                             {post.cover_image ? (
                                                 <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
@@ -534,65 +590,13 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
                 {/* ─── ОНОВЛЕНИЙ ФІРМОВИЙ СЕО БЛОК: FAQ ─── */}
                 <section className="relative py-4 px-0">
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none opacity-[0.06]" style={{ background: "radial-gradient(circle, #F97316 0%, transparent 70%)" }} />
-                    <div className="relative max-w-full mx-auto">
-                        <motion.p {...fadeIn(0.32)} className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-4">FAQ</motion.p>
-                        <motion.h2 {...fadeIn(0.34)} className="text-center font-black mb-4 leading-tight" style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "clamp(24px, 3vw, 34px)", letterSpacing: "-1px" }}>
-                            Часті запитання про вартість оренди житла
-                        </motion.h2>
-                        <motion.p {...fadeIn(0.36)} className="text-center text-white/40 text-sm max-w-md mx-auto mb-12 leading-relaxed">
-                            Розбираємо деталі розрахунків, приховані платежі та правила ринку нерухомості України
-                        </motion.p>
-                        <div className="flex flex-col gap-3">
-                            {faqs.map((item, i) => (
-                                <FaqItem key={i} item={item} index={i} />
-                            ))}
-                        </div>
-                        <motion.p {...fadeIn(0.4)} className="text-center text-white/30 text-sm mt-10">
-                            Не знайшли потрібну відповідь?{" "}
-                            <a href="https://t.me/FoxFlatSupport" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors font-semibold">
-                                Напишіть нам у підтримку
-                            </a>
-                        </motion.p>
+                    <div className="space-y-4 max-w-4xl mx-auto">
+                        {faqs.map((item, index) => (
+                            <FaqItem key={index} item={item} index={index} />
+                        ))}
                     </div>
                 </section>
             </div>
-            <style jsx global>{`
-                input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
-                input[type=range]::-moz-range-thumb { width: 0; height: 0; border: none; }
-            `}</style>
-            <motion.section
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="mt-20 max-w-4xl mx-auto text-white/60 space-y-8 border-t border-white/10 pt-12"
-            >
-                <div>
-                    <h2 className="text-xl font-black text-white mb-4">Як правильно розрахувати бюджет на оренду квартири у 2026 році</h2>
-                    <p className="leading-relaxed">
-                        Планування бюджету — це перший і найважливіший крок у пошуку житла. Багато орендарів припускаються помилки, орієнтуючись лише на &#34;чисту&#34; ціну оренди, зазначену в оголошенні. Проте реальна вартість оренди квартири в Києві чи інших містах України складається з декількох факторів. Окрім щомісячних платежів, важливо враховувати одноразові витрати при заселенні: страховий депозит, комісію рієлтора та витрати на облаштування. Наш калькулятор дозволяє побачити повну картину витрат і обрати житло, яке не стане фінансовим тягарем.
-                    </p>
-                </div>
-
-                <div>
-                    <h2 className="text-xl font-black text-white mb-4">Приховані платежі при оренді житла</h2>
-                    <p className="leading-relaxed mb-4">
-                        Досвідчені орендарі знають, що комунальні послуги — це лише частина витрат. Часто орендарі забувають про додаткові витрати, які можуть суттєво вплинути на гаманець:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Обслуговування будинку (ОСББ/ЖЕК):</strong> у новобудовах ці платежі можуть сягати 1000+ грн на місяць.</li>
-                        <li><strong>Послуги інтернет-провайдерів:</strong> інколи інтернет та ТБ підключені до дорогих пакетів, які не можна змінити.</li>
-                        <li><strong>Опалення:</strong> в зимовий період це найбільша стаття витрат, яку часто не враховують при літньому перегляді квартири.</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h2 className="text-xl font-black text-white mb-4">Чому FoxFlat — ваш головний інструмент пошуку</h2>
-                    <p className="leading-relaxed">
-                        Самостійний моніторинг сайтів оголошень забирає надто багато часу, особливо в умовах дефіциту якісних квартир. FoxFlat автоматизує цей процес, збираючи пропозиції з десятків джерел. За допомогою нашого Telegram-бота ви можете не лише налаштувати параметри пошуку, а й отримувати миттєві сповіщення про нові квартири, які ідеально вписуються у ваш розрахований бюджет. Економте свій час та гроші, обираючи житло ефективно.
-                    </p>
-                </div>
-            </motion.section>
         </main>
     );
 }
