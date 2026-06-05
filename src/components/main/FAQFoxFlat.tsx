@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
+// Оновлений масив FAQ з інтегрованим калькулятором
 const faqs = [
     {
         q: 'Скільки коштує використання FoxFlat?',
@@ -11,6 +13,13 @@ const faqs = [
     {
         q: 'Яка різниця між Free та Premium?',
         a: 'Free дає базовий пошук квартир з обмеженнями: сповіщення приходять кожні 30 хвилин, можна змінювати фільтри лише раз на добу і відкривати до 3 оголошень на день. Premium відкриває всі можливості: миттєві сповіщення, повний набір фільтрів (район, площа, поверх), необмежені зміни параметрів пошуку та необмежену кількість переходів на оголошення.',
+    },
+    {
+        type: 'calculator',
+        q: 'Як розрахувати бюджет на оренду?',
+        a: 'Ми створили зручний калькулятор витрат, який допоможе тобі спланувати бюджет на оренду, враховуючи комунальні послуги, комісії та інші витрати.',
+        linkText: 'Перейти до калькулятора →',
+        href: '/tools/calculator'
     },
     {
         q: 'У яких містах працює бот?',
@@ -34,7 +43,7 @@ const faqs = [
     },
 ];
 
-function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
+function FaqItem({ item, index }: { item: any; index: number }) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -71,9 +80,14 @@ function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                     >
-                        <p className="px-6 pb-5 text-sm text-white/50 leading-relaxed">
-                            {item.a}
-                        </p>
+                        <div className="px-6 pb-5 text-sm text-white/50 leading-relaxed">
+                            <p>{item.a}</p>
+                            {item.type === 'calculator' && (
+                                <Link href={item.href} className="inline-block mt-3 text-orange-400 hover:text-white transition-colors underline decoration-orange-500/50 underline-offset-4">
+                                    {item.linkText}
+                                </Link>
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -84,47 +98,13 @@ function FaqItem({ item, index }: { item: typeof faqs[0]; index: number }) {
 export default function FaqFoxFlat() {
     return (
         <section className="relative py-24 px-4">
-
-            <div
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none opacity-[0.06]"
-                style={{ background: 'radial-gradient(circle, #F97316 0%, transparent 70%)' }}
-            />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none opacity-[0.06]" style={{ background: 'radial-gradient(circle, #F97316 0%, transparent 70%)' }} />
 
             <div className="relative max-w-3xl mx-auto">
-
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-4"
-                >
-                    FAQ
-                </motion.p>
-
-                <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center font-black mb-4 leading-tight"
-                    style={{
-                        fontFamily: "'Unbounded', sans-serif",
-                        fontSize: 'clamp(24px, 3vw, 38px)',
-                        letterSpacing: '-1px',
-                    }}
-                >
+                <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-4">FAQ</motion.p>
+                <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-center font-black mb-4 leading-tight" style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(24px, 3vw, 38px)', letterSpacing: '-1px' }}>
                     Часті запитання про оренду квартир через FoxFlat
                 </motion.h2>
-
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.15 }}
-                    className="text-center text-white/40 text-sm max-w-md mx-auto mb-12 leading-relaxed"
-                >
-                    Є питання? Ми зібрали найпопулярніші відповіді
-                </motion.p>
 
                 <div className="flex flex-col gap-3">
                     {faqs.map((item, i) => (
@@ -132,24 +112,9 @@ export default function FaqFoxFlat() {
                     ))}
                 </div>
 
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 }}
-                    className="text-center text-white/30 text-sm mt-10"
-                >
-                    Не знайшов відповідь?{' '}
-                    <a
-                        href="https://t.me/qa_aqa_dmytro"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors"
-                    >
-                        Напиши в підтримку
-                    </a>
+                <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className="text-center text-white/30 text-sm mt-10">
+                    Не знайшов відповідь? <a href="https://t.me/FoxFlatSupport" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors">Напиши в підтримку</a>
                 </motion.p>
-
             </div>
         </section>
     );

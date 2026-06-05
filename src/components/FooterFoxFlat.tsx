@@ -25,8 +25,6 @@ const CITIES = [
     { slug: "chernivtsi",      name: "Чернівці" },
 ];
 
-
-
 export default function FooterFoxFlat() {
     return (
         <footer className="w-full bg-black pt-10 pb-6 px-4 relative z-10">
@@ -36,11 +34,11 @@ export default function FooterFoxFlat() {
 
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Міста + Блог */}
-                <div className="grid grid-cols-1 gap-8">
+                {/* Міста + Інструменти + Блог */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
                     {/* Міста */}
-                    <div className="">
+                    <div className="md:col-span-3">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
                             Оренда по містах
                         </p>
@@ -54,7 +52,15 @@ export default function FooterFoxFlat() {
                         </div>
                     </div>
 
-
+                    {/* Інструменти */}
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                            Інструменти
+                        </p>
+                        <Link href="/tools/calculator" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                            Калькулятор оренди
+                        </Link>
+                    </div>
 
                 </div>
 

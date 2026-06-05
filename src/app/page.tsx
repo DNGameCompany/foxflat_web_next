@@ -188,7 +188,7 @@ export default async function HomePage() {
                                 contactPoint: {
                                     '@type': 'ContactPoint',
                                     contactType: 'customer support',
-                                    url: 'https://t.me/qa_aqa_dmytro',
+                                    url: 'https://t.me/FoxFlatSupport',
                                     availableLanguage: 'Ukrainian',
                                 },
                                 sameAs: ['https://t.me/FoxFlat_bot'],

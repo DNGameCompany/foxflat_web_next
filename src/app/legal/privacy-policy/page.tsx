@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
         title: 'Політика конфіденційності',
         description: 'Політика конфіденційності Telegram-бота FoxFlat, що регламентує порядок збору, зберігання, обробки та використання персональних даних користувачів.',
         lastUpdated: '08 травня 2025 року',
-        supportTelegram: 'https://t.me/qa_aqa_dmytro',
+        supportTelegram: 'https://t.me/FoxFlatSupport',
         supportEmail: 'support@foxflat.com',
     };
 

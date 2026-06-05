@@ -8,6 +8,7 @@ const NAV_LINKS = [
     { href: '/blog',     label: 'Блог' },
     { href: '/reviews',  label: 'Відгуки' },
     { href: '/contacts', label: 'Контакти' },
+    { href: '/tools/calculator', label: 'Калькулятор оренди' }, // Новий лінк
 ];
 
 export default function HeaderFoxFlat() {

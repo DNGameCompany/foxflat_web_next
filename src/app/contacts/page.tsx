@@ -51,7 +51,7 @@ export default async function ContactsPage() {
         title: 'Контакти FoxFlat',
         description:
             'Зв’яжіться з нашою командою для підтримки, запитів чи співпраці через Telegram або форму зворотного зв’язку.',
-        telegramLink: 'https://t.me/qa_aqa_dmytro',
+        telegramLink: 'https://t.me/FoxFlatSupport',
     };
 
     return (

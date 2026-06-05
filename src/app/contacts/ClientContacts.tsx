@@ -23,7 +23,7 @@ const contacts = [
         ),
         label: 'Telegram підтримка',
         value: '@foxflat_support',
-        href: 'https://t.me/qa_aqa_dmytro',
+        href: 'https://t.me/FoxFlatSupport',
         desc: 'Відповідаємо протягом кількох годин',
     },
     {

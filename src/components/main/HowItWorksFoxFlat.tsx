@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 const IconBot = () => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -74,15 +75,12 @@ export default function HowItWorksFoxFlat() {
 
     return (
         <section className="relative py-28 px-6 overflow-hidden">
-            {/* bg glow */}
             <div
                 className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse, rgba(249,115,22,0.05) 0%, transparent 65%)' }}
             />
 
             <div className="relative max-w-6xl mx-auto">
-
-                {/* Header */}
                 <motion.p
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
@@ -117,12 +115,8 @@ export default function HowItWorksFoxFlat() {
                     Без реєстрацій, без дзвінків ріелторам — тільки свіжі оголошення в Telegram
                 </motion.p>
 
-                {/* Layout: ліворуч таймлайн, праворуч панель */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
-
-                    {/* Ліва колонка — вертикальний таймлайн */}
                     <div className="relative">
-                        {/* Вертикальна лінія */}
                         <div className="absolute left-[27px] top-4 bottom-4 w-px bg-white/[0.06]" />
                         <motion.div
                             className="absolute left-[27px] top-4 w-px bg-gradient-to-b from-orange-500/70 to-orange-500/10"
@@ -149,7 +143,6 @@ export default function HowItWorksFoxFlat() {
                                                 : 'border border-transparent hover:bg-white/[0.02]'
                                         }`}
                                     >
-                                        {/* Dot на лінії */}
                                         <div className={`absolute left-[19px] w-[17px] h-[17px] rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 ${
                                             isActive
                                                 ? 'border-orange-500 bg-orange-500/20 scale-125'
@@ -160,7 +153,6 @@ export default function HowItWorksFoxFlat() {
                                             )}
                                         </div>
 
-                                        {/* Іконка */}
                                         <div className={`flex-shrink-0 p-2.5 rounded-xl border transition-all duration-300 ${
                                             isActive
                                                 ? 'bg-orange-500/15 border-orange-500/30 text-orange-400'
@@ -169,7 +161,6 @@ export default function HowItWorksFoxFlat() {
                                             <step.Icon />
                                         </div>
 
-                                        {/* Назва + бейдж */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-0.5">
                                                 <span
@@ -184,7 +175,6 @@ export default function HowItWorksFoxFlat() {
                                             </span>
                                         </div>
 
-                                        {/* Номер праворуч */}
                                         <span
                                             className={`flex-shrink-0 text-sm font-bold transition-colors duration-300 ${isActive ? 'text-orange-500/50' : 'text-white/10'}`}
                                             style={{ fontFamily: "'Unbounded', sans-serif" }}
@@ -197,7 +187,6 @@ export default function HowItWorksFoxFlat() {
                         </div>
                     </div>
 
-                    {/* Права колонка — панель деталей */}
                     <div className="lg:sticky lg:top-32">
                         <AnimatePresence mode="wait">
                             {steps.map((step, i) =>
@@ -210,7 +199,6 @@ export default function HowItWorksFoxFlat() {
                                         transition={{ duration: 0.35, ease: 'easeOut' }}
                                         className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-10"
                                     >
-                                        {/* Декоративний великий номер */}
                                         <div
                                             className="absolute -top-4 -right-4 font-black text-white/[0.04] select-none pointer-events-none leading-none"
                                             style={{
@@ -222,20 +210,17 @@ export default function HowItWorksFoxFlat() {
                                             {step.num}
                                         </div>
 
-                                        {/* Glow за номером */}
                                         <div
                                             className="absolute top-0 right-0 w-64 h-64 pointer-events-none"
                                             style={{ background: 'radial-gradient(circle at 80% 20%, rgba(249,115,22,0.07) 0%, transparent 60%)' }}
                                         />
 
-                                        {/* Іконка велика */}
                                         <div className="inline-flex p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400 mb-8">
                                             <div style={{ transform: 'scale(1.4)', transformOrigin: 'center' }}>
                                                 <step.Icon />
                                             </div>
                                         </div>
 
-                                        {/* Крок */}
                                         <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-3">
                                             Крок {step.num}
                                         </p>
@@ -255,13 +240,11 @@ export default function HowItWorksFoxFlat() {
                                             {step.desc}
                                         </p>
 
-                                        {/* Detail рядок */}
                                         <div className="flex items-center gap-3 pt-6 border-t border-white/[0.06]">
                                             <div className="w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
                                             <span className="text-sm text-white/35">{step.detail}</span>
                                         </div>
 
-                                        {/* Прогрес-індикатор */}
                                         <div className="flex gap-1.5 mt-6">
                                             {steps.map((_, idx) => (
                                                 <div
@@ -283,13 +266,12 @@ export default function HowItWorksFoxFlat() {
                     </div>
                 </div>
 
-                {/* CTA */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.5 }}
-                    className="flex justify-center mt-16"
+                    className="flex flex-col items-center mt-16 gap-4"
                 >
                     <a
                         href="https://t.me/FoxFlat_bot?start=website"
@@ -303,6 +285,13 @@ export default function HowItWorksFoxFlat() {
                             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </a>
+
+                    <Link
+                        href="/tools/calculator"
+                        className="text-xs text-white/50 hover:text-orange-500 transition-colors border-b border-white/20 hover:border-orange-500/50 pb-0.5"
+                    >
+                        Калькулятор витрат на оренду →
+                    </Link>
                 </motion.div>
             </div>
         </section>
