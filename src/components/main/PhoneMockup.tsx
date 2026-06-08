@@ -2,12 +2,13 @@ import React from 'react';
 import Image from "next/image";
 
 interface IphoneMockupProps {
-    videoSrc: string;
-    width?: number; // ширина мокапу
+    videoSrc?: string;
+    imageSrc?: string;
+    width?: number;
 }
 
-const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, width = 350 }) => {
-    const height = width * 2; // можна підігнати
+const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, imageSrc, width = 350 }) => {
+    const height = width * 2;
 
     return (
         <div
@@ -31,19 +32,32 @@ const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, width = 350 }) =>
                     backgroundColor: 'black',
                 }}
             >
-                <video
-                    src={videoSrc}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'fill', // використати fill для заповнення без полос
-                        display: 'block',
-                    }}
-                />
+                {videoSrc ? (
+                    <video
+                        src={videoSrc}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'fill',
+                            display: 'block',
+                        }}
+                    />
+                ) : imageSrc ? (
+                    <img
+                        src={imageSrc}
+                        alt="Phone screen"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                        }}
+                    />
+                ) : null}
             </div>
 
             {/* Рамка телефону */}
@@ -61,7 +75,6 @@ const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, width = 350 }) =>
                     userSelect: 'none',
                 }}
                 draggable={false}
-
             />
         </div>
     );
