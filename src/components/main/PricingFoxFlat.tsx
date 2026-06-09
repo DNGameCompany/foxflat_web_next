@@ -233,7 +233,7 @@ export default function PricingFoxFlat() {
 
                         <div>
                             <a
-                                href="https://t.me/FoxFlat_bot?start=website"
+                                href="https://t.me/FoxFlat_bot?start=website_premium"
                                 target="_blank"
                                 onClick={() => handleBotClick("tier-premium", "Місячна підписка")}
                                 className="block text-center font-bold text-black bg-orange-500 hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 px-6 py-4 rounded-xl transition-all"
