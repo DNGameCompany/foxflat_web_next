@@ -298,7 +298,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                     </h1>
                     <p className="text-white/40 text-base leading-relaxed max-w-lg mx-auto mb-10">
                         FoxFlat надсилає нові оголошення у {city.nameGen} кожні 15 хвилин прямо в Telegram.
-                        Без посередників, без реєстрації — просто запусти бота.
+                        Без реєстрації — просто запусти бота.
                     </p>
                     <a
                         href={`https://t.me/FoxFlat_bot?start=website_${slug}`}
@@ -347,7 +347,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                 <div className="flex flex-col gap-4">
                     {[
                         { n: '01', t: 'Запусти бота', d: <span>Відкрий <a href={`https://t.me/FoxFlat_bot?start=website_${slug}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2">@FoxFlat_bot</a> у Telegram</span> },
-                        { n: '02', t: `Обери ${city.name}`, d: `Вкажи місто ${city.name} і налаштуй фільтри — ціна, район, кімнати` },
+                        { n: '02', t: 'Місто обрано автоматично', d: `${city.name} підставиться автоматично — бо ти перейшов з цієї сторінки. Залишилось налаштувати фільтри: ціна, район, кімнати` },
                         { n: '03', t: 'Отримуй квартири', d: `Нові оголошення у ${city.nameGen} приходять кожні 15 хвилин прямо в Telegram` },
                     ].map((step, i) => (
                         <div key={i} className="flex gap-5 p-6 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
