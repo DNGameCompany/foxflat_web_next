@@ -60,6 +60,9 @@ export default function FooterFoxFlat() {
                         <Link href="/tools/calculator" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
                             Калькулятор оренди
                         </Link>
+                        <Link href="/tools/checklist" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                            Чеклист огляду квартири
+                        </Link>
                     </div>
 
                 </div>
