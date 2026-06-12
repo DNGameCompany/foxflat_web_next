@@ -911,7 +911,6 @@ export default function ChecklistClient() {
                     <p className="w-full text-center text-xs text-white/20 mb-2">Також корисно:</p>
                     {([
                         ["Калькулятор вартості оренди", "/tools/calculator"],
-                        ["Шаблон договору оренди",      "/tools/dohovir"],
                         ["Блог про оренду",              "/blog"],
                     ] as [string, string][]).map(([label, href]) => (
                         <Link key={href} href={href} className="text-sm font-bold px-4 py-2 rounded-full border border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20 transition-all">
