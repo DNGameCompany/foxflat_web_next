@@ -180,14 +180,41 @@ export async function generateStaticParams() {
     return Object.keys(cities).map((slug) => ({ slug }));
 }
 
+// Допоміжна функція: акуратно обрізає рядок по межі слова, без розриву посеред слова
+function truncateAtWord(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    const truncated = text.slice(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    return (lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated).trim();
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const city = cities[slug];
     if (!city) return {};
 
+    const content = cityContent[slug];
+
+    // priceFrom: "4 000–7 500 грн/міс" -> "4 000 грн"
+    const priceFrom = content
+        ? `${content.price1br.split('–')[0].trim()} грн`
+        : null;
+
+    const title = priceFrom
+        ? `Оренда квартир у ${city.nameGen} від ${priceFrom} — FoxFlat`
+        : `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`;
+
+    // Хук: перше речення з tip, акуратно обрізане до ~60 символів по межі слова
+    const rawHook = content?.tip.split('.')[0]?.trim();
+    const hook = rawHook ? truncateAtWord(rawHook, 60) : null;
+
+    const description = (content && hook)
+        ? `${hook}. 1-кімнатні від ${content.price1br}. Нові оголошення в Telegram кожні 15 хв — безкоштовно.`
+        : `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat. Оновлення кожні 15 хвилин. Запусти безкоштовно!`;
+
     return {
-        title: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
-        description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat. Оновлення кожні 15 хвилин, без посередників і комісій. Запусти безкоштовно!`,
+        title,
+        description,
         keywords: [
             `оренда квартир ${city.name}`,
             `оренда квартир ${city.name} телеграм`,
@@ -201,8 +228,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         ],
         alternates: { canonical: `https://foxflat.com.ua/misto/${slug}` },
         openGraph: {
-            title: `Оренда квартир у ${city.nameGen} — FoxFlat`,
-            description: `Telegram-бот FoxFlat надсилає нові квартири у ${city.nameGen} кожні 15 хвилин. Без посередників!`,
+            title,
+            description,
             url: `https://foxflat.com.ua/misto/${slug}`,
             siteName: 'FoxFlat',
             locale: 'uk_UA',
