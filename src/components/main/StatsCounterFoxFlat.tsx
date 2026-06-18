@@ -57,12 +57,21 @@ const stats = [
     },
 ];
 
+// КЛЮЧОВА ЗМІНА: стартуємо з target, а не з 0.
+// SSR/перший рендер завжди покаже фінальне число — Google і будь-який
+// бот без JS бачитимуть коректні цифри одразу в HTML.
+// Анімація "від 0" — це лише косметичний ефект, що відбувається ПІСЛЯ
+// гідратації, і тільки якщо елемент потрапив у viewport.
 function useCountUp(target: number, duration = 1800, started: boolean) {
-    const [count, setCount] = useState(0);
+    const [count, setCount] = useState(target);
+    const hasAnimated = useRef(false);
 
     useEffect(() => {
-        if (!started) return;
+        if (!started || hasAnimated.current) return;
+        hasAnimated.current = true;
 
+        // Косметичний "розбіг" від 0 — тільки в браузері, тільки один раз.
+        setCount(0);
         let startTime: number | null = null;
 
         const step = (timestamp: number) => {
@@ -74,6 +83,7 @@ function useCountUp(target: number, duration = 1800, started: boolean) {
             setCount(Math.floor(ease * target));
 
             if (progress < 1) requestAnimationFrame(step);
+            else setCount(target); // гарантуємо точне фінальне значення
         };
 
         requestAnimationFrame(step);
