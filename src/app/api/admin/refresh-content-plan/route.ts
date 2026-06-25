@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
                 },
                 body: JSON.stringify({
                     model: "claude-sonnet-4-6",
-                    max_tokens: 3000,
+                    max_tokens: 5000,
                     system: `Ти — SEO-стратег foxflat.com.ua (оренда квартир, Україна).
 Міста (22): ${CITIES.join(", ")}.
 Категорії: news 25% | guide 35% | tips 40%.
@@ -128,10 +128,23 @@ ${planCtx}
             try {
                 parsed = JSON.parse(raw);
             } catch {
-                const fixed = raw.replace(/("(?:[^"\\]|\\.)*")/g, (m) =>
-                    m.replace(/\n/g, "\\n").replace(/\r/g, "\\r")
-                );
-                parsed = JSON.parse(fixed);
+                // fix unescaped newlines and quotes inside string values
+                let fixed = raw
+                    .replace(/\r?\n/g, "\\n")
+                    .replace(/\t/g, "\\t");
+                // if JSON is still truncated — close it gracefully
+                if (!fixed.trimEnd().endsWith("}")) {
+                    const lastComma = fixed.lastIndexOf(",");
+                    const lastBrace = fixed.lastIndexOf("}");
+                    fixed = fixed.slice(0, Math.max(lastComma, lastBrace) + (lastBrace > lastComma ? 1 : 0));
+                    if (!fixed.includes('"items"')) fixed += ',"items":[]}';
+                    else fixed += "]}";
+                }
+                try {
+                    parsed = JSON.parse(fixed);
+                } catch (e2) {
+                    throw new Error(`JSON parse failed. Raw (first 300): ${raw.slice(0, 300)}. Error: ${e2}`);
+                }
             }
 
             if (autoSave) {
