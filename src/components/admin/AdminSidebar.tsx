@@ -32,6 +32,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpe
 
     const handleLogout = async () => {
         await signOut(auth);
+        await fetch("/api/auth/session", { method: "DELETE" });
         window.location.href = "/admin/login";
     };
 

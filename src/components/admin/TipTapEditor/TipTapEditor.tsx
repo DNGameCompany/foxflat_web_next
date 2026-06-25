@@ -70,6 +70,7 @@ export default function TipTapEditor({ content, onChange }: Props) {
             }),
             CharacterCount,
         ],
+        immediatelyRender: false,
         content: content || "",
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());

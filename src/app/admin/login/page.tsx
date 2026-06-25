@@ -20,7 +20,19 @@ export default function AdminLogin() {
         setError(null);
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await credential.user.getIdToken();
+
+            const sessionRes = await fetch("/api/auth/session", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ idToken }),
+            });
+
+            if (!sessionRes.ok) {
+                throw new Error("Помилка авторизації на сервері");
+            }
+
             router.push("/admin");
         } catch (err: unknown) {
             if (err instanceof Error) {

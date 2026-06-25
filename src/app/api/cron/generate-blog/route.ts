@@ -7,6 +7,7 @@ const BLOG_API = "https://api.foxflat.com.ua";
 
 interface SearchResult {
     title:   string;
+
     url:     string;
     snippet: string;
 }
@@ -87,41 +88,55 @@ async function getExistingPosts() {
     }
 }
 
+const SYSTEM_PROMPT = `Ти — SEO-контент-менеджер foxflat.com.ua (оренда квартир по Україні).
+Міста (22): ${CITIES.join(", ")}.
+SEO-ціль: топ-10 за "оренда квартир [місто]".
+
+Категорії: news 25% | guide 35% | tips 40%
+news — новини ринку/законодавства; guide — інструкції (орендувати, перевірити, договір); tips — поради, лайфхаки, чек-листи.
+
+Достовірність (критично): тільки факти з пошукових результатів або загальновідомі. Не вигадуй ціни/статистику без джерела. news лише за наявності свіжих пошукових даних — інакше guide/tips.
+
+Відповідай ТІЛЬКИ JSON без markdown. В content — HTML теги, \n-escape замість реальних переносів:
+{"plan_updates":[{"topic":"","status":"planned","priority":"high","reason":""}],"selected_topic":"","selection_reason":"","post":{"title":"","excerpt":"","content":"","category":"","slug":"","seo_keywords":[]}}`;
+
 async function analyzeAndGenerate(posts: {
     title: string;
     category: string;
-    slug: string;
 }[], plan: ContentPlan) {
     const today = new Date().toLocaleDateString("uk-UA", {
         day: "numeric", month: "long", year: "numeric",
     });
 
-    const categoryCount = posts.reduce((acc: Record<string, number>, p) => {
+    const c = posts.reduce((acc: Record<string, number>, p) => {
         acc[p.category] = (acc[p.category] ?? 0) + 1;
         return acc;
     }, {});
-    const categoryStats = `tips: ${categoryCount.tips ?? 0}, news: ${categoryCount.news ?? 0}, guide: ${categoryCount.guide ?? 0}`;
 
-    const postsCtx = posts.length
-        ? posts.map((p) => `- [${p.category}] "${p.title}"`).join("\n")
+    // Показуємо лише останні 25 статей і тільки заплановані теми — решта шум
+    const recentPosts = posts.slice(-25);
+    const postsCtx = recentPosts.length
+        ? recentPosts.map((p) => `[${p.category}] ${p.title}`).join("\n")
         : "Статей ще немає";
 
-    const planCtx = plan.items.length
-        ? plan.items.map((i) => `- [${i.status}] (${i.priority}) ${i.topic} — ${i.reason}`).join("\n")
-        : "Контент-план порожній";
+    const plannedItems = plan.items.filter((i) => i.status === "planned");
+    const publishedCount = plan.items.filter((i) => i.status === "published").length;
+    const planCtx = plannedItems.length
+        ? plannedItems.map((i) => `(${i.priority}) ${i.topic} — ${i.reason}`).join("\n")
+        : "Немає запланованих тем";
 
-    // Паралельно шукаємо актуальні дані
+    // 8 результатів замість 12 — достатньо для актуального контексту
     const [newsResults, lawResults, priceResults] = await Promise.all([
-        searchGoogle("ринок нерухомості України оренда квартир новини", 5),
-        searchGoogle("закон оренда житло Україна зміни 2025", 3),
-        searchGoogle("ціни оренди квартир Київ Львів Одеса Харків", 4),
+        searchGoogle("ринок нерухомості України оренда квартир новини", 3),
+        searchGoogle("закон оренда житло Україна зміни 2025", 2),
+        searchGoogle("ціни оренди квартир Київ Львів Одеса Харків", 3),
     ]);
 
     const searchCtx = [
-        formatSearchResults(newsResults,  "АКТУАЛЬНІ НОВИНИ РИНКУ НЕРУХОМОСТІ"),
-        formatSearchResults(lawResults,   "ЗМІНИ В ЗАКОНОДАВСТВІ"),
-        formatSearchResults(priceResults, "ЦІНИ НА ОРЕНДУ"),
-    ].filter(Boolean).join("\n") || "Пошукові дані недоступні — спирайся лише на перевірені факти.";
+        formatSearchResults(newsResults,  "НОВИНИ РИНКУ"),
+        formatSearchResults(lawResults,   "ЗАКОНОДАВСТВО"),
+        formatSearchResults(priceResults, "ЦІНИ"),
+    ].filter(Boolean).join("\n") || "Пошукові дані недоступні.";
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -132,89 +147,23 @@ async function analyzeAndGenerate(posts: {
         },
         body: JSON.stringify({
             model:      "claude-sonnet-4-6",
-            max_tokens: 8000,
+            max_tokens: 4000,
+            system:     SYSTEM_PROMPT,
             messages: [{
                 role:    "user",
-                content: `Ти — SEO-стратег і контент-менеджер для foxflat.com.ua.
+                content: `Сьогодні: ${today} | Розподіл: tips ${c.tips ?? 0}, news ${c.news ?? 0}, guide ${c.guide ?? 0}
 
-САЙТ: сервіс пошуку та оренди квартир по всій Україні.
-МІСТА СЕРВІСУ (${CITIES.length}): ${CITIES.join(", ")}.
-АУДИТОРІЯ: люди, що шукають оренду квартири в різних містах України.
-SEO-ЦІЛЬ: Google топ-10 за запитами "оренда квартир [місто]" та суміжними по всіх містах.
-СЬОГОДНІ: ${today}
-
-─── КАТЕГОРІЇ БЛОГУ ───
-• news  (Новини)  — актуальні новини ринку нерухомості, зміни законодавства, тренди
-• guide (Гайд)   — покрокові інструкції: як орендувати, як перевірити, як скласти договір
-• tips  (Порада) — практичні поради, лайфхаки, чек-листи для орендарів
-
-ПОТОЧНИЙ РОЗПОДІЛ: ${categoryStats}
-
-─── ІСНУЮЧІ СТАТТІ (${posts.length} шт.) ───
+СТАТТІ (${posts.length} всього, останні ${recentPosts.length}):
 ${postsCtx}
 
-─── ПОТОЧНИЙ КОНТЕНТ-ПЛАН ───
+ПЛАН (${plannedItems.length} заплановано, ${publishedCount} опубліковано):
 ${planCtx}
+
 ${searchCtx}
 
-─── ПРАВИЛА ДОСТОВІРНОСТІ (КРИТИЧНО) ───
-• Використовуй ТІЛЬКИ факти, які є в пошукових результатах вище АБО які є загальновідомою стабільною інформацією.
-• Якщо пишеш конкретні ціни — бери з пошукових результатів або давай ДІАПАЗОН з поміткою "орієнтовно".
-• Якщо пишеш про закони — посилайся на конкретні статті або джерела з результатів пошуку.
-• НЕ вигадуй статистику, конкретні цифри чи факти "зі стелі" — це вводить читачів в оману.
-• Якщо по темі немає свіжих даних — обери загальну/практичну тему де факти стабільні.
-• Для категорії "news": ОБОВ'ЯЗКОВО спирайся на пошукові результати. Немає результатів — не пиши новини, обери guide/tips.
-
-─── ТВОЄ ЗАВДАННЯ ───
-
-1. АНАЛІЗ ПРОГАЛИН:
-   - Яких тем або міст-специфічних матеріалів не вистачає?
-   - Яка категорія (news/guide/tips) зараз недопредставлена?
-   - Що актуально зараз (з пошукових результатів + сезон)?
-   - Які LSI-кластери ще не охоплені?
-   - Чи варто зробити статтю по конкретному місту?
-
-2. ОНОВЛЕННЯ КОНТЕНТ-ПЛАНУ:
-   - Відмітити опубліковані теми
-   - Додати нові теми — баланс між: загальні / міські / категорії
-   - Ідеальне співвідношення: ~40% tips, ~35% guide, ~25% news
-   - По містах: більші міста частіше, менші рідше але обов'язково
-
-3. ВИБІР ТЕМИ:
-   - Найкраща тема для ЗАРАЗ з огляду на SEO + актуальність (пошукові дані) + баланс категорій
-   - Якщо стаття про місто — обери те де найбільший потенціал трафіку і мало контенту
-   - Поясни свій вибір (категорія + місто або загальна + чому зараз)
-
-4. НАПИСАННЯ СТАТТІ:
-   - Мова: українська, жива і природна
-   - Обсяг: 700-900 слів
-   - Структура: вступ → 3-4 секції H2 → висновок
-   - Конкретні факти та поради — ТІЛЬКИ ті, в яких впевнений (з пошуку або стабільні знання)
-   - LSI ключові слова природно в тексті
-   - Якщо стаття про місто — локальні деталі: райони, орієнтовні ціни, особливості ринку
-   - НІЯКИХ вигаданих цитат, статистики "за даними аналітиків" без джерела
-
-Поверни ТІЛЬКИ валідний JSON без markdown. ВАЖЛИВО: у полі content НЕ використовуй реальні символи переносу рядка — замість них пиши HTML теги, пробіли або \n як escape-послідовність.
-{
-  "plan_updates": [
-    {
-      "topic": "назва теми",
-      "status": "planned",
-      "priority": "high",
-      "reason": "чому важливо для SEO або аудиторії"
-    }
-  ],
-  "selected_topic": "обрана тема",
-  "selection_reason": "2-3 речення: чому саме ця тема зараз",
-  "post": {
-    "title": "заголовок до 70 символів",
-    "excerpt": "SEO-мета опис до 160 символів",
-    "content": "повний HTML: теги <h2> <p> <ul> <li> <strong>",
-    "category": "tips або news або guide",
-    "slug": "slug-latiynkoyu-do-60-symvoliv",
-    "seo_keywords": ["ключове слово 1", "ключове слово 2", "ключове слово 3"]
-  }
-}`,
+1. Онови план: додай нові теми (баланс категорій + міст, великі міста частіше).
+2. Обери найкращу тему (SEO + актуальність + баланс). Місто з найбільшим потенціалом і малим покриттям.
+3. Напиши 700-900 слів: вступ → 3-4×H2 → висновок. LSI природно. Місто → райони/ціни/особливості.`,
             }],
         }),
     });
@@ -229,7 +178,6 @@ ${searchCtx}
     try {
         return JSON.parse(raw);
     } catch {
-        // Claude sometimes includes literal newlines inside JSON strings — fix them
         const fixed = raw.replace(/("(?:[^"\\]|\\.)*")/g, (m) =>
             m.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t")
         );

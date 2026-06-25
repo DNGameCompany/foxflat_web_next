@@ -5,6 +5,8 @@ import { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc } 
 import { db } from "@/lib/firebase";
 import TipTapEditor from "@/src/components/admin/TipTapEditor/TipTapEditor";
 import BlogImageUpload from "./BlogImageUpload";
+import AiGeneratorPanel, { type GeneratedPost } from "./AiGeneratorPanel";
+import ContentPlanModal from "./ContentPlanModal";
 
 const API_URL = "https://api.foxflat.com.ua";
 
@@ -117,6 +119,8 @@ export default function BlogTab() {
     const [tgPreview, setTgPreview] = useState(false);
     const [tgFirstPara, setTgFirstPara] = useState("");
     const [tgRecord, setTgRecord] = useState<TGRecord | null>(null);
+    const [aiOpen, setAiOpen] = useState(false);
+    const [planOpen, setPlanOpen] = useState(false);
 
     useEffect(() => {
         setTgFirstPara(extractFirstParagraph(editing?.content ?? ""));
@@ -147,9 +151,20 @@ export default function BlogTab() {
 
     useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-    const openNew = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); setPreview(false); setPostToTelegram(false); setTgResult(null); };
-    const openEdit = (post: BlogPost) => { setEditing({ ...post }); setIsNew(false); setPreview(false); setPostToTelegram(false); setTgResult(null); };
-    const closeEditor = () => { setEditing(null); setIsNew(false); setPostToTelegram(false); setTgResult(null); };
+    const openNew = () => { setEditing({ id: "", ...EMPTY_POST }); setIsNew(true); setPreview(false); setPostToTelegram(false); setTgResult(null); setAiOpen(false); };
+    const openEdit = (post: BlogPost) => { setEditing({ ...post }); setIsNew(false); setPreview(false); setPostToTelegram(false); setTgResult(null); setAiOpen(false); };
+    const closeEditor = () => { setEditing(null); setIsNew(false); setPostToTelegram(false); setTgResult(null); setAiOpen(false); };
+
+    const handleAiGenerated = (post: GeneratedPost) => {
+        setEditing((ed) => ed ? {
+            ...ed,
+            title:    post.title,
+            excerpt:  post.excerpt,
+            content:  post.content,
+            category: post.category,
+            slug:     post.slug,
+        } : ed);
+    };
 
     const handleSave = async () => {
         if (!editing) return;
@@ -265,13 +280,26 @@ export default function BlogTab() {
 
     if (editing) return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <AiGeneratorPanel
+                isOpen={aiOpen}
+                onClose={() => setAiOpen(false)}
+                onGenerated={handleAiGenerated}
+            />
+
+            <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                     <button onClick={closeEditor} className="text-white/30 hover:text-white/70 transition-colors text-sm">← Назад</button>
                     <span className="text-white/15">|</span>
                     <span className="text-sm text-white/50">{isNew ? "Нова стаття" : "Редагувати"}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    {/* AI generate button — always visible in editor */}
+                    <button
+                        onClick={() => setAiOpen(true)}
+                        className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-orange-500/30 bg-orange-500/[0.07] text-orange-400/80 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all"
+                    >
+                        <span className="text-[11px] leading-none">✦</span> Генерувати AI
+                    </button>
                     <button onClick={() => setPreview((v) => !v)}
                             className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${preview ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/30 hover:text-white/60"}`}>
                         {preview ? "Редактор" : "Прев'ю"}
@@ -540,9 +568,14 @@ export default function BlogTab() {
                         </button>
                     ))}
                 </div>
-                <button onClick={openNew} className="ml-auto text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all">
-                    + Нова стаття
-                </button>
+                <div className="ml-auto flex items-center gap-2">
+                    <button onClick={() => setPlanOpen(true)} className="flex items-center gap-1.5 text-[10px] font-bold px-3.5 py-1.5 rounded-lg border border-white/[0.08] text-white/50 hover:text-white/80 hover:border-orange-500/30 hover:bg-orange-500/[0.04] transition-all">
+                        <span className="text-orange-400/70">✦</span> AI план тем
+                    </button>
+                    <button onClick={openNew} className="text-[10px] font-bold px-4 py-1.5 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all">
+                        + Нова стаття
+                    </button>
+                </div>
             </div>
 
             {loading ? (
@@ -606,6 +639,8 @@ export default function BlogTab() {
                     </table>
                 </div>
             )}
+
+            <ContentPlanModal isOpen={planOpen} onClose={() => setPlanOpen(false)} />
         </div>
     );
 }

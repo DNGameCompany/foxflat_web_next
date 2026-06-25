@@ -12,7 +12,7 @@ export const event = ({
     label: string
     value?: number
 }) => {
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    if (typeof window !== "undefined" && typeof window.gtag === "function" && process.env.NODE_ENV === "production") {
         window.gtag("event", action, {
             event_category: category,
             event_label: label,
