@@ -17,11 +17,11 @@ export const metadata: Metadata = {
         "як перевірити квартиру перед заселенням",
         "FoxFlat",
     ],
-    alternates: { canonical: "https://foxflat.com.ua/tools/chekist" },
+    alternates: { canonical: "https://foxflat.com.ua/tools/cheklist" },
     openGraph: {
         title: "Чеклист огляду квартири перед орендою | FoxFlat",
         description: "38 пунктів перевірки — відкрий на телефоні під час перегляду і не підпишеш поганий договір.",
-        url: "https://foxflat.com.ua/tools/chekist",
+        url: "https://foxflat.com.ua/tools/cheklist",
         siteName: "FoxFlat",
         images: [{ url: "https://foxflat.com.ua/og-checklist.png", width: 1200, height: 630, alt: "Чеклист огляду квартири FoxFlat" }],
         locale: "uk_UA",
@@ -40,8 +40,8 @@ const jsonLd = {
     "@graph": [
         {
             "@type": "WebApplication",
-            "@id": "https://foxflat.com.ua/tools/chekist#webapp",
-            "url": "https://foxflat.com.ua/tools/chekist",
+            "@id": "https://foxflat.com.ua/tools/cheklist#webapp",
+            "url": "https://foxflat.com.ua/tools/cheklist",
             "name": "Чеклист огляду квартири від FoxFlat",
             "applicationCategory": "UtilitiesApplication",
             "operatingSystem": "All",
@@ -53,7 +53,7 @@ const jsonLd = {
             "itemListElement": [
                 { "@type": "ListItem", "position": 1, "name": "Головна",      "item": "https://foxflat.com.ua/" },
                 { "@type": "ListItem", "position": 2, "name": "Інструменти", "item": "https://foxflat.com.ua/tools" },
-                { "@type": "ListItem", "position": 3, "name": "Чеклист огляду квартири", "item": "https://foxflat.com.ua/tools/chekist" },
+                { "@type": "ListItem", "position": 3, "name": "Чеклист огляду квартири", "item": "https://foxflat.com.ua/tools/cheklist" },
             ],
         },
         {
