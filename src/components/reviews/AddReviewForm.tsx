@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, FirestoreError } from 'firebase/firestore';
 import { Review } from '@/src/app/reviews/page';
+
+const MIN_TEXT_LENGTH = 10;
+const MAX_TEXT_LENGTH = 500;
 
 interface AddReviewFormProps {
     onNewReview: (review: Review) => void;
@@ -47,20 +50,32 @@ export default function AddReviewForm({ onNewReview }: AddReviewFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !text || rating < 1) {
+        setError('');
+
+        const trimmedName = name.trim();
+        const trimmedText = text.trim();
+
+        if (!trimmedName || !trimmedText || rating < 1) {
             setError('Будь ласка, заповніть усі поля та оберіть оцінку');
+            return;
+        }
+        if (trimmedText.length < MIN_TEXT_LENGTH) {
+            setError(`Відгук закороткий, мінімум ${MIN_TEXT_LENGTH} символів`);
+            return;
+        }
+        if (trimmedText.length > MAX_TEXT_LENGTH) {
+            setError(`Відгук занадто довгий, максимум ${MAX_TEXT_LENGTH} символів`);
             return;
         }
 
         setLoading(true);
-        setError('');
 
         try {
             const docRef = await addDoc(collection(db, 'reviews'), {
-                name, text, rating, date: serverTimestamp(),
+                name: trimmedName, text: trimmedText, rating, date: serverTimestamp(),
             });
 
-            onNewReview({ id: docRef.id, name, text, rating, date: new Date().toISOString() });
+            onNewReview({ id: docRef.id, name: trimmedName, text: trimmedText, rating, date: new Date().toISOString() });
 
             setName('');
             setText('');
@@ -69,7 +84,16 @@ export default function AddReviewForm({ onNewReview }: AddReviewFormProps) {
             setTimeout(() => setSuccess(false), 4000);
         } catch (err) {
             console.error(err);
-            setError('Сталася помилка при додаванні відгуку');
+            const code = (err as FirestoreError)?.code;
+            if (code === 'permission-denied') {
+                setError('Немає прав для додавання відгуку. Спробуйте пізніше.');
+            } else if (code === 'unavailable' || code === 'deadline-exceeded') {
+                setError('Немає з’єднання з сервером. Перевірте інтернет і спробуйте ще раз.');
+            } else if (code === 'resource-exhausted') {
+                setError('Забагато запитів. Спробуйте трохи пізніше.');
+            } else {
+                setError('Сталася помилка при додаванні відгуку. Спробуйте ще раз.');
+            }
         } finally {
             setLoading(false);
         }
@@ -146,15 +170,29 @@ export default function AddReviewForm({ onNewReview }: AddReviewFormProps) {
 
                 {/* Відгук */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest"
-                           style={{ fontFamily: "'Unbounded', sans-serif" }}>
-                        Відгук
-                    </label>
+                    <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-white/30 uppercase tracking-widest"
+                               style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                            Відгук
+                        </label>
+                        <span
+                            className={`text-[10px] font-semibold tabular-nums ${
+                                text.length >= MAX_TEXT_LENGTH
+                                    ? 'text-red-400'
+                                    : text.length > MAX_TEXT_LENGTH * 0.9
+                                        ? 'text-orange-400'
+                                        : 'text-white/20'
+                            }`}
+                        >
+                            {text.length}/{MAX_TEXT_LENGTH}
+                        </span>
+                    </div>
                     <textarea
                         placeholder="Розкажи про свій досвід..."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         rows={4}
+                        maxLength={MAX_TEXT_LENGTH}
                         className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.07] text-white text-sm placeholder-white/20 focus:border-orange-500/50 focus:bg-white/[0.05] outline-none transition-all duration-200 resize-none leading-relaxed"
                         required
                     />
