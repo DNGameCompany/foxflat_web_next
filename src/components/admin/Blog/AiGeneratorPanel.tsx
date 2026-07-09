@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 
 type Category = "tips" | "news" | "guide";
 
@@ -92,7 +93,7 @@ export default function AiGeneratorPanel({
     const fetchPlan = useCallback(async () => {
         setPlanLoading(true);
         try {
-            const res = await fetch("/api/admin/content-plan");
+            const res = await adminFetch("/api/admin/content-plan");
             const data = await res.json();
             setPlan((data.items ?? []).filter((i: PlanItem) => i.status === "planned"));
         } catch {
@@ -125,7 +126,7 @@ export default function AiGeneratorPanel({
         setGen({ running: true, step: "fetching", progress: 0, message: "Підготовка..." });
 
         try {
-            const res = await fetch("/api/admin/generate-blog", {
+            const res = await adminFetch("/api/admin/generate-blog", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ topic: selectedTopic || undefined, dry_run: true }),

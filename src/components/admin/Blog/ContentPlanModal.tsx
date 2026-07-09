@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface PlanItem {
     topic: string;
@@ -109,7 +110,7 @@ export default function ContentPlanModal({
         setItems([]);
 
         try {
-            const res = await fetch("/api/admin/refresh-content-plan", {
+            const res = await adminFetch("/api/admin/refresh-content-plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({}),
@@ -117,7 +118,7 @@ export default function ContentPlanModal({
             if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
             // snapshot old planned topics for diff
-            const planRes = await fetch("/api/admin/content-plan");
+            const planRes = await adminFetch("/api/admin/content-plan");
             const planData = await planRes.json();
             setOldTopics(new Set((planData.items ?? []).filter((i: PlanItem) => i.status === "planned").map((i: PlanItem) => i.topic)));
 
@@ -160,7 +161,7 @@ export default function ContentPlanModal({
     const handleSave = async () => {
         setSaving(true);
         try {
-            await fetch("/api/admin/refresh-content-plan", {
+            await adminFetch("/api/admin/refresh-content-plan", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items }),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface PlanItem {
     topic: string;
@@ -168,7 +169,7 @@ export default function BlogGeneratorPanel() {
     const fetchPlan = useCallback(async () => {
         setPlanLoading(true);
         try {
-            const res = await fetch("/api/admin/content-plan");
+            const res = await adminFetch("/api/admin/content-plan");
             const data = await res.json();
             setPlan(data.items ?? []);
         } catch {
@@ -184,7 +185,7 @@ export default function BlogGeneratorPanel() {
         setGen({ running: true, step: "fetching", progress: 0, message: "Старт..." });
 
         try {
-            const res = await fetch("/api/admin/generate-blog", {
+            const res = await adminFetch("/api/admin/generate-blog", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ topic: selectedTopic || undefined }),
@@ -245,7 +246,7 @@ export default function BlogGeneratorPanel() {
     const savePlan = async (items: PlanItem[]) => {
         setPlanSaving(true);
         try {
-            await fetch("/api/admin/content-plan", {
+            await adminFetch("/api/admin/content-plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items }),
