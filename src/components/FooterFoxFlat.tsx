@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { event } from "@/lib/gtag";
 
 const CITIES = [
     { slug: "kyiv",            name: "Київ" },
@@ -26,6 +29,10 @@ const CITIES = [
 ];
 
 export default function FooterFoxFlat() {
+    const handleBotClick = (action: string, label: string) => {
+        event({ action, category: "engagement", label });
+    };
+
     return (
         <footer className="w-full bg-black pt-10 pb-6 px-4 relative z-10">
             {/* Розділювач */}
@@ -34,11 +41,11 @@ export default function FooterFoxFlat() {
 
             <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Міста + Інструменти + Блог */}
+                {/* Міста + Інструменти + Наші проєкти */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
                     {/* Міста */}
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2">
                         <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
                             Оренда по містах
                         </p>
@@ -63,6 +70,23 @@ export default function FooterFoxFlat() {
                         <Link href="/tools/checklist" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
                             Чеклист огляду квартири
                         </Link>
+                    </div>
+
+                    {/* Наші проєкти */}
+                    <div className="space-y-4">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                            Наші проєкти
+                        </p>
+                        <a href="https://t.me/FoxFlat_bot" target="_blank" rel="noopener noreferrer"
+                           onClick={() => handleBotClick("ecosystem_foxflat_click", "Footer — FoxFlat link")}
+                           className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                            FoxFlat — оренда квартир
+                        </a>
+                        <a href="https://t.me/FoxHunts_bot" target="_blank" rel="noopener noreferrer"
+                           onClick={() => handleBotClick("ecosystem_foxhunt_click", "Footer — FoxHunt link")}
+                           className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                            FoxHunt — фріланс-проєкти
+                        </a>
                     </div>
 
                 </div>

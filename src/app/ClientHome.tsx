@@ -19,6 +19,7 @@ import HowItWorksFoxFlat from '@/src/components/main/HowItWorksFoxFlat';
 import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
 import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
 import BlogPreviewFoxFlat from "@/src/components/main/BlogPreviewFoxFlat";
+import EcosystemFoxFlat from "@/src/components/main/EcosystemFoxFlat";
 
 interface BlogPost {
     slug: string;
@@ -160,6 +161,16 @@ export default function ClientHome({
             {/* ── Фінальний CTA ── */}
             <motion.section {...fadeInSection}>
                 <CtaFoxFlat />
+            </motion.section>
+
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            {/* ── Екосистема Fox ── */}
+            <motion.section {...fadeInSection}>
+                <EcosystemFoxFlat />
             </motion.section>
 
             {/* Cities */}
