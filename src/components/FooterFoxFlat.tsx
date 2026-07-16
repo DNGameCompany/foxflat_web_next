@@ -46,13 +46,13 @@ export default function FooterFoxFlat() {
 
                     {/* Міста */}
                     <div className="md:col-span-2">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
                             Оренда по містах
                         </p>
                         <div className="flex flex-wrap gap-x-4 gap-y-2">
                             {CITIES.map((city) => (
                                 <Link key={city.slug} href={`/misto/${city.slug}`}
-                                      className="text-xs text-white/30 hover:text-orange-400 transition-colors">
+                                      className="text-xs text-white/60 hover:text-orange-400 transition-colors">
                                     {city.name}
                                 </Link>
                             ))}
@@ -61,30 +61,30 @@ export default function FooterFoxFlat() {
 
                     {/* Інструменти */}
                     <div className="space-y-4">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
                             Інструменти
                         </p>
-                        <Link href="/tools/calculator" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                        <Link href="/tools/calculator" className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
                             Калькулятор оренди
                         </Link>
-                        <Link href="/tools/checklist" className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                        <Link href="/tools/checklist" className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
                             Чеклист огляду квартири
                         </Link>
                     </div>
 
                     {/* Наші проєкти */}
                     <div className="space-y-4">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/20 uppercase mb-4">
+                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
                             Наші проєкти
                         </p>
                         <a href="https://t.me/FoxFlat_bot" target="_blank" rel="noopener noreferrer"
                            onClick={() => handleBotClick("ecosystem_foxflat_click", "Footer — FoxFlat link")}
-                           className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                           className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
                             FoxFlat — оренда квартир
                         </a>
                         <a href="https://t.me/FoxHunts_bot" target="_blank" rel="noopener noreferrer"
                            onClick={() => handleBotClick("ecosystem_foxhunt_click", "Footer — FoxHunt link")}
-                           className="text-xs text-white/30 hover:text-orange-400 transition-colors block">
+                           className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
                             FoxHunt — фріланс-проєкти
                         </a>
                     </div>
@@ -95,7 +95,7 @@ export default function FooterFoxFlat() {
                 <div className="h-px bg-white/[0.05]" />
 
                 {/* Нижня частина */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-white/25">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-white/50">
                     <p>© {new Date().getFullYear()} FoxFlat. Всі права захищено.</p>
                     <div className="flex gap-4 flex-wrap justify-center">
                         <Link href="/legal/terms-of-service" className="hover:text-orange-300 transition-colors">

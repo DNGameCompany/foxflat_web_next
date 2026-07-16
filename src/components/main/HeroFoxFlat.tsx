@@ -56,7 +56,7 @@ export default function HeroFoxFlat() {
                     {/* Телефон */}
                     <div className="flex justify-center lg:justify-end lg:pr-16">
                         <IphoneMockup
-                            imageSrc="/images/screen_mock.png"
+                            imageSrc="/images/screen_mock.webp"
                             width={330}
                         />
                     </div>

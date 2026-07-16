@@ -7,8 +7,11 @@ interface IphoneMockupProps {
     width?: number;
 }
 
+// device-frame_4.png intrinsic size is 620x1280 (ratio 1280/620)
+const FRAME_ASPECT_RATIO = 1280 / 620;
+
 const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, imageSrc, width = 350 }) => {
-    const height = width * 2;
+    const height = width * FRAME_ASPECT_RATIO;
 
     return (
         <div
@@ -65,6 +68,7 @@ const IphoneMockup: React.FC<IphoneMockupProps> = ({ videoSrc, imageSrc, width =
                 src="/images/device-frame_4.png"
                 alt="iPhone 15 Pro Frame"
                 fill
+                sizes="(max-width: 768px) 300px, 330px"
                 style={{
                     position: 'absolute',
                     top: 0,

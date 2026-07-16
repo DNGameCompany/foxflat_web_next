@@ -190,6 +190,7 @@ export default function ClientReviewsHome({ reviews, onReviewClick }: ClientRevi
                             <div className="flex items-center justify-center gap-6 mt-10">
                                 <button
                                     onClick={() => go(-1)}
+                                    aria-label="Попередній відгук"
                                     className="w-11 h-11 rounded-full border border-white/10 bg-white/[0.03] hover:border-orange-500/40 hover:bg-orange-500/10 text-white/40 hover:text-orange-400 flex items-center justify-center transition-all duration-200"
                                 >
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -202,6 +203,8 @@ export default function ClientReviewsHome({ reviews, onReviewClick }: ClientRevi
                                         <button
                                             key={i}
                                             onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
+                                            aria-label={`Перейти до відгуку ${i + 1}`}
+                                            aria-current={i === current}
                                             className={`rounded-full transition-all duration-300 ${
                                                 i === current
                                                     ? "w-6 h-2 bg-orange-500"
@@ -213,6 +216,7 @@ export default function ClientReviewsHome({ reviews, onReviewClick }: ClientRevi
 
                                 <button
                                     onClick={() => go(1)}
+                                    aria-label="Наступний відгук"
                                     className="w-11 h-11 rounded-full border border-white/10 bg-white/[0.03] hover:border-orange-500/40 hover:bg-orange-500/10 text-white/40 hover:text-orange-400 flex items-center justify-center transition-all duration-200"
                                 >
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
