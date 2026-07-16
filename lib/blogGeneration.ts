@@ -72,10 +72,22 @@ export function formatSearchResults(results: SearchResult[], label: string): str
         ).join("\n\n");
 }
 
-// Визначає місто зі згаданих у темі назв — потрібно, щоб зробити
-// прицільний пошук цін/районів САМЕ під обране місто (а не загальний).
+// Визначає місто зі згаданих у темі назв — потрібно лише як fallback
+// для forcedTopic (коли немає AI-планування, яке саме підбирає запити).
 export function extractCity(topic: string): string | null {
     return CITIES.find((city) => topic.includes(city)) ?? null;
+}
+
+// Виконує пошукові запити, підібрані планувальником саме під обрану тему
+// (а не жорстко зашитий шаблон) — це джерело конкретних фактів для статті.
+export async function runTargetedSearches(queries: string[]): Promise<string> {
+    const picked = queries.slice(0, 4);
+    if (!picked.length) return "";
+    const resultsList = await Promise.all(picked.map((q) => searchGoogle(q, 3)));
+    return resultsList
+        .map((results, i) => formatSearchResults(results, picked[i]))
+        .filter(Boolean)
+        .join("\n");
 }
 
 export async function getContentPlan(): Promise<ContentPlan> {
@@ -160,15 +172,17 @@ news — новини ринку/законодавства; guide — інст�
 Твоя задача — ТІЛЬКИ планування, без написання тексту статті.
 1. Онови план: додай нові теми (баланс категорій + міст, великі міста частіше).
 2. Обери найкращу наступну тему (SEO + актуальність + баланс категорій). Якщо тема прив'язана до міста — вкажи місто прямо в тексті теми (наприклад "Огляд районів для оренди у Львові").
+3. Сформуй 2-4 пошукові запити українською мовою — саме ті, які знайдуть КОНКРЕТНІ актуальні факти, необхідні для цієї статті (а не загальні). Наприклад: для теми про місто — ціни й райони цього міста; для теми про ВПО — суми й назви програм компенсації оренди, актуальна статистика переселенців; для теми про закон — номер/назву закону і дату змін. Без точних, наведених пошуком фактів стаття вийде порожньою "водою" — це найважливіший крок.
 
 Відповідай ТІЛЬКИ JSON без markdown:
-{"plan_updates":[{"topic":"","status":"planned","priority":"high","reason":""}],"selected_topic":"","selection_reason":"","category":"news|guide|tips"}`;
+{"plan_updates":[{"topic":"","status":"planned","priority":"high","reason":""}],"selected_topic":"","selection_reason":"","category":"news|guide|tips","search_queries":["",""]}`;
 
 export interface PlanningResult {
     plan_updates:     PlanItem[];
     selected_topic:   string;
     selection_reason: string;
     category:         string;
+    search_queries:   string[];
 }
 
 export async function planNextTopic(
@@ -181,12 +195,16 @@ export async function planNextTopic(
         const plan_updates = plan.items.map((i) =>
             i.topic === forcedTopic ? { ...i, status: "published" as const } : i
         );
+        const city = extractCity(forcedTopic);
         return {
             result: {
                 plan_updates,
                 selected_topic:   forcedTopic,
                 selection_reason: "Тема обрана вручну оператором",
                 category:         "guide",
+                // без AI-планування немає розбору теми на конкретні запити —
+                // беремо саму тему як запит (+ ціни міста, якщо воно згадане)
+                search_queries:   city ? [forcedTopic, `ціни оренди квартир ${city} 2026`] : [forcedTopic],
             },
             tokens: { input: 0, output: 0 },
         };

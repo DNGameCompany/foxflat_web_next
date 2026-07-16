@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import {
     searchGoogle,
     formatSearchResults,
-    extractCity,
+    runTargetedSearches,
     getContentPlan,
     saveContentPlan,
     getExistingPosts,
@@ -48,22 +48,11 @@ export async function POST(req: NextRequest) {
 
             const { result: planning, tokens: planningTokens } = await planNextTopic(posts, plan, generalSearchCtx, forcedTopic);
 
-            // Прицільний пошук САМЕ під обране місто — щоб ціни/райони в статті
-            // бралися зі свіжих даних, а не з (можливо застарілої) пам'яті моделі.
-            const city = extractCity(planning.selected_topic);
-            if (city) {
-                await emit({ type: "progress", step: "searching_city", progress: 45, message: `Пошук цін і районів: ${city}...` });
-            }
-            const [priceResults, districtResults] = city
-                ? await Promise.all([
-                    searchGoogle(`ціни оренди квартир ${city} 2026`, 3),
-                    searchGoogle(`райони ${city} оренда квартир де краще жити`, 3),
-                ])
-                : [[], []];
-            const citySearchCtx = [
-                formatSearchResults(priceResults,    "ЦІНИ"),
-                formatSearchResults(districtResults, "РАЙОНИ"),
-            ].filter(Boolean).join("\n");
+            // Пошук саме під ті запити, які AI визначив як потрібні для ЦІЄЇ теми
+            // (ціни міста, суми/назви програм допомоги, номери законів тощо) —
+            // а не жорстко зашитий шаблон, який покривав тільки статті про міста.
+            await emit({ type: "progress", step: "searching_topic", progress: 45, message: "Пошук фактів для теми..." });
+            const topicSearchCtx = await runTargetedSearches(planning.search_queries ?? []);
 
             await emit({ type: "progress", step: "generating", progress: 60, message: "Генерація AI контенту..." });
 
@@ -71,7 +60,7 @@ export async function POST(req: NextRequest) {
                 planning.selected_topic,
                 planning.category,
                 generalSearchCtx,
-                citySearchCtx,
+                topicSearchCtx,
             );
 
             const tokens = {
