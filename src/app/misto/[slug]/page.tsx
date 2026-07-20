@@ -288,7 +288,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'UAH',
-                description: 'Безкоштовний базовий доступ. Преміум — 200 грн/міс.',
+                description: 'Безкоштовний базовий доступ. Преміум — 199 грн/міс.',
             },
         },
     ];
