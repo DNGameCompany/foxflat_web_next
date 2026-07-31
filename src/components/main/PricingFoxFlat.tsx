@@ -145,7 +145,7 @@ export default function PricingFoxFlat() {
 
                         <div className="mb-6">
                             <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-4">
-                                Premium
+                                Преміум
                             </p>
 
                             {/* Два тарифи поруч */}
