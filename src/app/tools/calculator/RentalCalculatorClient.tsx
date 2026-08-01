@@ -338,28 +338,54 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const [isGenerating, setIsGenerating] = useState(false);
     const [pdfError, setPdfError] = useState<string | null>(null);
 
-    const monthly  = Object.values(values).reduce((a, b) => a + b, 0);
+    // Опалення платиться не 12, а лише кілька місяців на рік — рахуємо його окремо від решти комуналки
+    const [includeHeatingNow, setIncludeHeatingNow] = useState(false);
+    const [heatingSeasonMonths, setHeatingSeasonMonths] = useState(5);
+
+    // На сервері дата рендерингу може відрізнятись від дати клієнта, тож визначаємо сезон лише після монтування
+    useEffect(() => {
+        const month = new Date().getMonth(); // 0 = січень
+        const isHeatingSeasonNow = month <= 2 || month >= 9; // приблизно жовтень–березень
+        setIncludeHeatingNow(isHeatingSeasonNow);
+    }, []);
+
+    const heatingValue = values.heating;
+    const monthlyBase = FIELDS.filter(f => f.id !== "heating").reduce((sum, f) => sum + values[f.id], 0);
+    const monthly = monthlyBase + (includeHeatingNow ? heatingValue : 0);
     const deposit  = values.rent * depositMul;
     const effectiveAgentFeeRatio = isCustomAgentFee ? customAgentFeePct / 100 : agentFee;
     const agent    = values.rent * effectiveAgentFeeRatio;
     const moveIn   = deposit + agent + values.rent;
-    const annual = monthly * 12;
+    // Річна сума: комуналка без опалення х12 місяців + опалення лише за тривалість опалювального сезону
+    const annual = monthlyBase * 12 + heatingValue * heatingSeasonMonths;
     const overpay  = monthly - values.rent;
     const overpayPct = values.rent > 0 ? ((overpay / values.rent) * 100).toFixed(0) : "0";
 
-    const segments = FIELDS.map((f, i) => ({
-        id: f.id,
-        label: f.label,
-        value: values[f.id],
-        pct: monthly > 0 ? (values[f.id] / monthly) * 100 : 0,
-        color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
-    }));
+    const segments = FIELDS
+        .filter(f => f.id !== "heating" || includeHeatingNow)
+        .map((f, i) => ({
+            id: f.id,
+            label: f.label,
+            value: values[f.id],
+            pct: monthly > 0 ? (values[f.id] / monthly) * 100 : 0,
+            color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+        }));
 
     const moveInRows: MoveInRow[] = [
         { label: "Перший місяць", val: values.rent },
         { label: "Застава", val: deposit },
         { label: "Комісія рієлтора", val: agent }
     ];
+
+    const handleToggleHeatingSeason = (isSeason: boolean) => {
+        setIncludeHeatingNow(isSeason);
+        gTag.event({
+            action: "toggle_heating_season",
+            category: "calculator_page",
+            label: isSeason ? "Опалювальний сезон" : "Не сезон",
+            value: isSeason ? 1 : 0
+        });
+    };
 
     const handleAgentFeePreset = (v: number) => {
         setIsCustomAgentFee(false);
@@ -457,7 +483,11 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                 doc.setDrawColor(230, 230, 230);
                 doc.line(15, currentY + 2, 195, currentY + 2);
 
-                doc.text(f.label, 15, currentY);
+                const label = f.id === "heating"
+                    ? `${f.label} (сезон ~${heatingSeasonMonths} міс/рік${includeHeatingNow ? ", враховано в сумі зараз" : ", зараз не в сумі"})`
+                    : f.label;
+
+                doc.text(label, 15, currentY);
                 doc.text(`${fmt(values[f.id])} грн`, 165, currentY);
                 currentY += 10;
             });
@@ -495,7 +525,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             currentY += 10;
 
             doc.setFontSize(10);
-            doc.text("Лише щомісячні платежі за 12 місяців:", 15, currentY);
+            doc.text(`Оренда + комуналка за рік (опалення враховано за ${heatingSeasonMonths} міс/рік):`, 15, currentY);
             doc.text(`${fmt(annual)} грн`, 165, currentY);
             currentY += 8;
 
@@ -567,7 +597,46 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                             <SectionLabel>Щомісячні витрати</SectionLabel>
                             <div className="space-y-3.5">
                                 {FIELDS.map(f => (
-                                    <Slider key={f.id} field={f} value={values[f.id]} onChange={v => setValues(prev => ({ ...prev, [f.id]: v }))} />
+                                    <div key={f.id}>
+                                        <Slider field={f} value={values[f.id]} onChange={v => setValues(prev => ({ ...prev, [f.id]: v }))} />
+                                        {f.id === "heating" && (
+                                            <div className="mt-2.5 space-y-2.5 rounded-xl border border-white/[0.05] bg-white/[0.02] p-3">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs text-white/50">Зараз враховувати опалення?</span>
+                                                    <div className="flex gap-1.5">
+                                                        <button
+                                                            onClick={() => handleToggleHeatingSeason(false)}
+                                                            className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all duration-150 ${!includeHeatingNow ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}
+                                                        >
+                                                            Не сезон
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleToggleHeatingSeason(true)}
+                                                            className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-all duration-150 ${includeHeatingNow ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}
+                                                        >
+                                                            Опалювальний сезон
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-xs text-white/50">Скільки місяців на рік топлять</span>
+                                                    <NumberStepper
+                                                        value={heatingSeasonMonths}
+                                                        min={3}
+                                                        max={8}
+                                                        step={1}
+                                                        unit="міс/рік"
+                                                        onChange={setHeatingSeasonMonths}
+                                                        ariaLabel="Тривалість опалювального сезону в місяцях"
+                                                        inputWidthClass="w-6"
+                                                    />
+                                                </div>
+                                                <p className="text-[11px] text-white/25 leading-relaxed">
+                                                    Опалення не входить у щомісячну суму поза сезоном і не множиться на 12 у річному розрахунку — враховується лише за {heatingSeasonMonths} {heatingSeasonMonths === 1 ? "місяць" : heatingSeasonMonths < 5 ? "місяці" : "місяців"} на рік.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         </Card>
@@ -674,7 +743,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                         <Card>
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-baseline">
-                                    <span className="text-xs text-white/50">За рік (щомісячні)</span>
+                                    <span className="text-xs text-white/50">За рік (оренда + комуналка)</span>
                                     <AnimatedNumber value={annual} className="text-sm font-bold text-white/80 tabular-nums" />
                                 </div>
 
@@ -683,7 +752,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                                     <AnimatedNumber value={annual + moveIn} className="text-sm font-bold text-white tabular-nums" />
                                 </div>
 
-                                <p className="text-xs text-white/30 pt-0.5">З урахуванням одноразових витрат</p>
+                                <p className="text-xs text-white/30 pt-0.5">Опалення враховано за {heatingSeasonMonths} міс/рік, а не за всі 12 · плюс одноразові витрати на заселення</p>
                             </div>
                         </Card>
 
