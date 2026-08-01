@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
 import * as gTag from "@/lib/gtag";
@@ -37,10 +38,14 @@ interface MoveInRow {
     val: number;
 }
 
+// Кешуємо шрифт на рівні модуля, щоб не тягнути його з мережі при кожному експорті PDF
+let cachedFontBase64: string | null = null;
+
 const FIELDS: SliderField[] = [
     { id: "rent",       label: "Орендна плата",         min: 2000,  max: 50000, step: 100, unit: "грн", defaultValue: 12000, hint: "Ціна з оголошення" },
     { id: "electric",   label: "Електроенергія",         min: 0,     max: 3000,  step: 10,  unit: "грн", defaultValue: 600,   hint: "~100–300 кВт·год" },
-    { id: "gas",        label: "Газ",                    min: 0,     max: 2000,  step: 10,  unit: "грн", defaultValue: 300,   hint: "Якщо є газ" },
+    { id: "gas",        label: "Газ",                    min: 0,     max: 2000,  step: 10,  unit: "грн", defaultValue: 300,   hint: "Якщо є газова колонка/котел" },
+    { id: "heating",    label: "Опалення",               min: 0,     max: 5000,  step: 50,  unit: "грн", defaultValue: 0,     hint: "Взимку, якщо централізоване" },
     { id: "water",      label: "Вода",                   min: 0,     max: 1000,  step: 10,  unit: "грн", defaultValue: 200,   hint: "Холодна + гаряча" },
     { id: "building",   label: "Обслуговування будинку", min: 0,     max: 2000,  step: 10,  unit: "грн", defaultValue: 400,   hint: "ОСББ / ЖЕК" },
     { id: "internet",   label: "Інтернет + TV",          min: 0,     max: 600,   step: 10,  unit: "грн", defaultValue: 200,   hint: "" },
@@ -48,7 +53,7 @@ const FIELDS: SliderField[] = [
 
 const DEPOSIT_MULTIPLIER = [{ label: "1 місяць", value: 1 }, { label: "2 місяці", value: 2 }, { label: "3 місяці", value: 3 }];
 const AGENT_FEE = [{ label: "Без комісії", value: 0 }, { label: "50%", value: 0.5 }, { label: "100%", value: 1 }];
-const SEGMENT_COLORS = ["bg-orange-500", "bg-blue-500", "bg-purple-500", "bg-green-500", "bg-yellow-500", "bg-pink-500"];
+const SEGMENT_COLORS = ["bg-orange-500", "bg-blue-500", "bg-purple-500", "bg-red-500", "bg-green-500", "bg-yellow-500", "bg-pink-500"];
 
 const faqs = [
     {
@@ -61,7 +66,7 @@ const faqs = [
     },
     {
         q: "Навіщо потрібна страхова застава (депозит) і чи повертається вона?",
-        a: "Страхова застава захищає власника від можливих матеріальних збитків, пошкодження техніки чи меблів, або раптового з'їзду мешканців без попередження за місяць. Ці гроші зберігаються у власника до кінця терміну оренди і повертаються вам повністю під час виїзду, якщо майно в порядку.",
+        a: "Страхова застава захищає власника від можливих матеріальних збитків, пошкодження техніки чи меблів, або раптового з'їзду мешканців без попередження за місяць. Ці гроші зазвичай зберігаються у власника до кінця терміну оренди і повертаються вам повністю під час виїзду, якщо майно в порядку — точні умови повернення варто прописати в договорі.",
     },
     {
         q: "Чому комунальні послуги взимку та влітку так сильно відрізняються?",
@@ -69,7 +74,7 @@ const faqs = [
     },
     {
         q: "Хто має платити за обслуговування будинку (ОСББ/ЖЕК) та капітальний ремонт?",
-        a: "Згідно з ринковою практикою в Україні, поточні витрати (ОСББ, консьєрж, вивіз сміття, прибирання території) оплачує орендар, оскільки він безпосередньо користується цими послугами. Проте внески у фонд капітального ремонту будинку або заміну ліфтів має сплачувати виключно власник квартири.",
+        a: "За типовою практикою в Україні поточні витрати (ОСББ, консьєрж, вивіз сміття, прибирання території) як правило оплачує орендар, оскільки він безпосередньо користується цими послугами. Внески у фонд капітального ремонту будинку чи заміну ліфтів найчастіше несе власник квартири. Але це не універсальне правило — остаточний розподіл витрат завжди варто чітко прописати в договорі оренди.",
     },
     {
         q: "Як зафіксувати ціну оренди в договору, щоб її не підняли через місяць?",
@@ -77,7 +82,7 @@ const faqs = [
     },
     {
         q: "Що робити, якщо в орендованій квартирі зламався холодильник чи пральна машина?",
-        a: "Якщо поломка сталася через природний знос техніки (вона була стара або вийшла з ладу плата), ремонт або заміну оплачує власник. Якщо же поломка сталася з вини орендаря (наприклад, механічне пошкодження), ремонт здійснюється за кошт мешканця. Обов'язково фіксуйте стан техніки в акті прийому-передачі.",
+        a: "Якщо поломка сталася через природний знос техніки (вона була стара або вийшла з ладу плата), ремонт або заміну зазвичай оплачує власник. Якщо ж поломка сталася з вини орендаря (наприклад, механічне пошкодження), ремонт, як правило, здійснюється за кошт мешканця. У будь-якому разі рішення краще фіксувати письмово, а стан техніки — в акті прийому-передачі.",
     },
     {
         q: "Чи входять лічильники у фіксовану вартість комунальних послуг?",
@@ -162,6 +167,88 @@ function AnimatedNumber({ value, className, style }: { value: number; className?
     return <span className={className} style={style}>{fmt(display)}</span>;
 }
 
+function NumberStepper({
+                           value,
+                           min,
+                           max,
+                           step,
+                           unit,
+                           onChange,
+                           ariaLabel,
+                           inputWidthClass = "w-16",
+                       }: {
+    value: number;
+    min: number;
+    max: number;
+    step: number;
+    unit?: string;
+    onChange: (v: number) => void;
+    ariaLabel: string;
+    inputWidthClass?: string;
+}) {
+    const [inputValue, setInputValue] = useState(String(value));
+
+    // Синхронізуємо текстове поле, коли значення міняється ззовні (напр. через слайдер)
+    useEffect(() => {
+        setInputValue(String(value));
+    }, [value]);
+
+    const clamp = (n: number) => Math.min(max, Math.max(min, n));
+
+    const commit = (raw: string) => {
+        let n = Number(raw.replace(/\s/g, "").replace(",", "."));
+        if (Number.isNaN(n)) n = value;
+        n = clamp(n);
+        onChange(n);
+        setInputValue(String(n));
+    };
+
+    const bump = (direction: 1 | -1) => {
+        const n = clamp(value + direction * step);
+        onChange(n);
+        setInputValue(String(n));
+    };
+
+    return (
+        <div className="flex items-center gap-1.5">
+            <button
+                type="button"
+                onClick={() => bump(-1)}
+                disabled={value <= min}
+                aria-label={`Зменшити: ${ariaLabel}`}
+                className="flex items-center justify-center w-6 h-6 rounded-md border border-white/10 bg-white/[0.04] text-white/50 transition-colors hover:border-orange-500/40 hover:bg-orange-500/10 hover:text-orange-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-white/[0.04] disabled:hover:text-white/50"
+            >
+                <Minus className="w-3 h-3" strokeWidth={2.5} />
+            </button>
+
+            <input
+                type="text"
+                inputMode="numeric"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onBlur={(e) => commit(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+                className={`${inputWidthClass} text-center text-base font-bold text-white tabular-nums bg-transparent border-b border-white/10 focus:border-orange-500 outline-none transition-colors`}
+                aria-label={ariaLabel}
+            />
+
+            <button
+                type="button"
+                onClick={() => bump(1)}
+                disabled={value >= max}
+                aria-label={`Збільшити: ${ariaLabel}`}
+                className="flex items-center justify-center w-6 h-6 rounded-md border border-white/10 bg-white/[0.04] text-white/50 transition-colors hover:border-orange-500/40 hover:bg-orange-500/10 hover:text-orange-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:bg-white/[0.04] disabled:hover:text-white/50"
+            >
+                <Plus className="w-3 h-3" strokeWidth={2.5} />
+            </button>
+
+            {unit && <span className="text-xs text-white/40 ml-0.5">{unit}</span>}
+        </div>
+    );
+}
+
 function Slider({ field, value, onChange }: { field: SliderField; value: number; onChange: (v: number) => void }) {
     const pct = ((value - field.min) / (field.max - field.min)) * 100;
     const isFirstMount = useRef(true);
@@ -186,15 +273,20 @@ function Slider({ field, value, onChange }: { field: SliderField; value: number;
 
     return (
         <div className="space-y-1.5 relative select-none">
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
                 <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
                     <span className="text-sm font-bold text-white/70">{field.label}</span>
                     {field.hint && <span className="text-xs text-white/30">{field.hint}</span>}
                 </div>
-                <div className="flex items-baseline gap-1 shrink-0">
-                    <span className="text-base font-bold text-white tabular-nums">{fmt(value)}</span>
-                    <span className="text-xs text-white/40">{field.unit}</span>
-                </div>
+                <NumberStepper
+                    value={value}
+                    min={field.min}
+                    max={field.max}
+                    step={field.step}
+                    unit={field.unit}
+                    onChange={onChange}
+                    ariaLabel={field.label}
+                />
             </div>
             <div className="relative py-2 group cursor-pointer">
                 <div className="h-2 rounded-full bg-white/[0.06] w-full overflow-hidden relative">
@@ -241,11 +333,15 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
     const [values, setValues] = useState<Record<string, number>>(Object.fromEntries(FIELDS.map(f => [f.id, f.defaultValue])));
     const [depositMul, setDepositMul] = useState(1);
     const [agentFee, setAgentFee] = useState(0);
+    const [isCustomAgentFee, setIsCustomAgentFee] = useState(false);
+    const [customAgentFeePct, setCustomAgentFeePct] = useState(30);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [pdfError, setPdfError] = useState<string | null>(null);
 
     const monthly  = Object.values(values).reduce((a, b) => a + b, 0);
     const deposit  = values.rent * depositMul;
-    const agent    = values.rent * agentFee;
+    const effectiveAgentFeeRatio = isCustomAgentFee ? customAgentFeePct / 100 : agentFee;
+    const agent    = values.rent * effectiveAgentFeeRatio;
     const moveIn   = deposit + agent + values.rent;
     const annual = monthly * 12;
     const overpay  = monthly - values.rent;
@@ -256,7 +352,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
         label: f.label,
         value: values[f.id],
         pct: monthly > 0 ? (values[f.id] / monthly) * 100 : 0,
-        color: SEGMENT_COLORS[i],
+        color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
     }));
 
     const moveInRows: MoveInRow[] = [
@@ -265,9 +361,25 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
         { label: "Комісія рієлтора", val: agent }
     ];
 
+    const handleAgentFeePreset = (v: number) => {
+        setIsCustomAgentFee(false);
+        setAgentFee(v);
+    };
+
+    const handleCustomAgentFeeToggle = () => {
+        setIsCustomAgentFee(true);
+        gTag.event({
+            action: "change_agent_fee",
+            category: "calculator_page",
+            label: "Своя %",
+            value: customAgentFeePct
+        });
+    };
+
     const handleDownloadPDF = async () => {
         if (isGenerating) return;
         setIsGenerating(true);
+        setPdfError(null);
 
         gTag.event({
             action: "export_pdf_click",
@@ -288,22 +400,25 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
             const dateStr = new Date().toLocaleDateString("uk-UA");
 
-            const response = await fetch("/fonts/Roboto-Regular.ttf");
-            if (!response.ok) {
-                throw new Error("Файл шрифту не знайдено в папці public/fonts/");
+            // Шрифт вантажимо з мережі лише один раз за сесію, далі використовуємо кеш
+            if (!cachedFontBase64) {
+                const response = await fetch("/fonts/Roboto-Regular.ttf");
+                if (!response.ok) {
+                    throw new Error("FONT_NOT_FOUND");
+                }
+                const blob = await response.blob();
+
+                const reader = new FileReader();
+                await new Promise<void>((resolve, reject) => {
+                    reader.onloadend = () => resolve();
+                    reader.onerror = () => reject(new Error("FONT_READ_FAILED"));
+                    reader.readAsDataURL(blob);
+                });
+
+                cachedFontBase64 = (reader.result as string).split(",")[1];
             }
-            const blob = await response.blob();
 
-            const reader = new FileReader();
-            await new Promise<void>((resolve, reject) => {
-                reader.onloadend = () => resolve();
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-
-            const fontBase64 = (reader.result as string).split(",")[1];
-
-            doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+            doc.addFileToVFS("Roboto-Regular.ttf", cachedFontBase64);
             doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
             doc.setFont("Roboto", "normal");
 
@@ -354,10 +469,11 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
 
             doc.setFontSize(10);
 
+            const agentFeeLabel = isCustomAgentFee ? `${customAgentFeePct}%` : `${agentFee * 100}%`;
             const moveInRowsPdf = [
                 ["Перший місяць (оренда)", values.rent],
                 [`Застава (депозит х${depositMul})`, deposit],
-                [`Комісія рієлтора (${agentFee * 100}%)`, agent]
+                [`Комісія рієлтора (${agentFeeLabel})`, agent]
             ];
 
             moveInRowsPdf.forEach(([lbl, val]) => {
@@ -402,7 +518,19 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             });
         } catch (error) {
             console.error("Помилка генерації PDF:", error);
-            alert("Помилка: перевірте, чи файл Roboto-Regular.ttf дійсно лежить у папці public/fonts/");
+
+            const message = error instanceof Error ? error.message : "UNKNOWN";
+            setPdfError(
+                message === "FONT_NOT_FOUND" || message === "FONT_READ_FAILED"
+                    ? "Не вдалося завантажити шрифт для звіту. Спробуйте оновити сторінку та повторити ще раз."
+                    : "Не вдалося сформувати PDF. Спробуйте, будь ласка, ще раз за хвилину."
+            );
+
+            gTag.event({
+                action: "export_pdf_error",
+                category: "calculator_page",
+                label: message
+            });
         } finally {
             setIsGenerating(false);
         }
@@ -426,7 +554,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-12">
                 <motion.p {...fadeIn(0)} className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-2">Інструменти</motion.p>
                 <motion.h1 {...fadeIn(0.05)} className="text-center font-black mb-2 leading-tight" style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "clamp(24px, 3.5vw, 38px)", letterSpacing: "-1px" }}>
-                    Калькулятор вартості оренди
+                    Калькулятор вартості оренди квартири
                 </motion.h1>
                 <motion.p {...fadeIn(0.1)} className="text-center text-white/50 text-sm max-w-md mx-auto mb-8 leading-relaxed">
                     Дізнайтесь реальну суму витрат — не лише ціну з оголошення, а всі додаткові платежі.
@@ -453,7 +581,37 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-baseline justify-between"><span className="text-xs font-bold text-white/60">Комісія рієлтора</span><span className="text-sm font-bold text-white">{fmt(agent)} грн</span></div>
-                                    <ToggleGroup options={AGENT_FEE} value={agentFee} onChange={setAgentFee} fieldType="agent_fee" />
+                                    <div className="flex gap-2">
+                                        {AGENT_FEE.map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => handleAgentFeePreset(opt.value)}
+                                                className={`flex-1 text-xs sm:text-sm font-bold py-3 px-2 rounded-xl border transition-all duration-150 ${!isCustomAgentFee && agentFee === opt.value ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={handleCustomAgentFeeToggle}
+                                            className={`flex-1 text-xs sm:text-sm font-bold py-3 px-2 rounded-xl border transition-all duration-150 ${isCustomAgentFee ? "bg-orange-500/15 border-orange-500/40 text-orange-400" : "border-white/[0.07] text-white/40 hover:text-white/60"}`}
+                                        >
+                                            Своя %
+                                        </button>
+                                    </div>
+                                    {isCustomAgentFee && (
+                                        <div className="pt-1">
+                                            <NumberStepper
+                                                value={customAgentFeePct}
+                                                min={0}
+                                                max={100}
+                                                step={5}
+                                                unit="% від орендної плати"
+                                                onChange={setCustomAgentFeePct}
+                                                ariaLabel="Своя комісія рієлтора, відсоток"
+                                                inputWidthClass="w-12"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </Card>
@@ -475,6 +633,11 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                                     <span>{isGenerating ? "Формування..." : "Експорт у PDF"}</span>
                                 </button>
                             </div>
+                            {pdfError && (
+                                <p className="relative mt-3 text-xs text-red-400 leading-relaxed">
+                                    {pdfError}
+                                </p>
+                            )}
                         </div>
 
                         <Card>
@@ -564,7 +727,13 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                                     >
                                         <div className="aspect-video w-full rounded-lg overflow-hidden bg-white/[0.04] relative">
                                             {post.cover_image ? (
-                                                <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
+                                                <img
+                                                    src={post.cover_image}
+                                                    alt={post.title}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                                                />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500/10 to-transparent">
                                                     <span className="text-orange-500/20 text-2xl font-black" style={{ fontFamily: "'Unbounded', sans-serif" }}>{post.title[0]}</span>
@@ -613,7 +782,7 @@ export default function RentalCalculatorClient({ initialPosts }: { initialPosts:
                     </p>
                     <ul className="list-disc pl-5 space-y-2">
                         <li><strong>Обслуговування будинку (ОСББ/ЖЕК):</strong> у новобудовах ці платежі можуть сягати 1000+ грн на місяць.</li>
-                        <li><strong>Послуги інтернет-провайдерів:</strong> інколи інтернет та ТБ підключені до дорогих пакетів, які не можна змінили.</li>
+                        <li><strong>Послуги інтернет-провайдерів:</strong> інколи інтернет та ТБ підключені до дорогих пакетів, які не можна змінити.</li>
                         <li><strong>Опалення:</strong> в зимовий період це найбільша стаття витрат, яку часто не враховують при літньому перегляді квартири.</li>
                     </ul>
                 </div>
