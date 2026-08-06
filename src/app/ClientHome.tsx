@@ -19,6 +19,7 @@ import HowItWorksFoxFlat from '@/src/components/main/HowItWorksFoxFlat';
 import FaqFoxFlat from '@/src/components/main/FAQFoxFlat';
 import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
 import BlogPreviewFoxFlat from "@/src/components/main/BlogPreviewFoxFlat";
+import ResourcesStripFoxFlat from "@/src/components/main/ResourcesStripFoxFlat";
 import EcosystemFoxFlat from "@/src/components/main/EcosystemFoxFlat";
 
 interface BlogPost {
@@ -32,9 +33,9 @@ interface BlogPost {
 }
 
 export default function ClientHome({
-    blogPosts = [],
-    initialReviews = [],
-}: {
+                                       blogPosts = [],
+                                       initialReviews = [],
+                                   }: {
     blogPosts?: BlogPost[];
     initialReviews?: Review[];
 }) {
@@ -146,6 +147,16 @@ export default function ClientHome({
 
             <motion.section {...fadeInSection}>
                 <BlogPreviewFoxFlat posts={blogPosts} />
+            </motion.section>
+
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            {/* ── Корисні ресурси ── */}
+            <motion.section {...fadeInSection}>
+                <ResourcesStripFoxFlat />
             </motion.section>
 
             {/* тонкий розділювач */}

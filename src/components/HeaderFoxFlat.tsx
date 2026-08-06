@@ -13,6 +13,7 @@ const NAV_LINKS = [
 const TOOLS_LINKS = [
     { href: '/tools/calculator', label: 'Калькулятор оренди' },
     { href: '/tools/checklist',  label: 'Чек лист огляду' },
+    { href: '/tools/dogovir-orendy',  label: 'Договір оренди' },
 ];
 
 export default function HeaderFoxFlat() {
@@ -92,7 +93,7 @@ export default function HeaderFoxFlat() {
                                 isToolsActive ? 'text-orange-400' : 'text-white/50 hover:text-white'
                             }`}
                         >
-                            Інструменти
+                            Для орендаря
                             <svg
                                 width="12" height="12" viewBox="0 0 12 12" fill="none"
                                 className={`transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`}
@@ -175,7 +176,7 @@ export default function HeaderFoxFlat() {
                                 isToolsActive ? 'text-orange-400' : 'text-white/60'
                             }`}
                         >
-                            Інструменти
+                            Для орендаря
                             <svg
                                 width="14" height="14" viewBox="0 0 12 12" fill="none"
                                 className={`transition-transform duration-200 ${toolsMobileOpen ? 'rotate-180' : ''}`}
