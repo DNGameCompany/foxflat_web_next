@@ -13,7 +13,7 @@ const NAV_LINKS = [
 const TOOLS_LINKS = [
     { href: '/tools/calculator', label: 'Калькулятор оренди' },
     { href: '/tools/checklist',  label: 'Чек лист огляду' },
-    { href: '/tools/dogovir-orendy',  label: 'Договір оренди' },
+    { href: '/docs/dogovir-orendy',  label: 'Договір оренди' },
 ];
 
 export default function HeaderFoxFlat() {
