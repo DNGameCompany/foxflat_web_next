@@ -21,6 +21,7 @@ import CitiesFoxFlat from "@/src/components/main/CitiesFoxFlat";
 import BlogPreviewFoxFlat from "@/src/components/main/BlogPreviewFoxFlat";
 import ResourcesStripFoxFlat from "@/src/components/main/ResourcesStripFoxFlat";
 import EcosystemFoxFlat from "@/src/components/main/EcosystemFoxFlat";
+import DonateFoxFlat from "@/src/components/main/DonateFoxFlat";
 
 interface BlogPost {
     slug: string;
@@ -98,6 +99,16 @@ export default function ClientHome({
                     ↓
                 </span>
             )}
+
+            {/* ── Донат на ЗСУ ── */}
+            <motion.section {...fadeInSection}>
+                <DonateFoxFlat />
+            </motion.section>
+
+            {/* тонкий розділювач */}
+            <div className="max-w-4xl mx-auto px-4">
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
 
             {/* ── Лічильники довіри ── */}
             <motion.section {...fadeInSection}>
