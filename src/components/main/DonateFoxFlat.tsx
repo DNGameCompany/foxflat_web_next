@@ -9,6 +9,20 @@ const CARD_NUMBER = "4874 1000 3087 1001";
 
 type Tab = "link" | "qr";
 
+// ⬇️ Сюди додаєш нові звіти (нові зверху)
+const REPORTS = [
+    {
+        date: "15.08.2026",
+        title: "Звіт за 15 серпня",
+        url: "https://www.instagram.com/p/DcEJQ0LjMZS/?igsh=MTcwczU1Nnp1Yjd6cw==",
+    },
+    // {
+    //   date: "14.08.2026",
+    //   title: "Звіт за 14 серпня",
+    //   url: "https://www.instagram.com/p/XXXXX/",
+    // },
+];
+
 export default function DonateFoxFlat() {
     const [tab, setTab] = useState<Tab>("link");
     const [copied, setCopied] = useState(false);
@@ -43,6 +57,14 @@ export default function DonateFoxFlat() {
         } catch {
             // clipboard недоступний
         }
+    };
+
+    const handleReportClick = (date: string) => {
+        event({
+            action: "donate_report_click",
+            category: "engagement",
+            label: `Donate section — report ${date}`,
+        });
     };
 
     return (
@@ -218,6 +240,52 @@ export default function DonateFoxFlat() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Звіти */}
+                        {REPORTS.length > 0 && (
+                            <div className="mt-8 sm:mt-10">
+                                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+                                    Звіти по збору
+                                </h3>
+
+                                <ul className="space-y-2">
+                                    {REPORTS.map((report) => (
+                                        <li key={report.url}>
+                                            <a
+                                                href={report.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={() => handleReportClick(report.date)}
+                                                className="group flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 transition-all hover:border-white/20 hover:bg-white/[0.06] active:scale-[0.99]"
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                          <span className="shrink-0 rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium text-gray-300">
+                            {report.date}
+                          </span>
+                                                    <span className="truncate text-sm text-white group-hover:text-amber-300 transition-colors">
+                            {report.title}
+                          </span>
+                                                </div>
+
+                                                <svg
+                                                    className="h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:translate-x-0.5 group-hover:text-white"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth={2}
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                                                    />
+                                                </svg>
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
