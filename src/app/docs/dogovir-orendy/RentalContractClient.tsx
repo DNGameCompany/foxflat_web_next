@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
 import * as gTag from "@/lib/gtag";
+import { addDoc, collection, doc, increment, serverTimestamp, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface DocSection {
     icon: React.ElementType;
@@ -130,6 +132,28 @@ const faqs = [
         a: "Усі умови — ціну, заставу, комісію, строк — фіксуйте письмово в договорі до передачі грошей. Усне «домовились на словах» неможливо довести в разі спору, тоді як підписаний договір має юридичну силу.",
     },
 ];
+
+// ─────────────────────────────────────────────────────────────
+// Логування завантажень договору у Firestore
+// ─────────────────────────────────────────────────────────────
+async function logContractDownload() {
+    try {
+        await Promise.all([
+            // Загальний лічильник — швидко читати одним запитом
+            setDoc(
+                doc(db, "stats", "contract_downloads"),
+                { count: increment(1), lastDownloadAt: serverTimestamp() },
+                { merge: true }
+            ),
+            // Лог кожного завантаження — для динаміки по днях
+            addDoc(collection(db, "contract_downloads_log"), {
+                createdAt: serverTimestamp(),
+            }),
+        ]);
+    } catch (error) {
+        console.error("Не вдалося залогувати завантаження договору:", error);
+    }
+}
 
 function FaqItem({ item, index }: { item: (typeof faqs)[0]; index: number }) {
     const [open, setOpen] = useState(false);
@@ -701,6 +725,8 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
             a.remove();
             URL.revokeObjectURL(url);
 
+            logContractDownload();
+
             gTag.event({
                 action: "download_contract_template",
                 category: "contract_page",
@@ -708,6 +734,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
             });
         } catch {
             window.open(pdfUrl, "_blank", "noopener,noreferrer");
+            logContractDownload();
             gTag.event({
                 action: "download_contract_template",
                 category: "contract_page",
