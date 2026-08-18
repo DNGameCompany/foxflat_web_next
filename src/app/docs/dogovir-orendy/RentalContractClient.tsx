@@ -14,11 +14,15 @@ import {
     Check,
     Maximize2,
     X,
+    Shield,          // ← додай
 } from "lucide-react";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
 import * as gTag from "@/lib/gtag";
 import { addDoc, collection, doc, increment, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+// 🔗 ПОСИЛАННЯ НА ВАШУ БАНКУ MONOBANK АБО LIQPAY
+const MONOBANK_JAR_URL = "https://send.monobank.ua/jar/2BrMzU78xp"; // Замініть на ваше посилання
 
 interface DocSection {
     icon: React.ElementType;
@@ -139,13 +143,11 @@ const faqs = [
 async function logContractDownload() {
     try {
         await Promise.all([
-            // Загальний лічильник — швидко читати одним запитом
             setDoc(
                 doc(db, "stats", "contract_downloads"),
                 { count: increment(1), lastDownloadAt: serverTimestamp() },
                 { merge: true }
             ),
-            // Лог кожного завантаження — для динаміки по днях
             addDoc(collection(db, "contract_downloads_log"), {
                 createdAt: serverTimestamp(),
             }),
@@ -233,10 +235,6 @@ const QUICK_JUMP = [
     { label: "Довідка ЦКУ", page: 9, from: 9, to: 9 },
 ];
 
-// ─────────────────────────────────────────────────────────────
-// Хук свайпу: розрізняє "тап" (клік) від "свайпу" (гортання),
-// щоб клік на прев'ю не сплутувався зі свайпом-навігацією.
-// ─────────────────────────────────────────────────────────────
 function useSwipe({
                       onSwipeLeft,
                       onSwipeRight,
@@ -284,15 +282,11 @@ function useSwipe({
         [onSwipeLeft, onSwipeRight, threshold]
     );
 
-    // Чи останній жест був перетягуванням (щоб onClick його ігнорував)
     const wasDragged = useCallback(() => movedRef.current, []);
 
     return { onTouchStart, onTouchMove, onTouchEnd, wasDragged };
 }
 
-// ─────────────────────────────────────────────────────────────
-// Зображення в лайтбоксі з pinch-to-zoom, double-tap і панорамуванням
-// ─────────────────────────────────────────────────────────────
 function ZoomableLightboxImage({
                                    src,
                                    alt,
@@ -318,8 +312,7 @@ function ZoomableLightboxImage({
         scale.set(1);
         x.set(0);
         y.set(0);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [src]);
+    }, [src, scale, x, y]);
 
     const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
 
@@ -447,9 +440,6 @@ function ZoomableLightboxImage({
     );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Модалка лайтбоксу
-// ─────────────────────────────────────────────────────────────
 function LightboxModal({
                            index,
                            total,
@@ -516,15 +506,14 @@ function LightboxModal({
     );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Прев'ю документа
-// ─────────────────────────────────────────────────────────────
 function DocumentPreview({
                              onDownload,
                              downloading,
+                             onDonate,
                          }: {
     onDownload: () => void;
     downloading: boolean;
+    onDonate: () => void;
 }) {
     const [index, setIndex] = useState(0);
     const [direction, setDirection] = useState(1);
@@ -548,7 +537,6 @@ function DocumentPreview({
             document.body.style.touchAction = "";
             window.removeEventListener("keydown", onKey);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lightboxOpen, index]);
 
     const goTo = (i: number, label?: string) => {
@@ -571,7 +559,6 @@ function DocumentPreview({
     });
 
     const openLightbox = () => {
-        // Якщо це був свайп (гортання), а не тап — не відкриваємо лайтбокс
         if (swipe.wasDragged()) return;
         setLightboxOpen(true);
         gTag.event({
@@ -667,15 +654,29 @@ function DocumentPreview({
                 ))}
             </div>
 
-            <button
-                type="button"
-                onClick={onDownload}
-                disabled={downloading}
-                className="mt-3 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-orange-500/40 text-orange-400 hover:bg-orange-500/10 transition-all text-xs font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-                <Download className="w-3.5 h-3.5" strokeWidth={2.5} />
-                {downloading ? "Завантаження…" : "Завантажити повний PDF (9 стор.)"}
-            </button>
+            {/* Блок з двома кнопками для зручності під прев'ю */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                    type="button"
+                    onClick={onDownload}
+                    disabled={downloading}
+                    className="flex items-center justify-center gap-2 py-3 px-3 rounded-xl border-2 border-orange-500/40 text-orange-400 hover:bg-orange-500/10 transition-all text-xs font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    <Download className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.5} />
+                    <span>{downloading ? "Завантаження…" : "Завантажити PDF"}</span>
+                </button>
+
+                <a
+                    href={MONOBANK_JAR_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onDonate}
+                    className="group flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] text-blue-200/90 hover:bg-blue-500/15 hover:border-blue-400/40 hover:text-white transition-all duration-200 text-xs font-medium w-full"
+                >
+                    <Shield className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors flex-shrink-0" strokeWidth={2} />
+                    <span>На зв’язок захисникам</span>
+                </a>
+            </div>
 
             {mounted &&
                 lightboxOpen &&
@@ -746,6 +747,14 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
         }
     };
 
+    const handleDonateClick = () => {
+        gTag.event({
+            action: "click_donate_monobank",
+            category: "contract_page",
+            label: "79 ПЗ ДПСУ — Monobank Jar",
+        });
+    };
+
     const fadeIn = (delay = 0) => ({
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
@@ -789,10 +798,13 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6 items-start">
                     <motion.div {...fadeIn(0.2)} className="lg:col-span-7 lg:order-1">
-                        <DocumentPreview onDownload={handleDownload} downloading={downloading} />
+                        <DocumentPreview
+                            onDownload={handleDownload}
+                            downloading={downloading}
+                            onDonate={handleDonateClick}
+                        />
                     </motion.div>
 
-                    {/* sticky ЗЗОВНІ motion — без transform */}
                     <div className="lg:col-span-5 lg:order-2 lg:sticky lg:top-20 self-start space-y-4">
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -830,16 +842,31 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                     <span className="w-1 h-1 rounded-full bg-white/20 mt-1.5" />
                                     <span>Формат A4</span>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                    className="flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-orange-500 text-black hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all text-sm font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed"
-                                    style={{ fontFamily: "'Unbounded', sans-serif" }}
-                                >
-                                    <Download className="w-4 h-4" strokeWidth={2.5} />
-                                    {downloading ? "Завантаження…" : "Завантажити PDF"}
-                                </button>
+
+                                {/* ГОЛОВНИЙ БЛОК З ДВОМА КНОПКАМИ (PRIMARY + DONATE) */}
+                                <div className="space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleDownload}
+                                        disabled={downloading}
+                                        className="flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-orange-500 text-black hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all text-sm font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-orange-500/10"
+                                        style={{ fontFamily: "'Unbounded', sans-serif" }}
+                                    >
+                                        <Download className="w-4 h-4 stroke-[2.5]" />
+                                        {downloading ? "Завантаження…" : "Завантажити PDF"}
+                                    </button>
+
+                                    <a
+                                        href={MONOBANK_JAR_URL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={handleDonateClick}
+                                        className="group flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] hover:bg-blue-500/15 hover:border-blue-400/40 text-blue-200/90 hover:text-white transition-all duration-200 text-xs font-medium w-full"
+                                    >
+                                        <Shield className="w-4 h-4 text-blue-400 group-hover:text-blue-300 transition-colors" strokeWidth={2} />
+                                        <span>Антени для 79 ПЗ ДПСУ</span>
+                                    </a>
+                                </div>
                             </div>
 
                             <Card>
@@ -1082,6 +1109,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                 </div>
             </motion.section>
 
+            {/* МОДАЛКА ПРИ ЗАВАНТАЖЕННІ ДАКУМЕНТА — з додатковою пропозицією донату під час очікування */}
             {mounted &&
                 showDownloadModal &&
                 createPortal(
@@ -1103,6 +1131,18 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                     style={{ animation: "downloadProgress 10s linear forwards" }}
                                 />
                             </div>
+
+                            {/* Додаткове дружнє нагадування під час генерації */}
+                            <a
+                                href={MONOBANK_JAR_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={handleDonateClick}
+                                className="group mt-6 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] hover:bg-blue-500/15 hover:border-blue-400/40 text-blue-200/80 hover:text-white transition-all duration-200 text-xs font-medium"
+                            >
+                                <Shield className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors" strokeWidth={2} />
+                                <span>Поки готується PDF — допоможи воїнам</span>
+                            </a>
                         </div>
                         <style>{`
                             @keyframes downloadProgress {
