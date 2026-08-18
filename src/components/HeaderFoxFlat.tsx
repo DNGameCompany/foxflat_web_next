@@ -12,8 +12,8 @@ const NAV_LINKS = [
 
 const TOOLS_LINKS = [
     { href: '/tools/calculator', label: 'Калькулятор оренди' },
-    { href: '/tools/checklist',  label: 'Чек лист огляду' },
-    { href: '/docs/dogovir-orendy',  label: 'Договір оренди' },
+    { href: '/tools/checklist',  label: 'Чек-лист огляду' },
+    { href: '/docs/dogovir-orendy', label: 'Договір оренди' },
 ];
 
 export default function HeaderFoxFlat() {
@@ -35,7 +35,10 @@ export default function HeaderFoxFlat() {
     }, []);
 
     // Закрити мобільне меню при переході на іншу сторінку
-    useEffect(() => { setOpen(false); setToolsMobileOpen(false); }, [pathname]);
+    useEffect(() => {
+        setOpen(false);
+        setToolsMobileOpen(false);
+    }, [pathname]);
 
     // Закрити dropdown при кліку поза ним
     useEffect(() => {
@@ -52,33 +55,34 @@ export default function HeaderFoxFlat() {
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
                 scrolled || open
-                    ? 'bg-black/80 backdrop-blur-md border-b border-white/[0.06]'
-                    : 'bg-transparent border-b border-transparent'
+                    ? 'bg-[#1E1E2E]/95 backdrop-blur-md border-b border-white/10 shadow-lg'
+                    : 'bg-[#1E1E2E] border-b border-white/5'
             }`}
         >
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-14">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-16">
 
                 {/* Логотип */}
-                <div className="text-white font-bold text-lg tracking-widest select-none">
+                <div className="font-extrabold text-xl tracking-wider select-none text-white flex items-center gap-2">
+                    <span className="w-3 h-3 bg-[#FF6B35] rounded-sm inline-block" />
                     {isHome ? (
-                        'FoxFlat'
+                        <span>FoxFlat</span>
                     ) : (
-                        <Link href="/" className="hover:text-orange-400 transition-colors">
+                        <Link href="/" className="hover:text-[#FF6B35] transition-colors">
                             FoxFlat
                         </Link>
                     )}
                 </div>
 
                 {/* Навігація — десктоп */}
-                <nav className="hidden md:flex items-center gap-6">
+                <nav className="hidden md:flex items-center gap-8">
                     {NAV_LINKS.map(({ href, label }) => (
                         <Link
                             key={href}
                             href={href}
-                            className={`text-xs font-semibold transition-colors ${
+                            className={`text-sm font-semibold transition-colors ${
                                 pathname === href
-                                    ? 'text-orange-400'
-                                    : 'text-white/50 hover:text-white'
+                                    ? 'text-[#FF6B35]'
+                                    : 'text-white/70 hover:text-white'
                             }`}
                         >
                             {label}
@@ -89,8 +93,8 @@ export default function HeaderFoxFlat() {
                     <div ref={toolsRef} className="relative">
                         <button
                             onClick={() => setToolsOpen((v) => !v)}
-                            className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
-                                isToolsActive ? 'text-orange-400' : 'text-white/50 hover:text-white'
+                            className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                                isToolsActive ? 'text-[#FF6B35]' : 'text-white/70 hover:text-white'
                             }`}
                         >
                             Для орендаря
@@ -98,31 +102,29 @@ export default function HeaderFoxFlat() {
                                 width="12" height="12" viewBox="0 0 12 12" fill="none"
                                 className={`transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`}
                             >
-                                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                         </button>
 
                         {toolsOpen && (
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-48 rounded-xl border border-white/[0.08] bg-black/90 backdrop-blur-md shadow-xl overflow-hidden">
-                                <div className="p-1">
-                                    {TOOLS_LINKS.map(({ href, label }) => (
-                                        <Link
-                                            key={href}
-                                            href={href}
-                                            onClick={() => setToolsOpen(false)}
-                                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
-                                                pathname === href
-                                                    ? 'text-orange-400 bg-orange-500/10'
-                                                    : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
-                                            }`}
-                                        >
-                                            {pathname === href && (
-                                                <span className="w-1 h-1 rounded-full bg-orange-400 flex-shrink-0" />
-                                            )}
-                                            {label}
-                                        </Link>
-                                    ))}
-                                </div>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-52 rounded-xl border border-white/10 bg-[#1E1E2E] shadow-2xl overflow-hidden p-1.5">
+                                {TOOLS_LINKS.map(({ href, label }) => (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        onClick={() => setToolsOpen(false)}
+                                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                                            pathname === href
+                                                ? 'text-[#FF6B35] bg-[#FF6B35]/10'
+                                                : 'text-white/80 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        {pathname === href && (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35] flex-shrink-0" />
+                                        )}
+                                        {label}
+                                    </Link>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -133,7 +135,7 @@ export default function HeaderFoxFlat() {
                     href="https://t.me/FoxFlat_bot?start=website_header"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hidden md:inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold text-xs px-4 py-2 rounded-lg transition-colors"
+                    className="hidden md:inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all shadow-md active:scale-95"
                 >
                     Запустити бота
                 </a>
@@ -141,7 +143,7 @@ export default function HeaderFoxFlat() {
                 {/* Гамбургер — мобільний */}
                 <button
                     onClick={() => setOpen((v) => !v)}
-                    className="md:hidden flex flex-col justify-center items-center gap-[5px] w-8 h-8"
+                    className="md:hidden flex flex-col justify-center items-center gap-[5px] w-8 h-8 focus:outline-none"
                     aria-label="Меню"
                 >
                     <span className={`block h-0.5 w-5 bg-white transition-all duration-200 ${open ? 'rotate-45 translate-y-[7px]' : ''}`} />
@@ -152,16 +154,16 @@ export default function HeaderFoxFlat() {
 
             {/* Мобільне меню */}
             {open && (
-                <div className="md:hidden border-t border-white/[0.06] bg-black/90 backdrop-blur-md px-6 py-4 flex flex-col gap-1">
+                <div className="md:hidden border-t border-white/10 bg-[#1E1E2E] px-6 py-4 flex flex-col gap-1 shadow-2xl">
                     {NAV_LINKS.map(({ href, label }) => (
                         <Link
                             key={href}
                             href={href}
                             onClick={() => setOpen(false)}
-                            className={`py-3 text-sm font-semibold border-b border-white/[0.05] transition-colors ${
+                            className={`py-3 text-sm font-semibold border-b border-white/5 transition-colors ${
                                 pathname === href
-                                    ? 'text-orange-400'
-                                    : 'text-white/60 hover:text-white'
+                                    ? 'text-[#FF6B35]'
+                                    : 'text-white/80 hover:text-white'
                             }`}
                         >
                             {label}
@@ -169,11 +171,11 @@ export default function HeaderFoxFlat() {
                     ))}
 
                     {/* Інструменти — акордеон у мобільному */}
-                    <div className="border-b border-white/[0.05]">
+                    <div className="border-b border-white/5">
                         <button
                             onClick={() => setToolsMobileOpen((v) => !v)}
                             className={`w-full flex items-center justify-between py-3 text-sm font-semibold transition-colors ${
-                                isToolsActive ? 'text-orange-400' : 'text-white/60'
+                                isToolsActive ? 'text-[#FF6B35]' : 'text-white/80'
                             }`}
                         >
                             Для орендаря
@@ -181,12 +183,12 @@ export default function HeaderFoxFlat() {
                                 width="14" height="14" viewBox="0 0 12 12" fill="none"
                                 className={`transition-transform duration-200 ${toolsMobileOpen ? 'rotate-180' : ''}`}
                             >
-                                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                         </button>
 
                         {toolsMobileOpen && (
-                            <div className="pb-2 flex flex-col gap-0.5">
+                            <div className="pb-2 flex flex-col gap-1">
                                 {TOOLS_LINKS.map(({ href, label }) => (
                                     <Link
                                         key={href}
@@ -194,8 +196,8 @@ export default function HeaderFoxFlat() {
                                         onClick={() => setOpen(false)}
                                         className={`pl-4 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
                                             pathname === href
-                                                ? 'text-orange-400'
-                                                : 'text-white/50 hover:text-white'
+                                                ? 'text-[#FF6B35] bg-[#FF6B35]/10'
+                                                : 'text-white/60 hover:text-white'
                                         }`}
                                     >
                                         {label}
@@ -210,7 +212,7 @@ export default function HeaderFoxFlat() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setOpen(false)}
-                        className="mt-3 inline-flex justify-center items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-bold text-sm px-4 py-3 rounded-lg transition-colors"
+                        className="mt-4 inline-flex justify-center items-center gap-2 bg-[#FF6B35] hover:bg-[#e05a2b] text-white font-bold text-sm px-4 py-3 rounded-lg transition-colors shadow-md"
                     >
                         Запустити бота
                     </a>

@@ -38,44 +38,76 @@ const resources: ResourceItem[] = [
 
 export default function ResourcesStripFoxFlat() {
     return (
-        <section className="max-w-6xl mx-auto px-4 py-16">
-            <div className="text-center mb-10">
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                    Корисно при оренді
-                </h2>
-                <p className="text-white/50 mt-2">
-                    Безкоштовні інструменти та документи для орендарів
-                </p>
-            </div>
+        <section className="relative w-full bg-[#1E1E2E] text-white py-24 px-6 overflow-hidden">
+            {/* Фонове сяйво */}
+            <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] pointer-events-none"
+                style={{ background: "radial-gradient(ellipse, rgba(255,107,53,0.08) 0%, transparent 65%)" }}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {resources.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-6
-                                   hover:border-orange-400/40 hover:bg-white/[0.06] transition-all duration-300"
+            <div className="relative max-w-6xl mx-auto">
+                <div className="text-center mb-16">
+                    <p className="text-xs font-extrabold tracking-widest text-[#FF6B35] uppercase mb-3">
+                        Інструменти
+                    </p>
+                    <h2
+                        className="font-extrabold mb-4 leading-tight text-white"
+                        style={{
+                            fontFamily: "'Unbounded', sans-serif",
+                            fontSize: "clamp(24px, 3.5vw, 40px)",
+                            letterSpacing: "-1px",
+                        }}
                     >
-                        <div className="flex items-center justify-center w-12 h-12 rounded-xl
-                                        bg-orange-400/10 text-orange-400 mb-4
-                                        group-hover:bg-orange-400/20 transition-colors">
-                            {item.icon}
-                        </div>
+                        Корисно при оренді
+                    </h2>
+                    <p className="text-white/60 text-base max-w-md mx-auto leading-relaxed">
+                        Безкоштовні інструменти та документы для орендарів
+                    </p>
+                </div>
 
-                        <h3 className="text-white font-semibold text-lg mb-2">
-                            {item.title}
-                        </h3>
-                        <p className="text-white/50 text-sm mb-4 leading-relaxed">
-                            {item.description}
-                        </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {resources.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-7
+                                       hover:border-[#FF6B35]/50 hover:bg-white/[0.08] transition-all duration-300 shadow-lg overflow-hidden"
+                        >
+                            {/* М'який підсвіт при наведенні */}
+                            <div
+                                className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                style={{ background: "radial-gradient(circle at 0% 100%, rgba(255,107,53,0.15) 0%, transparent 70%)" }}
+                            />
 
-                        <span className="inline-flex items-center gap-1.5 text-orange-400 text-sm font-medium
-                                          group-hover:gap-2.5 transition-all">
-                            {item.cta}
-                            <ArrowRight className="w-4 h-4" />
-                        </span>
-                    </Link>
-                ))}
+                            <div>
+                                <div className="flex items-center justify-center w-12 h-12 rounded-xl
+                                                bg-[#FF6B35]/15 text-[#FF6B35] border border-[#FF6B35]/20 mb-5
+                                                group-hover:bg-[#FF6B35] group-hover:text-white transition-all duration-300 shadow-sm">
+                                    {item.icon}
+                                </div>
+
+                                <h3
+                                    className="text-white font-bold text-lg mb-3 group-hover:text-[#FF6B35] transition-colors duration-200"
+                                    style={{ fontFamily: "'Unbounded', sans-serif" }}
+                                >
+                                    {item.title}
+                                </h3>
+                                <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                                    {item.description}
+                                </p>
+                            </div>
+
+                            <span
+                                className="inline-flex items-center gap-2 text-[#FF6B35] text-xs font-bold
+                                           group-hover:gap-3 transition-all duration-200 uppercase tracking-wider"
+                                style={{ fontFamily: "'Unbounded', sans-serif" }}
+                            >
+                                {item.cta}
+                                <ArrowRight className="w-4 h-4" />
+                            </span>
+                        </Link>
+                    ))}
+                </div>
             </div>
         </section>
     );

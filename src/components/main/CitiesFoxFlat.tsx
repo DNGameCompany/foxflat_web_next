@@ -26,57 +26,63 @@ const CITIES = [
 ];
 
 const REGION_COLOR: Record<string, string> = {
-    "Центр":  "text-orange-400/60",
-    "Захід":  "text-blue-400/60",
-    "Схід":   "text-yellow-400/60",
-    "Південь":"text-emerald-400/60",
-    "Північ": "text-purple-400/60",
+    "Центр":  "text-[#FF6B35]/80",
+    "Захід":  "text-sky-400/80",
+    "Схід":   "text-amber-400/80",
+    "Південь":"text-emerald-400/80",
+    "Північ": "text-purple-400/80",
 };
 
 export default function CitiesFoxFlat() {
     return (
-        <section className="w-full bg-black py-16 px-4">
-            <div className="max-w-5xl mx-auto">
+        <section className="relative w-full bg-[#1E1E2E] text-white py-24 px-6 overflow-hidden">
+            {/* М'яке фонове сяйво */}
+            <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] pointer-events-none"
+                style={{ background: "radial-gradient(ellipse, rgba(255,107,53,0.08) 0%, transparent 65%)" }}
+            />
+
+            <div className="relative max-w-5xl mx-auto">
 
                 {/* Заголовок */}
-                <div className="mb-10 text-center">
-                    <p className="text-xs font-bold tracking-widest text-orange-500 uppercase mb-4">
+                <div className="mb-16 text-center">
+                    <p className="text-xs font-extrabold tracking-widest text-[#FF6B35] uppercase mb-3">
                         Покриття
                     </p>
-                    <h2 className="font-black mb-4 leading-tight"
+                    <h2 className="font-extrabold mb-4 leading-tight text-white"
                         style={{
                             fontFamily: "'Unbounded', sans-serif",
-                            fontSize: 'clamp(24px, 3vw, 38px)',
+                            fontSize: 'clamp(24px, 3.5vw, 38px)',
                             letterSpacing: '-1px',
                         }}>
                         Оренда квартир{' '}
-                        <span className="text-orange-500">по всій Україні</span>
+                        <span className="text-[#FF6B35]">по всій Україні</span>
                     </h2>
-                    <p className="text-white/40 text-sm max-w-md mx-auto leading-relaxed">
+                    <p className="text-white/60 text-base max-w-md mx-auto leading-relaxed">
                         FoxFlat працює у 22 містах — знайди квартиру у своєму місті за лічені хвилини
                     </p>
                 </div>
 
                 {/* Плитки міст */}
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-3">
                     {CITIES.map((city) => (
                         <Link
                             key={city.slug}
                             href={`/misto/${city.slug}`}
-                            className="group relative flex flex-col justify-between p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-orange-500/30 hover:bg-orange-500/[0.04] transition-all duration-200 w-36"
+                            className="group relative flex flex-col justify-between p-4 rounded-xl border border-white/10 bg-white/5 hover:border-[#FF6B35]/50 hover:bg-white/[0.08] transition-all duration-300 w-36 shadow-md"
                         >
                             {/* Назва */}
-                            <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors leading-tight">
+                            <span className="text-sm font-bold text-white/80 group-hover:text-white transition-colors leading-tight">
                                 {city.name}
                             </span>
 
                             {/* Регіон */}
-                            <span className={`text-[10px] font-bold mt-2 tracking-wide ${REGION_COLOR[city.region]}`}>
+                            <span className={`text-[10px] font-extrabold mt-3 tracking-wider uppercase ${REGION_COLOR[city.region]}`}>
                                 {city.region}
                             </span>
 
                             {/* Стрілка при ховері */}
-                            <span className="absolute top-3 right-3 text-orange-500/0 group-hover:text-orange-500/60 transition-all duration-200 text-xs">
+                            <span className="absolute top-3 right-3 text-[#FF6B35]/0 group-hover:text-[#FF6B35] group-hover:translate-x-0.5 transition-all duration-200 text-xs">
                                 →
                             </span>
                         </Link>

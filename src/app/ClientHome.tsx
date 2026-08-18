@@ -75,75 +75,85 @@ export default function ClientHome({
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Додано as const для усунення помилки TS2322 з Framer Motion
     const fadeInSection = {
         initial: { opacity: 0, y: 50 },
         whileInView: { opacity: 1, y: 0 },
-        transition: { duration: 0.6 },
-        viewport: { once: true },
-    };
+        transition: { duration: 0.6, ease: "easeOut" },
+        viewport: { once: true, amount: 0.2 },
+    } as const;
+
+    // Геометричний розділювач у стилі flat-дизайну
+    const GeometricDivider = () => (
+        <div className="w-full py-6 bg-[#1E1E2E] flex items-center justify-center gap-4">
+            <div className="w-1/4 h-px bg-gradient-to-r from-transparent via-[#FF6B35]/30 to-[#FF6B35]/60" />
+            <div className="w-2 h-2 rotate-45 border border-[#FF6B35] bg-[#1E1E2E] flex-shrink-0" />
+            <div className="w-1/4 h-px bg-gradient-to-l from-transparent via-[#FF6B35]/30 to-[#FF6B35]/60" />
+        </div>
+    );
 
     return (
-        <main className="relative min-h-screen w-full overflow-hidden bg-black">
-            <AnimatedBackground />
-            <HeaderFoxFlat />
-            <div className="h-14" />
-            <HeroFoxFlat />
-
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <main className="relative min-h-screen w-full overflow-hidden bg-[#1E1E2E] text-white">
+            <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+                <AnimatedBackground />
             </div>
 
+            <HeaderFoxFlat />
+
+            <div className="h-16 bg-white relative z-10" />
+
+            {/* ── HERO SECTION ── */}
+            <motion.section {...fadeInSection} className="relative z-10 bg-white pb-16">
+                <HeroFoxFlat />
+            </motion.section>
+
+            <GeometricDivider />
+
             {showScrollHint && (
-                <span className="fixed bottom-6 left-1/2 -translate-x-1/2 animate-bounce text-orange-400 z-10 text-3xl pointer-events-none select-none">
+                <span className="fixed bottom-6 left-1/2 -translate-x-1/2 animate-bounce text-[#FF6B35] z-50 text-4xl pointer-events-none select-none">
                     ↓
                 </span>
             )}
 
             {/* ── Донат на ЗСУ ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#FF6B35] text-[#1E1E2E] py-12">
                 <DonateFoxFlat />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
             {/* ── Лічильники довіри ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#1E1E2E] py-16">
                 <StatsCounterFoxFlat />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
             {/* ── Як це працює ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-white text-[#1E1E2E] py-16">
                 <HowItWorksFoxFlat />
             </motion.section>
 
+            <GeometricDivider />
+
             {/* ── Переваги ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#1E1E2E] py-16">
                 <FeatureFoxFlat />
             </motion.section>
 
+            <GeometricDivider />
+
             {/* ── Ціни ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-white text-[#1E1E2E] py-16">
                 <PricingFoxFlat />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
             {/* ── Відгуки ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#1E1E2E] py-16">
                 {loading ? (
-                    <div className="text-center py-16 text-orange-400 text-2xl animate-pulse">
+                    <div className="text-center py-16 text-[#FF6B35] text-2xl animate-pulse font-light">
                         Завантаження відгуків...
                     </div>
                 ) : (
@@ -151,52 +161,40 @@ export default function ClientHome({
                 )}
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
-            <motion.section {...fadeInSection}>
+            {/* ── Блог ── */}
+            <motion.section {...fadeInSection} className="relative z-10 bg-white text-[#1E1E2E] py-16">
                 <BlogPreviewFoxFlat posts={blogPosts} />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
             {/* ── Корисні ресурси ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#FF6B35] text-[#1E1E2E] py-8">
                 <ResourcesStripFoxFlat />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
             {/* ── FAQ ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#1E1E2E] py-16">
                 <FaqFoxFlat />
             </motion.section>
 
+            <GeometricDivider />
+
             {/* ── Фінальний CTA ── */}
-            <motion.section {...fadeInSection}>
+            <motion.section {...fadeInSection} className="relative z-10 bg-white text-[#1E1E2E] py-20">
                 <CtaFoxFlat />
             </motion.section>
 
-            {/* тонкий розділювач */}
-            <div className="max-w-4xl mx-auto px-4">
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
+            <GeometricDivider />
 
-            {/* ── Екосистема Fox ── */}
-            <motion.section {...fadeInSection}>
+            {/* ── Екосистема Fox & Cities ── */}
+            <motion.section {...fadeInSection} className="relative z-10 bg-[#1E1E2E] pt-16 pb-24">
                 <EcosystemFoxFlat />
-            </motion.section>
-
-            {/* Cities */}
-            <motion.section {...fadeInSection}>
+                <div className="h-16" />
                 <CitiesFoxFlat />
             </motion.section>
         </main>

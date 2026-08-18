@@ -13,39 +13,39 @@ export default function HeroFoxFlat() {
     };
 
     return (
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden bg-white text-[#1E1E2E]">
 
-            {/* Glow background */}
-            <div className="absolute inset-0 -z-10 overflow-hidden">
-                <div className="absolute left-1/2 top-[-10%] h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-orange-500/20 blur-3xl"></div>
+            {/* М'який акцентний фоновий глоу в стилі помаранчевого банера */}
+            <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+                <div className="absolute left-1/2 top-[-10%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#FF6B35]/15 blur-3xl" />
             </div>
 
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center py-24 sm:py-32">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 sm:py-24">
 
-                    {/* Текст */}
+                    {/* Текстовий блок */}
                     <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
 
-                        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-[#1E1E2E] sm:text-5xl lg:text-6xl leading-tight">
                             FoxFlat — Telegram-бот для швидкої оренди квартир в Україні
                         </h1>
 
-                        <h2 className="mt-4 text-2xl font-semibold text-gray-300">
+                        <h2 className="mt-5 text-xl sm:text-2xl font-semibold text-[#FF6B35]">
                             Актуальні оголошення оренди квартир у 22 містах України: Київ, Львів, Одеса, Харків та інші
                         </h2>
 
-                        <p className="mt-6 text-lg leading-8 text-gray-300 max-w-lg">
+                        <p className="mt-6 text-lg leading-relaxed text-[#1E1E2E]/80 max-w-lg">
                             Знімай квартиру швидко та без зайвих пошуків. FoxFlat миттєво надсилає нові оголошення оренди прямо в Telegram, щоб ти був першим, хто дізнається про доступні квартири.
                         </p>
 
-                        {/* Кнопка */}
-                        <div className="mt-10 flex justify-center lg:justify-start">
+                        {/* Кнопки та заклик до дії */}
+                        <div className="mt-8 flex justify-center lg:justify-start">
                             <a
                                 href="https://t.me/FoxFlat_bot?start=website"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={handleBotClick}
-                                className="w-full sm:w-auto rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-base font-semibold text-black shadow-sm hover:from-orange-400 hover:to-orange-300 transition"
+                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-[#FF6B35] px-8 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#e05a2b] transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                             >
                                 Запустити бота
                             </a>
@@ -53,12 +53,16 @@ export default function HeroFoxFlat() {
 
                     </div>
 
-                    {/* Телефон */}
-                    <div className="flex justify-center lg:justify-end lg:pr-16">
-                        <IphoneMockup
-                            imageSrc="/images/screen_mock.webp"
-                            width={330}
-                        />
+                    {/* Макет телефону */}
+                    <div className="flex justify-center lg:justify-end lg:pr-8">
+                        <div className="relative">
+                            {/* Геометрична декоративна підкладка в стилі flat-дизайну */}
+                            <div className="absolute -inset-4 rounded-3xl bg-[#1E1E2E]/5 -rotate-2 -z-10" />
+                            <IphoneMockup
+                                imageSrc="/images/screen_mock.webp"
+                                width={330}
+                            />
+                        </div>
                     </div>
 
                 </div>

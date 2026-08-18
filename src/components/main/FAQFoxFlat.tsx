@@ -58,11 +58,11 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.07 }}
-            className={`border rounded-xl overflow-hidden transition-colors duration-200 ${
+            transition={{ duration: 0.4, delay: index * 0.05 }}
+            className={`border rounded-2xl overflow-hidden transition-all duration-300 shadow-sm ${
                 open
-                    ? 'border-orange-500/30 bg-orange-500/[0.04]'
-                    : 'border-white/[0.06] bg-white/[0.02] hover:border-white/10'
+                    ? 'border-[#FF6B35]/60 bg-white/[0.08] shadow-md'
+                    : 'border-white/10 bg-white/5 hover:border-white/20'
             }`}
         >
             <button
@@ -70,8 +70,8 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
                 className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
             >
                 <span
-                    className={`text-sm font-semibold leading-snug transition-colors ${
-                        open ? 'text-orange-400' : 'text-white'
+                    className={`font-bold leading-snug transition-colors duration-200 ${
+                        open ? 'text-[#FF6B35]' : 'text-white'
                     }`}
                     style={{
                         fontFamily: "'Unbounded', sans-serif",
@@ -82,10 +82,10 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
                 </span>
 
                 <span
-                    className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold transition-all duration-300 ${
                         open
-                            ? 'bg-orange-500 text-black rotate-45'
-                            : 'bg-white/[0.06] text-white/40'
+                            ? 'bg-[#FF6B35] text-white rotate-45'
+                            : 'bg-white/10 text-white/50'
                     }`}
                 >
                     +
@@ -104,7 +104,7 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
                             ease: [0.4, 0, 0.2, 1],
                         }}
                     >
-                        <div className="px-6 pb-5 text-sm text-white/50 leading-relaxed">
+                        <div className="px-6 pb-6 text-sm text-white/70 leading-relaxed border-t border-white/5 pt-4">
                             <p>{item.a}</p>
 
                             {item.type === 'calculator' &&
@@ -112,7 +112,7 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
                                 item.linkText && (
                                     <Link
                                         href={item.href}
-                                        className="inline-block mt-3 text-orange-400 hover:text-white transition-colors underline decoration-orange-500/50 underline-offset-4"
+                                        className="inline-block mt-3 text-[#FF6B35] hover:text-[#e05a2b] font-semibold transition-colors underline decoration-[#FF6B35]/50 underline-offset-4"
                                     >
                                         {item.linkText}
                                     </Link>
@@ -127,12 +127,13 @@ function FaqItem({ item, index }: { item: FAQItem; index: number }) {
 
 export default function FaqFoxFlat() {
     return (
-        <section className="relative py-24 px-4">
+        <section className="relative w-full bg-[#1E1E2E] text-white py-24 px-6 overflow-hidden">
+            {/* М'яке фонове сяйво */}
             <div
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none opacity-[0.06]"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none opacity-20"
                 style={{
                     background:
-                        'radial-gradient(circle, #F97316 0%, transparent 70%)',
+                        'radial-gradient(circle, #FF6B35 0%, transparent 70%)',
                 }}
             />
 
@@ -141,7 +142,7 @@ export default function FaqFoxFlat() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="text-center text-xs font-bold tracking-widest text-orange-500 uppercase mb-4"
+                    className="text-center text-xs font-extrabold tracking-widest text-[#FF6B35] uppercase mb-3"
                 >
                     FAQ
                 </motion.p>
@@ -151,17 +152,17 @@ export default function FaqFoxFlat() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="text-center font-black mb-4 leading-tight"
+                    className="text-center font-extrabold mb-12 leading-tight text-white"
                     style={{
                         fontFamily: "'Unbounded', sans-serif",
-                        fontSize: 'clamp(24px, 3vw, 38px)',
+                        fontSize: 'clamp(24px, 3.5vw, 38px)',
                         letterSpacing: '-1px',
                     }}
                 >
                     Часті запитання про оренду квартир через FoxFlat
                 </motion.h2>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                     {faqs.map((item, i) => (
                         <FaqItem key={i} item={item} index={i} />
                     ))}
@@ -171,15 +172,15 @@ export default function FaqFoxFlat() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ delay: 0.4 }}
-                    className="text-center text-white/30 text-sm mt-10"
+                    transition={{ delay: 0.3 }}
+                    className="text-center text-white/50 text-sm mt-12"
                 >
                     Не знайшов відповідь?{' '}
                     <a
                         href="https://t.me/FoxFlatSupport"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors"
+                        className="text-[#FF6B35] font-semibold hover:underline underline-offset-4 transition-colors"
                     >
                         Напиши в підтримку
                     </a>

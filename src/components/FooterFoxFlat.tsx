@@ -34,25 +34,33 @@ export default function FooterFoxFlat() {
     };
 
     return (
-        <footer className="w-full bg-black pt-10 pb-6 px-4 relative z-10">
-            {/* Розділювач */}
-            <div className="w-full h-px mb-10"
-                 style={{ background: "linear-gradient(to right, transparent, rgba(249,115,22,0.3), transparent)" }} />
+        <footer className="w-full bg-[#1E1E2E] text-white pt-12 pb-8 px-6 relative z-10 overflow-hidden">
+            {/* Верхній градієнтний розділювач */}
+            <div
+                className="w-full h-px mb-12"
+                style={{ background: "linear-gradient(to right, transparent, rgba(255,107,53,0.4), transparent)" }}
+            />
 
-            <div className="max-w-5xl mx-auto space-y-8">
+            <div className="max-w-5xl mx-auto space-y-10">
 
                 {/* Міста + Інструменти + Наші проєкти */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 
                     {/* Міста */}
                     <div className="md:col-span-2">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
+                        <p
+                            className="text-[11px] font-extrabold tracking-[0.15em] text-[#FF6B35] uppercase mb-4"
+                            style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        >
                             Оренда по містах
                         </p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        <div className="flex flex-wrap gap-x-4 gap-y-2.5">
                             {CITIES.map((city) => (
-                                <Link key={city.slug} href={`/misto/${city.slug}`}
-                                      className="text-xs text-white/60 hover:text-orange-400 transition-colors">
+                                <Link
+                                    key={city.slug}
+                                    href={`/misto/${city.slug}`}
+                                    className="text-xs text-white/60 hover:text-[#FF6B35] transition-colors duration-200"
+                                >
                                     {city.name}
                                 </Link>
                             ))}
@@ -60,31 +68,45 @@ export default function FooterFoxFlat() {
                     </div>
 
                     {/* Інструменти */}
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
+                    <div className="space-y-3">
+                        <p
+                            className="text-[11px] font-extrabold tracking-[0.15em] text-[#FF6B35] uppercase mb-4"
+                            style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        >
                             Інструменти
                         </p>
-                        <Link href="/tools/calculator" className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
+                        <Link href="/tools/calculator" className="text-xs text-white/60 hover:text-[#FF6B35] transition-colors duration-200 block">
                             Калькулятор оренди
                         </Link>
-                        <Link href="/tools/checklist" className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
+                        <Link href="/tools/checklist" className="text-xs text-white/60 hover:text-[#FF6B35] transition-colors duration-200 block">
                             Чеклист огляду квартири
                         </Link>
                     </div>
 
                     {/* Наші проєкти */}
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-bold tracking-[0.15em] text-white/50 uppercase mb-4">
+                    <div className="space-y-3">
+                        <p
+                            className="text-[11px] font-extrabold tracking-[0.15em] text-[#FF6B35] uppercase mb-4"
+                            style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        >
                             Наші проєкти
                         </p>
-                        <a href="https://t.me/FoxFlat_bot" target="_blank" rel="noopener noreferrer"
-                           onClick={() => handleBotClick("ecosystem_foxflat_click", "Footer — FoxFlat link")}
-                           className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
+                        <a
+                            href="https://t.me/FoxFlat_bot"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => handleBotClick("ecosystem_foxflat_click", "Footer — FoxFlat link")}
+                            className="text-xs text-white/60 hover:text-[#FF6B35] transition-colors duration-200 block"
+                        >
                             FoxFlat — оренда квартир
                         </a>
-                        <a href="https://t.me/FoxHunts_bot" target="_blank" rel="noopener noreferrer"
-                           onClick={() => handleBotClick("ecosystem_foxhunt_click", "Footer — FoxHunt link")}
-                           className="text-xs text-white/60 hover:text-orange-400 transition-colors block">
+                        <a
+                            href="https://t.me/FoxHunts_bot"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => handleBotClick("ecosystem_foxhunt_click", "Footer — FoxHunt link")}
+                            className="text-xs text-white/60 hover:text-[#FF6B35] transition-colors duration-200 block"
+                        >
                             FoxHunt — фріланс-проєкти
                         </a>
                     </div>
@@ -92,28 +114,28 @@ export default function FooterFoxFlat() {
                 </div>
 
                 {/* Розділювач */}
-                <div className="h-px bg-white/[0.05]" />
+                <div className="h-px bg-white/10" />
 
                 {/* Нижня частина */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-white/50">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/50">
                     <p>© {new Date().getFullYear()} FoxFlat. Всі права захищено.</p>
                     <div className="flex gap-4 flex-wrap justify-center">
-                        <Link href="/legal/terms-of-service" className="hover:text-orange-300 transition-colors">
+                        <Link href="/legal/terms-of-service" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Договір публічної оферти
                         </Link>
-                        <Link href="/legal/privacy-policy" className="hover:text-orange-300 transition-colors">
+                        <Link href="/legal/privacy-policy" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Політика конфіденційності
                         </Link>
-                        <Link href="/legal/acceptable-use-policy" className="hover:text-orange-300 transition-colors">
+                        <Link href="/legal/acceptable-use-policy" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Політика прийнятного використання
                         </Link>
-                        <Link href="/reviews" className="hover:text-orange-300 transition-colors">
+                        <Link href="/reviews" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Відгуки
                         </Link>
-                        <Link href="/contacts" className="hover:text-orange-300 transition-colors">
+                        <Link href="/contacts" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Контакти
                         </Link>
-                        <Link href="/blog" className="hover:text-orange-300 transition-colors">
+                        <Link href="/blog" className="hover:text-[#FF6B35] transition-colors duration-200">
                             Блог
                         </Link>
                     </div>
