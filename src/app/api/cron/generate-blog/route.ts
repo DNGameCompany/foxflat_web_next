@@ -12,10 +12,18 @@ import {
     sendDraftNotification,
 } from "@/lib/blogGeneration";
 
+// Більше пошукових запитів + довша генерація (до 7000 токенів) можуть не вкластись
+// у дефолтний таймаут serverless-функції. 300с — максимум на Vercel Pro для cron;
+// на Hobby максимум 60с — якщо ви на Hobby, зменшіть MAX_QUERIES_PER_ARTICLE в ai.ts,
+// інакше функція обірветься по таймауту й стаття не опублікується.
+export const maxDuration = 300;
+
 export async function GET(req: NextRequest) {
     if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const usage = { planning: { input: 0, output: 0 }, writing: { input: 0, output: 0 } };
 
     try {
         const [posts, plan] = await Promise.all([
@@ -32,19 +40,21 @@ export async function GET(req: NextRequest) {
             formatSearchResults(lawResults,  "ЗАКОНОДАВСТВО"),
         ].filter(Boolean).join("\n");
 
-        const { result: planning } = await planNextTopic(posts, plan, generalSearchCtx, null);
+        const { result: planning, tokens: planningTokens } = await planNextTopic(posts, plan, generalSearchCtx, null);
+        usage.planning = planningTokens;
 
-        // Пошук саме під ті запити, які AI визначив як потрібні для ЦІЄЇ теми
-        // (ціни міста, суми/назви програм допомоги, номери законів тощо) —
-        // а не жорстко зашитий шаблон, який покривав тільки статті про міста.
+        // Пошук саме під ті запити, які AI визначив як потрібні для ЦІЄЇ теми,
+        // згруповані по категоріях (ціни/статистика, конкуренти в топі, законодавство,
+        // новини, експертні думки, локальні дані) — до 8 запитів × 5 результатів.
         const topicSearchCtx = await runTargetedSearches(planning.search_queries ?? []);
 
-        const { result: post } = await writePost(
+        const { result: post, tokens: writingTokens } = await writePost(
             planning.selected_topic,
             planning.category,
             generalSearchCtx,
             topicSearchCtx,
         );
+        usage.writing = writingTokens;
 
         await saveContentPlan({ items: planning.plan_updates, updatedAt: new Date().toISOString() });
 
@@ -62,10 +72,18 @@ export async function GET(req: NextRequest) {
             planUpdated:     planning.plan_updates.filter((i) => i.status === "planned").length,
         });
 
+        const totalTokens = {
+            input:  usage.planning.input + usage.writing.input,
+            output: usage.planning.output + usage.writing.output,
+        };
+        console.log("Blog gen tokens:", { ...usage, total: totalTokens });
+
         return NextResponse.json({
-            ok:    true,
-            slug:  post.slug,
-            topic: planning.selected_topic,
+            ok:            true,
+            slug:          post.slug,
+            topic:         planning.selected_topic,
+            search_queries: (planning.search_queries ?? []).map((q) => `[${q.category}] ${q.query}`),
+            tokens:        totalTokens,
         });
     } catch (e) {
         console.error("Cron error:", e);
