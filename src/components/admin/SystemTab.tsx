@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 const API_URL = "https://api.foxflat.com.ua";
 
 type Section = "bot" | "site";
+type MonitoringValue = "ok" | "locked" | "missing";
 
 interface BotStatus {
     online: boolean;
@@ -31,9 +32,6 @@ interface ActionState {
     success: boolean | null;
     message: string;
 }
-
-
-
 
 const EMPTY_ACTION: ActionState = { loading: false, success: null, message: "" };
 
@@ -86,8 +84,7 @@ function IconSpinner({ className }: { className?: string }) {
     );
 }
 
-
-// ── Status dot ──────────────────────────────────────────────────────────────
+// ── Status dot (бот онлайн/офлайн) ──────────────────────────────────────────
 
 function StatusDot({ online }: { online: boolean }) {
     return (
@@ -99,6 +96,26 @@ function StatusDot({ online }: { online: boolean }) {
             <span className={`text-sm font-semibold ${online ? "text-green-400" : "text-red-400"}`}>
                 {online ? "Online" : "Offline"}
             </span>
+        </div>
+    );
+}
+
+// ── Monitoring dot (redis system:monitoring) ────────────────────────────────
+
+function MonitoringDot({ status }: { status: MonitoringValue }) {
+    const cfg = {
+        ok:      { dot: "bg-green-400",  text: "text-green-400",  pulse: true,  label: "Моніторинг активний" },
+        locked:  { dot: "bg-yellow-400", text: "text-yellow-400", pulse: false, label: "Моніторинг заблоковано" },
+        missing: { dot: "bg-red-400",    text: "text-red-400",    pulse: false, label: "Немає даних моніторингу" },
+    }[status];
+
+    return (
+        <div className="flex items-center gap-2">
+            <span className="relative flex w-2 h-2">
+                <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                {cfg.pulse && <span className={`absolute inset-0 rounded-full ${cfg.dot} animate-ping opacity-50`} />}
+            </span>
+            <span className={`text-sm font-semibold ${cfg.text}`}>{cfg.label}</span>
         </div>
     );
 }
@@ -195,6 +212,9 @@ export default function SystemTab() {
     const [sitemapAction, setSitemapAction] = useState<ActionState>(EMPTY_ACTION);
     const [cacheAction, setCacheAction] = useState<ActionState>(EMPTY_ACTION);
 
+    const [monitoring, setMonitoring] = useState<MonitoringValue>("missing");
+    const [monitoringLoading, setMonitoringLoading] = useState(true);
+
     const fetchBotStatus = useCallback(async () => {
         setBotLoading(true);
         try {
@@ -222,13 +242,33 @@ export default function SystemTab() {
         finally { setSiteLoading(false); }
     }, []);
 
+    const fetchMonitoring = useCallback(async () => {
+        setMonitoringLoading(true);
+        try {
+            const r = await fetch(`${API_URL}/system/monitoring/status`);
+            if (!r.ok) throw new Error();
+            const data = await r.json();
+            if (data?.value === "1") setMonitoring("ok");
+            else if (data?.value === "locked") setMonitoring("locked");
+            else setMonitoring("missing");
+        } catch {
+            setMonitoring("missing");
+        } finally {
+            setMonitoringLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchBotStatus();
         fetchLogs();
         fetchSiteInfo();
-        const t = setInterval(fetchBotStatus, 30000);
+        fetchMonitoring();
+        const t = setInterval(() => {
+            fetchBotStatus();
+            fetchMonitoring();
+        }, 30000);
         return () => clearInterval(t);
-    }, [fetchBotStatus, fetchLogs, fetchSiteInfo]);
+    }, [fetchBotStatus, fetchLogs, fetchSiteInfo, fetchMonitoring]);
 
     const runAction = async (url: string, setter: (s: ActionState) => void, successMsg: string, cb?: () => void) => {
         setter({ loading: true, success: null, message: "" });
@@ -269,6 +309,15 @@ export default function SystemTab() {
                     </button>
                 ))}
             </div>
+
+            {/* Моніторинг — завжди видно, незалежно від табу */}
+            <Card title="Моніторинг" onRefresh={fetchMonitoring}>
+                {monitoringLoading ? (
+                    <Skeleton w="180px" />
+                ) : (
+                    <MonitoringDot status={monitoring} />
+                )}
+            </Card>
 
             {/* ── БОТ ── */}
             {section === "bot" && (
