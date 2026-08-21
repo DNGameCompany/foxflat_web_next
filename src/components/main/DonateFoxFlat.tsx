@@ -16,11 +16,11 @@ const REPORTS = [
         title: "Звіт за 15 серпня",
         url: "https://www.instagram.com/p/DcEJQ0LjMZS/?igsh=MTcwczU1Nnp1Yjd6cw==",
     },
-    // {
-    //   date: "14.08.2026",
-    //   title: "Звіт за 14 серпня",
-    //   url: "https://www.instagram.com/p/XXXXX/",
-    // },
+    {
+        date: "21.08.2026",
+        title: "Звіт за 21 серпня",
+        url: "https://www.instagram.com/p/DcS7QkLsq3t/?igsi=MTRpejd2a2o1MHVqeA==",
+    },
 ];
 
 export default function DonateFoxFlat() {
