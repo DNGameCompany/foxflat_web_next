@@ -1,25 +1,55 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Legend,
+} from "recharts";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-interface DayStats { date: string; count: number; }
+interface DayStats {
+    date: string;
+    count: number;                     // сума по всіх планах
+    [plan: string]: string | number;   // динамічні ключі планів (basic, pro, ...)
+}
 
 type RangeMode = "7" | "30" | "90" | "all";
 
-const API_URL = "https://api.foxflat.com.ua/payment/get-payments";
+const API_URL = "https://api.foxflat.com.ua/payment/get-payments"; // або новий ендпоінт з планами
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
-// Будує суцільний ряд дат від першої оплати до СЬОГОДНІ, підставляючи 0 там, де оплат не було.
-// Важливо рахувати "до сьогодні", а не "до останньої оплати" — інакше дні без оплат
-// випадають з ряду, і фільтри 7/30/90 днів від поточної дати лишаються без даних.
-function fillGaps(raw: Record<string, number>): DayStats[] {
-    const dates = Object.keys(raw).sort();
+// Кольори для планів (можна розширити)
+const PLAN_COLORS: Record<string, string> = {
+    basic: "#F97316",
+    pro: "#3B82F6",
+    premium: "#A855F7",
+    unknown: "#6B7280",
+};
 
+const FALLBACK_COLORS = ["#F97316", "#3B82F6", "#22C55E", "#A855F7", "#EC4899", "#EAB308", "#14B8A6"];
+
+function getPlanColor(plan: string, index: number): string {
+    return PLAN_COLORS[plan] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+}
+
+/**
+ * Будує суцільний ряд дат від першої оплати до сьогодні.
+ * Підставляє 0 і порожні плани там, де оплат не було.
+ */
+function fillGaps(
+    raw: Record<string, Record<string, number>>,
+    allPlans: string[]
+): DayStats[] {
+    const dates = Object.keys(raw).sort();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
@@ -28,7 +58,15 @@ function fillGaps(raw: Record<string, number>): DayStats[] {
 
     for (let t = first.getTime(); t <= today.getTime(); t += MS_DAY) {
         const iso = new Date(t).toISOString().slice(0, 10);
-        result.push({ date: iso, count: raw[iso] ?? 0 });
+        const dayPlans = raw[iso] ?? {};
+        const entry: DayStats = { date: iso, count: 0 };
+
+        for (const plan of allPlans) {
+            const val = dayPlans[plan] ?? 0;
+            entry[plan] = val;
+            entry.count += val;
+        }
+        result.push(entry);
     }
     return result;
 }
@@ -43,20 +81,45 @@ function formatLong(iso: string) {
     return date.toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
 }
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
-    if (active && payload?.length && label) return (
-        <div className="px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#1a1a1a] shadow-xl text-xs">
-            <p className="text-white/40 mb-1">{formatLong(label)}</p>
-            <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-orange-400" />
-                <span className="text-white/90 font-semibold">{payload[0].value} оплат</span>
+const CustomTooltip = ({
+                           active,
+                           payload,
+                           label,
+                           plans,
+                       }: {
+    active?: boolean;
+    payload?: { name: string; value: number; color: string }[];
+    label?: string;
+    plans: string[];
+}) => {
+    if (!active || !payload?.length || !label) return null;
+
+    const total = payload.reduce((s, p) => s + (p.value || 0), 0);
+
+    return (
+        <div className="px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#1a1a1a] shadow-xl text-xs min-w-[160px]">
+            <p className="text-white/40 mb-2">{formatLong(label)}</p>
+            <div className="space-y-1.5">
+                {payload
+                    .filter((p) => p.value > 0)
+                    .map((p) => (
+                        <div key={p.name} className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+                                <span className="text-white/70">{p.name}</span>
+                            </div>
+                            <span className="text-white/90 font-semibold tabular-nums">{p.value}</span>
+                        </div>
+                    ))}
+            </div>
+            <div className="mt-2 pt-2 border-t border-white/10 flex justify-between">
+                <span className="text-white/40">Всього</span>
+                <span className="text-white font-semibold tabular-nums">{total}</span>
             </div>
         </div>
     );
-    return null;
 };
 
-// Стрілка тренду — як у GA: зелена вгору, червона вниз
 function TrendBadge({ delta }: { delta: number | null }) {
     if (delta === null) return null;
     const up = delta >= 0;
@@ -72,6 +135,7 @@ function TrendBadge({ delta }: { delta: number | null }) {
 
 export default function PaymentsChart() {
     const [series, setSeries] = useState<DayStats[]>([]);
+    const [plans, setPlans] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [range, setRange] = useState<RangeMode>("30");
@@ -83,13 +147,20 @@ export default function PaymentsChart() {
                 if (!res.ok) throw new Error(`Помилка запиту: ${res.status}`);
                 return res.json();
             })
-            .then((raw: Record<string, number>) => setSeries(fillGaps(raw)))
+            .then((raw: Record<string, Record<string, number>>) => {
+                // Збираємо всі унікальні плани
+                const planSet = new Set<string>();
+                Object.values(raw).forEach((day) => {
+                    Object.keys(day).forEach((p) => planSet.add(p));
+                });
+                const allPlans = Array.from(planSet).sort();
+                setPlans(allPlans);
+                setSeries(fillGaps(raw, allPlans));
+            })
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
 
-    // Фільтрація по реальних календарних днях від "сьогодні", а не по індексу масиву —
-    // саме тут була причина, чому таби 7/30/90 раніше показували однакові дані.
     const { current, previous } = useMemo(() => {
         if (range === "all") return { current: series, previous: [] as DayStats[] };
 
@@ -115,21 +186,48 @@ export default function PaymentsChart() {
     const avgPerDay = current.length ? total / current.length : 0;
     const best = current.reduce((max, d) => (d.count > (max?.count ?? -1) ? d : max), null as DayStats | null);
 
+    // Підрахунок по планах за поточний період
+    const planTotals = useMemo(() => {
+        const acc: Record<string, number> = {};
+        for (const plan of plans) {
+            acc[plan] = current.reduce((s, d) => s + (Number(d[plan]) || 0), 0);
+        }
+        return acc;
+    }, [current, plans]);
+
     const display = hovered ?? { date: current[current.length - 1]?.date ?? "", count: total };
 
     const exportCSV = () => {
-        const blob = new Blob(["\uFEFF" + Papa.unparse(current)], { type: "text/csv;charset=utf-8;" });
+        const rows = current.map((d) => {
+            const row: Record<string, string | number> = { date: d.date, total: d.count };
+            plans.forEach((p) => (row[p] = Number(d[p]) || 0));
+            return row;
+        });
+        const blob = new Blob(["\uFEFF" + Papa.unparse(rows)], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = "payments_by_day.csv";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        a.href = url;
+        a.download = "payments_by_day_and_plan.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     };
 
     const exportExcel = () => {
-        const ws = XLSX.utils.json_to_sheet(current);
+        const rows = current.map((d) => {
+            const row: Record<string, string | number> = { date: d.date, total: d.count };
+            plans.forEach((p) => (row[p] = Number(d[p]) || 0));
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "PaymentsByDay");
-        saveAs(new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })], { type: "application/octet-stream" }), "payments_by_day.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, "PaymentsByDayAndPlan");
+        saveAs(
+            new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })], {
+                type: "application/octet-stream",
+            }),
+            "payments_by_day_and_plan.xlsx"
+        );
     };
 
     const ranges: { key: RangeMode; label: string }[] = [
@@ -139,54 +237,67 @@ export default function PaymentsChart() {
         { key: "all", label: "Весь час" },
     ];
 
-    if (loading) return (
-        <div className="flex items-center justify-center py-20 gap-3 text-orange-400">
-            <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
-                <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <span className="text-sm">Завантаження...</span>
-        </div>
-    );
+    if (loading)
+        return (
+            <div className="flex items-center justify-center py-20 gap-3 text-orange-400">
+                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+                    <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span className="text-sm">Завантаження...</span>
+            </div>
+        );
 
-    if (error) return (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-5 text-center">
-            <p className="text-sm text-red-400 font-medium">Не вдалося завантажити дані</p>
-            <p className="text-xs text-white/30 mt-1">{error}</p>
-        </div>
-    );
+    if (error)
+        return (
+            <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-5 text-center">
+                <p className="text-sm text-red-400 font-medium">Не вдалося завантажити дані</p>
+                <p className="text-xs text-white/30 mt-1">{error}</p>
+            </div>
+        );
 
     return (
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-            {/* Хедер: таби діапазону + експорт, як стрічка інструментів у GA */}
+            {/* Хедер */}
             <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4">
                 <div className="flex gap-1">
                     {ranges.map(({ key, label }) => (
-                        <button key={key} onClick={() => setRange(key)}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all duration-150 ${
-                                    range === key
-                                        ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
-                                        : "border-transparent text-white/35 hover:text-white/60 hover:bg-white/[0.04]"
-                                }`}>
+                        <button
+                            key={key}
+                            onClick={() => setRange(key)}
+                            className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all duration-150 ${
+                                range === key
+                                    ? "bg-orange-500/15 border-orange-500/40 text-orange-400"
+                                    : "border-transparent text-white/35 hover:text-white/60 hover:bg-white/[0.04]"
+                            }`}
+                        >
                             {label}
                         </button>
                     ))}
                 </div>
                 <div className="flex gap-2">
-                    {[{ label: "CSV", fn: exportCSV }, { label: "Excel", fn: exportExcel }].map(({ label, fn }) => (
-                        <button key={label} onClick={fn}
-                                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150">
+                    {[
+                        { label: "CSV", fn: exportCSV },
+                        { label: "Excel", fn: exportExcel },
+                    ].map(({ label, fn }) => (
+                        <button
+                            key={label}
+                            onClick={fn}
+                            className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150"
+                        >
                             {label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Великий KPI-блок зліва, як заголовна цифра в GA-звіті */}
+            {/* KPI */}
             <div className="px-5 pt-5 pb-1">
                 <div className="flex items-baseline gap-3 flex-wrap">
-                    <p className="font-black text-4xl text-white/95 leading-none tabular-nums"
-                       style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                    <p
+                        className="font-black text-4xl text-white/95 leading-none tabular-nums"
+                        style={{ fontFamily: "'Unbounded', sans-serif" }}
+                    >
                         {display.count}
                     </p>
                     <span className="text-xs text-white/30 mb-1">
@@ -194,23 +305,48 @@ export default function PaymentsChart() {
                     </span>
                     {!hovered && <TrendBadge delta={totalDelta} />}
                 </div>
-                <div className="flex items-center gap-4 mt-2 text-[11px] text-white/30">
-                    <span>Середнє: <span className="text-white/60 font-medium">{avgPerDay.toFixed(1)}/день</span></span>
+
+                <div className="flex items-center gap-4 mt-2 text-[11px] text-white/30 flex-wrap">
+                    <span>
+                        Середнє: <span className="text-white/60 font-medium">{avgPerDay.toFixed(1)}/день</span>
+                    </span>
                     {best && (
-                        <span>Пік: <span className="text-white/60 font-medium">{best.count}</span> ({formatShort(best.date)})</span>
+                        <span>
+                            Пік: <span className="text-white/60 font-medium">{best.count}</span> ({formatShort(best.date)})
+                        </span>
                     )}
                     {previous.length > 0 && (
-                        <span>Попередній період: <span className="text-white/60 font-medium">{prevTotal}</span></span>
+                        <span>
+                            Попередній період: <span className="text-white/60 font-medium">{prevTotal}</span>
+                        </span>
                     )}
                 </div>
+
+                {/* Розбивка по планах */}
+                {plans.length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-3">
+                        {plans.map((plan, i) => (
+                            <div key={plan} className="flex items-center gap-1.5 text-[11px]">
+                                <span
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ background: getPlanColor(plan, i) }}
+                                />
+                                <span className="text-white/40 capitalize">{plan}</span>
+                                <span className="text-white/70 font-medium tabular-nums">
+                                    {planTotals[plan] ?? 0}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Графік-area, фірмовий вигляд аналітичних дашбордів */}
+            {/* Графік */}
             <div className="px-2 pb-2">
                 {current.length === 0 ? (
                     <p className="text-sm text-white/25 text-center py-16">Немає даних за обраний період</p>
                 ) : (
-                    <ResponsiveContainer width="100%" height={260}>
+                    <ResponsiveContainer width="100%" height={280}>
                         <AreaChart
                             data={current}
                             margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
@@ -221,10 +357,12 @@ export default function PaymentsChart() {
                             onMouseLeave={() => setHovered(null)}
                         >
                             <defs>
-                                <linearGradient id="paymentsFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#F97316" stopOpacity={0.35} />
-                                    <stop offset="100%" stopColor="#F97316" stopOpacity={0} />
-                                </linearGradient>
+                                {plans.map((plan, i) => (
+                                    <linearGradient key={plan} id={`fill-${plan}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={getPlanColor(plan, i)} stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor={getPlanColor(plan, i)} stopOpacity={0.05} />
+                                    </linearGradient>
+                                ))}
                             </defs>
                             <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.045)" />
                             <XAxis
@@ -242,16 +380,28 @@ export default function PaymentsChart() {
                                 tickLine={false}
                                 width={28}
                             />
-                            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(249,115,22,0.3)", strokeWidth: 1 }} />
-                            <Area
-                                type="monotone"
-                                dataKey="count"
-                                stroke="#F97316"
-                                strokeWidth={2}
-                                fill="url(#paymentsFill)"
-                                dot={false}
-                                activeDot={{ r: 4, fill: "#F97316", stroke: "#0f0f0f", strokeWidth: 2 }}
+                            <Tooltip content={<CustomTooltip plans={plans} />} cursor={{ stroke: "rgba(249,115,22,0.3)", strokeWidth: 1 }} />
+                            <Legend
+                                verticalAlign="top"
+                                height={28}
+                                iconType="circle"
+                                iconSize={8}
+                                formatter={(value) => <span className="text-[11px] text-white/50 capitalize">{value}</span>}
                             />
+                            {plans.map((plan, i) => (
+                                <Area
+                                    key={plan}
+                                    type="monotone"
+                                    dataKey={plan}
+                                    name={plan}
+                                    stackId="1"
+                                    stroke={getPlanColor(plan, i)}
+                                    strokeWidth={1.5}
+                                    fill={`url(#fill-${plan})`}
+                                    dot={false}
+                                    activeDot={{ r: 3.5, stroke: "#0f0f0f", strokeWidth: 2 }}
+                                />
+                            ))}
                         </AreaChart>
                     </ResponsiveContainer>
                 )}
