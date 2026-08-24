@@ -14,7 +14,11 @@ import CitiesChart from "./CitiesChart";
    Дані
    ────────────────────────────────────────────────────────────────────────── */
 
-interface DayPoint { date: string; count: number; }
+interface DayPoint {
+    date: string;
+    count: number;
+    plans?: Record<string, number>;
+}
 
 type RangeMode = "7" | "30" | "90" | "all";
 type MetricKey = "payments" | "registrations" | "conversion" | "cities" | "filters";
@@ -22,10 +26,12 @@ type MetricKey = "payments" | "registrations" | "conversion" | "cities" | "filte
 const API_URL = "https://api.foxflat.com.ua/payment/get-payments";
 const MS_DAY = 24 * 60 * 60 * 1000;
 
-// Будує суцільний ряд дат від першої події до СЬОГОДНІ, підставляючи 0 де подій не було.
-// Рахувати до "сьогодні", а не до останньої події — інакше дні без подій випадають
-// з ряду і фільтри 7/30/90 днів від поточної дати лишаються без даних.
-function fillGaps(raw: Record<string, number>): DayPoint[] {
+/**
+ * Приймає як стару структуру { "2025-08-20": 5 },
+ * так і нову { "2025-08-20": { "basic": 3, "pro": 2 } }.
+ * Завжди повертає масив з числовим count (сума по планах).
+ */
+function fillGaps(raw: Record<string, number | Record<string, number>>): DayPoint[] {
     const dates = Object.keys(raw).sort();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -35,7 +41,23 @@ function fillGaps(raw: Record<string, number>): DayPoint[] {
 
     for (let t = first.getTime(); t <= today.getTime(); t += MS_DAY) {
         const iso = new Date(t).toISOString().slice(0, 10);
-        result.push({ date: iso, count: raw[iso] ?? 0 });
+        const value = raw[iso];
+
+        let count = 0;
+        let plans: Record<string, number> | undefined;
+
+        if (typeof value === "number") {
+            count = value;
+        } else if (value && typeof value === "object") {
+            plans = {};
+            for (const [plan, n] of Object.entries(value)) {
+                const num = Number(n) || 0;
+                plans[plan] = num;
+                count += num;
+            }
+        }
+
+        result.push({ date: iso, count, plans });
     }
     return result;
 }
@@ -46,7 +68,11 @@ function formatShort(iso: string) {
 }
 
 function formatLong(iso: string) {
-    return new Date(iso + "T00:00:00Z").toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" });
+    return new Date(iso + "T00:00:00Z").toLocaleDateString("uk-UA", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
 }
 
 function rangeSlice(series: DayPoint[], range: RangeMode): { current: DayPoint[]; previous: DayPoint[] } {
@@ -72,14 +98,22 @@ function rangeSlice(series: DayPoint[], range: RangeMode): { current: DayPoint[]
    ────────────────────────────────────────────────────────────────────────── */
 
 function Sparkline({ values, color }: { values: number[]; color: string }) {
-    const max = Math.max(...values, 1);
+    const safe = values.map((v) => (typeof v === "number" && !Number.isNaN(v) ? v : 0));
+    const max = Math.max(...safe, 1);
     const w = 100, h = 32;
-    const step = values.length > 1 ? w / (values.length - 1) : w;
-    const points = values.map((v, i) => `${i * step},${h - (v / max) * (h - 4) - 2}`).join(" ");
+    const step = safe.length > 1 ? w / (safe.length - 1) : w;
+    const points = safe.map((v, i) => `${i * step},${h - (v / max) * (h - 4) - 2}`).join(" ");
 
     return (
         <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none">
-            <polyline points={points} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline
+                points={points}
+                fill="none"
+                stroke={color}
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
     );
 }
@@ -98,7 +132,7 @@ function TrendTag({ delta }: { delta: number | null }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Картка-метрика (як у GA-зведенні: число, тренд, спарклайн, клік для фокусу)
+   Картка-метрика
    ────────────────────────────────────────────────────────────────────────── */
 
 interface MetricCardProps {
@@ -123,8 +157,10 @@ function MetricCard({ label, value, delta, spark, color, active, onClick }: Metr
         >
             <p className="text-[11px] font-medium text-white/40 mb-1.5 truncate">{label}</p>
             <div className="flex items-center justify-between gap-2">
-                <p className="font-black text-2xl leading-none tabular-nums"
-                   style={{ fontFamily: "'Unbounded', sans-serif", color: active ? color : "rgba(255,255,255,0.92)" }}>
+                <p
+                    className="font-black text-2xl leading-none tabular-nums"
+                    style={{ fontFamily: "'Unbounded', sans-serif", color: active ? color : "rgba(255,255,255,0.92)" }}
+                >
                     {value}
                 </p>
                 <TrendTag delta={delta} />
@@ -140,19 +176,47 @@ function MetricCard({ label, value, delta, spark, color, active, onClick }: Metr
    Тултіп головного графіка
    ────────────────────────────────────────────────────────────────────────── */
 
-const ChartTooltip = ({ active, payload, label, color, unit }: {
-    active?: boolean; payload?: { value: number }[]; label?: string; color: string; unit: string;
+const ChartTooltip = ({
+                          active,
+                          payload,
+                          label,
+                          color,
+                          unit,
+                      }: {
+    active?: boolean;
+    payload?: { value: number; payload?: DayPoint }[];
+    label?: string;
+    color: string;
+    unit: string;
 }) => {
-    if (active && payload?.length && label) return (
-        <div className="px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#1a1a1a] shadow-xl text-xs">
-            <p className="text-white/40 mb-1">{formatLong(label)}</p>
-            <div className="flex items-center gap-1.5">
+    if (!active || !payload?.length || !label) return null;
+
+    const point = payload[0]?.payload;
+    const plans = point?.plans;
+
+    return (
+        <div className="px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#1a1a1a] shadow-xl text-xs min-w-[140px]">
+            <p className="text-white/40 mb-1.5">{formatLong(label)}</p>
+            <div className="flex items-center gap-1.5 mb-1">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-white/90 font-semibold">{payload[0].value} {unit}</span>
+                <span className="text-white/90 font-semibold">
+                    {payload[0].value} {unit}
+                </span>
             </div>
+            {plans && Object.keys(plans).length > 0 && (
+                <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                    {Object.entries(plans)
+                        .filter(([, n]) => n > 0)
+                        .map(([plan, n]) => (
+                            <div key={plan} className="flex justify-between gap-4 text-white/50">
+                                <span className="capitalize">{plan}</span>
+                                <span className="tabular-nums text-white/80">{n}</span>
+                            </div>
+                        ))}
+                </div>
+            )}
         </div>
     );
-    return null;
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -160,7 +224,7 @@ const ChartTooltip = ({ active, payload, label, color, unit }: {
    ────────────────────────────────────────────────────────────────────────── */
 
 const METRIC_META: Record<MetricKey, { label: string; unit: string; color: string }> = {
-    payments:      { label: "Оплати",      unit: "оплат",     color: "#F97316" },
+    payments:      { label: "Оплати",      unit: "оплат",      color: "#F97316" },
     registrations: { label: "Реєстрації",  unit: "реєстрацій", color: "#38BDF8" },
     conversion:    { label: "Конверсія",   unit: "%",          color: "#A78BFA" },
     cities:        { label: "Міста",       unit: "міст",       color: "#34D399" },
@@ -189,61 +253,120 @@ export default function StatsTab() {
                 if (!res.ok) throw new Error(`Помилка запиту: ${res.status}`);
                 return res.json();
             })
-            .then((raw: Record<string, number>) => setPaymentsSeries(fillGaps(raw)))
-            .catch((e) => setError(e.message))
+            .then((raw: Record<string, number | Record<string, number>>) => {
+                setPaymentsSeries(fillGaps(raw));
+            })
+            .catch((e: Error) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
 
-    const { current, previous } = useMemo(() => rangeSlice(paymentsSeries, range), [paymentsSeries, range]);
+    const { current, previous } = useMemo(
+        () => rangeSlice(paymentsSeries, range),
+        [paymentsSeries, range]
+    );
 
-    const total = current.reduce((s, d) => s + d.count, 0);
-    const prevTotal = previous.reduce((s, d) => s + d.count, 0);
+    const total = current.reduce((s, d) => s + (Number(d.count) || 0), 0);
+    const prevTotal = previous.reduce((s, d) => s + (Number(d.count) || 0), 0);
     const delta = previous.length ? ((total - prevTotal) / Math.max(prevTotal, 1)) * 100 : null;
     const avgPerDay = current.length ? total / current.length : 0;
-    const best = current.reduce((max, d) => (d.count > (max?.count ?? -1) ? d : max), null as DayPoint | null);
+    const best = current.reduce(
+        (max, d) => ((Number(d.count) || 0) > (max?.count ?? -1) ? d : max),
+        null as DayPoint | null
+    );
 
-    const display = hovered ?? { date: current[current.length - 1]?.date ?? "", count: total };
-    const sparkValues = current.length ? current.map((d) => d.count) : [0, 0, 0];
+    const display = hovered ?? {
+        date: current[current.length - 1]?.date ?? "",
+        count: total,
+    };
+    const sparkValues = current.length ? current.map((d) => Number(d.count) || 0) : [0, 0, 0];
+
+    // Підсумок по планах за поточний період
+    const planTotals = useMemo(() => {
+        const acc: Record<string, number> = {};
+        for (const day of current) {
+            if (!day.plans) continue;
+            for (const [plan, n] of Object.entries(day.plans)) {
+                acc[plan] = (acc[plan] || 0) + (Number(n) || 0);
+            }
+        }
+        return acc;
+    }, [current]);
 
     const exportCSV = () => {
-        const blob = new Blob(["\uFEFF" + Papa.unparse(current)], { type: "text/csv;charset=utf-8;" });
+        const rows = current.map((d) => {
+            const row: Record<string, string | number> = {
+                date: d.date,
+                total: d.count,
+            };
+            if (d.plans) {
+                Object.entries(d.plans).forEach(([p, n]) => {
+                    row[p] = n;
+                });
+            }
+            return row;
+        });
+        const blob = new Blob(["\uFEFF" + Papa.unparse(rows)], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = "payments_by_day.csv";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        a.href = url;
+        a.download = "payments_by_day.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
 
     const exportExcel = () => {
-        const ws = XLSX.utils.json_to_sheet(current);
+        const rows = current.map((d) => {
+            const row: Record<string, string | number> = {
+                date: d.date,
+                total: d.count,
+            };
+            if (d.plans) {
+                Object.entries(d.plans).forEach(([p, n]) => {
+                    row[p] = n;
+                });
+            }
+            return row;
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "PaymentsByDay");
-        saveAs(new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })], { type: "application/octet-stream" }), "payments_by_day.xlsx");
+        saveAs(
+            new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })], {
+                type: "application/octet-stream",
+            }),
+            "payments_by_day.xlsx"
+        );
     };
 
     const meta = METRIC_META[focusMetric];
 
     return (
         <div className="space-y-5">
-            {/* Шапка: заголовок + єдиний селектор періоду для всієї сторінки */}
+            {/* Шапка */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-lg font-bold text-white/90" style={{ fontFamily: "'Unbounded', sans-serif" }}>
                     Статистика
                 </h1>
                 <div className="flex items-center gap-1 rounded-full border border-white/[0.07] bg-white/[0.02] p-1">
                     {RANGE_OPTIONS.map(({ key, label }) => (
-                        <button key={key} onClick={() => setRange(key)}
-                                className={`text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all duration-150 ${
-                                    range === key
-                                        ? "bg-orange-500/15 text-orange-400"
-                                        : "text-white/35 hover:text-white/60"
-                                }`}>
+                        <button
+                            key={key}
+                            onClick={() => setRange(key)}
+                            className={`text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all duration-150 ${
+                                range === key
+                                    ? "bg-orange-500/15 text-orange-400"
+                                    : "text-white/35 hover:text-white/60"
+                            }`}
+                        >
                             {label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Ряд карток-метрик — клік на картку фокусує головний графік на ній */}
+            {/* Картки-метрики */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                 <MetricCard
                     label="Оплати"
@@ -292,38 +415,77 @@ export default function StatsTab() {
                 />
             </div>
 
-            {/* Головна панель: великий графік для обраної метрики */}
+            {/* Головна панель */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
                 <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4">
                     <div>
                         <div className="flex items-baseline gap-3 flex-wrap">
-                            <p className="font-black text-3xl leading-none tabular-nums"
-                               style={{ fontFamily: "'Unbounded', sans-serif", color: meta.color }}>
+                            <p
+                                className="font-black text-3xl leading-none tabular-nums"
+                                style={{ fontFamily: "'Unbounded', sans-serif", color: meta.color }}
+                            >
                                 {focusMetric === "payments" ? display.count : "—"}
                             </p>
                             <span className="text-xs text-white/30">
                                 {focusMetric === "payments"
-                                    ? (hovered ? formatLong(hovered.date) : `${meta.unit} за період`)
+                                    ? hovered
+                                        ? formatLong(hovered.date)
+                                        : `${meta.unit} за період`
                                     : `${meta.label} — детальний вигляд нижче`}
                             </span>
                         </div>
+
                         {focusMetric === "payments" && (
-                            <div className="flex items-center gap-4 mt-1.5 text-[11px] text-white/30">
-                                <span>Середнє: <span className="text-white/60 font-medium">{avgPerDay.toFixed(1)}/день</span></span>
-                                {best && <span>Пік: <span className="text-white/60 font-medium">{best.count}</span> ({formatShort(best.date)})</span>}
-                                {previous.length > 0 && <span>Попередній період: <span className="text-white/60 font-medium">{prevTotal}</span></span>}
-                            </div>
+                            <>
+                                <div className="flex items-center gap-4 mt-1.5 text-[11px] text-white/30 flex-wrap">
+                                    <span>
+                                        Середнє:{" "}
+                                        <span className="text-white/60 font-medium">
+                                            {avgPerDay.toFixed(1)}/день
+                                        </span>
+                                    </span>
+                                    {best && (
+                                        <span>
+                                            Пік:{" "}
+                                            <span className="text-white/60 font-medium">{best.count}</span> (
+                                            {formatShort(best.date)})
+                                        </span>
+                                    )}
+                                    {previous.length > 0 && (
+                                        <span>
+                                            Попередній період:{" "}
+                                            <span className="text-white/60 font-medium">{prevTotal}</span>
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Розбивка по планах */}
+                                {Object.keys(planTotals).length > 0 && (
+                                    <div className="flex flex-wrap gap-3 mt-2">
+                                        {Object.entries(planTotals).map(([plan, n]) => (
+                                            <div key={plan} className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="text-white/40 capitalize">{plan}</span>
+                                                <span className="text-white/70 font-medium tabular-nums">{n}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 
                     {focusMetric === "payments" && (
                         <div className="flex gap-2">
-                            <button onClick={exportCSV}
-                                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150">
+                            <button
+                                onClick={exportCSV}
+                                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150"
+                            >
                                 CSV
                             </button>
-                            <button onClick={exportExcel}
-                                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150">
+                            <button
+                                onClick={exportExcel}
+                                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-white/[0.07] text-white/35 hover:border-orange-500/40 hover:text-orange-400 transition-all duration-150"
+                            >
                                 Excel
                             </button>
                         </div>
@@ -353,7 +515,8 @@ export default function StatsTab() {
                                     data={current}
                                     margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
                                     onMouseMove={(s: unknown) => {
-                                        const payload = (s as { activePayload?: { payload: DayPoint }[] })?.activePayload;
+                                        const payload = (s as { activePayload?: { payload: DayPoint }[] })
+                                            ?.activePayload;
                                         if (payload?.[0]) setHovered(payload[0].payload);
                                     }}
                                     onMouseLeave={() => setHovered(null)}
@@ -365,21 +528,38 @@ export default function StatsTab() {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.045)" />
-                                    <XAxis dataKey="date" tickFormatter={formatShort}
-                                           tick={{ fontSize: 11, fill: "rgba(255,255,255,0.28)" }} axisLine={false} tickLine={false} minTickGap={28} />
-                                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "rgba(255,255,255,0.28)" }}
-                                           axisLine={false} tickLine={false} width={28} />
-                                    <Tooltip content={<ChartTooltip color={meta.color} unit={meta.unit} />}
-                                             cursor={{ stroke: `${meta.color}55`, strokeWidth: 1 }} />
-                                    <Area type="monotone" dataKey="count" stroke={meta.color} strokeWidth={2}
-                                          fill="url(#metricFill)" dot={false}
-                                          activeDot={{ r: 4, fill: meta.color, stroke: "#0f0f0f", strokeWidth: 2 }} />
+                                    <XAxis
+                                        dataKey="date"
+                                        tickFormatter={formatShort}
+                                        tick={{ fontSize: 11, fill: "rgba(255,255,255,0.28)" }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        minTickGap={28}
+                                    />
+                                    <YAxis
+                                        allowDecimals={false}
+                                        tick={{ fontSize: 11, fill: "rgba(255,255,255,0.28)" }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        width={28}
+                                    />
+                                    <Tooltip
+                                        content={<ChartTooltip color={meta.color} unit={meta.unit} />}
+                                        cursor={{ stroke: `${meta.color}55`, strokeWidth: 1 }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="count"
+                                        stroke={meta.color}
+                                        strokeWidth={2}
+                                        fill="url(#metricFill)"
+                                        dot={false}
+                                        activeDot={{ r: 4, fill: meta.color, stroke: "#0f0f0f", strokeWidth: 2 }}
+                                    />
                                 </AreaChart>
                             </ResponsiveContainer>
                         )
                     ) : (
-                        // Для метрик, де графік ще не переведений на формат "день → значення",
-                        // показуємо існуючий детальний компонент напряму.
                         <div className="px-3 pb-2">
                             {focusMetric === "registrations" && <RegistrationsChart />}
                             {focusMetric === "conversion" && <ConversionChart />}
@@ -390,17 +570,32 @@ export default function StatsTab() {
                 </div>
             </div>
 
-            {/* Детальний вигляд оплат (таблиця) — згорнутий за умовчанням, як "View details" у GA */}
+            {/* Деталі по днях */}
             {focusMetric === "payments" && current.length > 0 && (
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-                    <button onClick={() => setDetailOpen((v) => !v)}
-                            className="w-full flex items-center justify-between px-5 py-3.5 text-left">
+                    <button
+                        onClick={() => setDetailOpen((v) => !v)}
+                        className="w-full flex items-center justify-between px-5 py-3.5 text-left"
+                    >
                         <span className="text-[11px] font-bold tracking-widest text-white/30 uppercase">
                             Деталі по днях
                         </span>
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-                             className={`transition-transform duration-200 ${detailOpen ? "rotate-180 text-orange-400" : "text-white/20"}`}>
-                            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            className={`transition-transform duration-200 ${
+                                detailOpen ? "rotate-180 text-orange-400" : "text-white/20"
+                            }`}
+                        >
+                            <path
+                                d="M4 6l4 4 4-4"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
                         </svg>
                     </button>
                     {detailOpen && (
@@ -409,18 +604,36 @@ export default function StatsTab() {
                                 <thead>
                                 <tr className="border-b border-white/[0.05]">
                                     {["#", "Дата", "Оплат"].map((h) => (
-                                        <th key={h} className="text-left text-[10px] font-bold tracking-widest text-white/25 uppercase px-5 py-2">{h}</th>
+                                        <th
+                                            key={h}
+                                            className="text-left text-[10px] font-bold tracking-widest text-white/25 uppercase px-5 py-2"
+                                        >
+                                            {h}
+                                        </th>
                                     ))}
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {current.slice().reverse().map((item, idx) => (
-                                    <tr key={idx} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-5 py-2.5 text-xs text-white/20">{idx + 1}</td>
-                                        <td className="px-5 py-2.5 text-sm text-white/70 font-medium">{item.date}</td>
-                                        <td className="px-5 py-2.5 text-sm font-bold" style={{ color: meta.color }}>{item.count}</td>
-                                    </tr>
-                                ))}
+                                {current
+                                    .slice()
+                                    .reverse()
+                                    .map((item, idx) => (
+                                        <tr
+                                            key={idx}
+                                            className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                                        >
+                                            <td className="px-5 py-2.5 text-xs text-white/20">{idx + 1}</td>
+                                            <td className="px-5 py-2.5 text-sm text-white/70 font-medium">
+                                                {item.date}
+                                            </td>
+                                            <td
+                                                className="px-5 py-2.5 text-sm font-bold"
+                                                style={{ color: meta.color }}
+                                            >
+                                                {item.count}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
