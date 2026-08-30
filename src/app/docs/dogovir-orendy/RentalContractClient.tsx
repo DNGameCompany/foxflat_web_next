@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, animate, useMotionValue } from "framer-motion";
 import {
@@ -14,7 +15,6 @@ import {
     Check,
     Maximize2,
     X,
-    Shield,          // ← додай
 } from "lucide-react";
 import HeaderFoxFlat from "@/src/components/HeaderFoxFlat";
 import * as gTag from "@/lib/gtag";
@@ -222,6 +222,61 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return <p className="text-xs font-bold tracking-wider text-white/30 uppercase mb-3">{children}</p>;
+}
+
+// Кнопка донату в стилі DonateFoxFlat: градієнт blue → amber, чорний жирний текст, стрілка
+function MilitaryDonateButton({
+                                  onClick,
+                                  label = "Задонатити на банку",
+                                  small = false,
+                              }: {
+    onClick: () => void;
+    label?: string;
+    small?: boolean;
+}) {
+    return (
+        <motion.a
+            href={MONOBANK_JAR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClick}
+            animate={{
+                scale: [1, 1.04, 1],
+                boxShadow: [
+                    "0 10px 25px -5px rgba(59, 130, 246, 0.25)",
+                    "0 10px 35px -5px rgba(59, 130, 246, 0.45)",
+                    "0 10px 25px -5px rgba(59, 130, 246, 0.25)",
+                ],
+            }}
+            transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+            }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-amber-400 font-bold text-black shadow-lg shadow-blue-500/25 transition-colors hover:brightness-105 ${
+                small
+                    ? "px-4 py-3 text-xs"
+                    : "px-5 py-3 text-sm sm:rounded-2xl sm:px-6 sm:py-3.5 sm:text-base"
+            }`}
+        >
+            <span>{label}</span>
+            <svg
+                className="h-4 w-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5 sm:h-5 sm:w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+            >
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                />
+            </svg>
+        </motion.a>
+    );
 }
 
 const TOTAL_PAGES = 9;
@@ -666,16 +721,7 @@ function DocumentPreview({
                     <span>{downloading ? "Завантаження…" : "Завантажити PDF"}</span>
                 </button>
 
-                <a
-                    href={MONOBANK_JAR_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={onDonate}
-                    className="group flex items-center justify-center gap-2 py-3 px-3 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] text-blue-200/90 hover:bg-blue-500/15 hover:border-blue-400/40 hover:text-white transition-all duration-200 text-xs font-medium w-full"
-                >
-                    <Shield className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors flex-shrink-0" strokeWidth={2} />
-                    <span>На зв’язок захисникам</span>
-                </a>
+                <MilitaryDonateButton onClick={onDonate} label="Задонатити на банку" small />
             </div>
 
             {mounted &&
@@ -694,19 +740,81 @@ function DocumentPreview({
     );
 }
 
+const DOWNLOAD_WAIT_SECONDS = 10;
+
 export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
     const [downloading, setDownloading] = useState(false);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showThanksModal, setShowThanksModal] = useState(false);
+    const [secondsLeft, setSecondsLeft] = useState(DOWNLOAD_WAIT_SECONDS);
+    const [showManualFallback, setShowManualFallback] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => setMounted(true), []);
+
+    // Відлік під час завантаження + поява ручного фолбеку, якщо файл сам не завантажився
+    useEffect(() => {
+        if (!showDownloadModal) return;
+
+        setSecondsLeft(DOWNLOAD_WAIT_SECONDS);
+        setShowManualFallback(false);
+
+        const tick = setInterval(() => {
+            setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+        }, 1000);
+
+        const fallbackTimer = setTimeout(() => {
+            setShowManualFallback(true);
+        }, DOWNLOAD_WAIT_SECONDS * 1000);
+
+        return () => {
+            clearInterval(tick);
+            clearTimeout(fallbackTimer);
+        };
+    }, [showDownloadModal]);
+
+    const handleManualDownloadClick = async () => {
+        try {
+            const res = await fetch(pdfUrl, { credentials: "same-origin" });
+            if (!res.ok) throw new Error("Download failed");
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "dogovir-najmu-zhytla.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            logContractDownload();
+            gTag.event({
+                action: "download_contract_template",
+                category: "contract_page",
+                label: "PDF template manual fallback click",
+            });
+        } catch {
+            window.open(pdfUrl, "_blank", "noopener,noreferrer");
+            logContractDownload();
+            gTag.event({
+                action: "download_contract_template",
+                category: "contract_page",
+                label: "PDF template manual fallback window.open",
+            });
+        } finally {
+            setShowDownloadModal(false);
+            setDownloading(false);
+            setShowThanksModal(true);
+        }
+    };
 
     const handleDownload = async () => {
         if (downloading) return;
         setDownloading(true);
         setShowDownloadModal(true);
 
-        const minDelay = new Promise((resolve) => setTimeout(resolve, 10_000));
+        const minDelay = new Promise((resolve) => setTimeout(resolve, DOWNLOAD_WAIT_SECONDS * 1000));
 
         try {
             const [res] = await Promise.all([
@@ -744,6 +852,9 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
         } finally {
             setShowDownloadModal(false);
             setDownloading(false);
+            // Показуємо прохання про донат ПІСЛЯ того, як людина отримала файл —
+            // а не поки вона ще чекає завантаження.
+            setShowThanksModal(true);
         }
     };
 
@@ -752,6 +863,15 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
             action: "click_donate_monobank",
             category: "contract_page",
             label: "79 ПЗ ДПСУ — Monobank Jar",
+        });
+    };
+
+    const handlePostDownloadDonateClick = () => {
+        handleDonateClick();
+        gTag.event({
+            action: "click_donate_post_download",
+            category: "contract_page",
+            label: "thanks_modal",
         });
     };
 
@@ -843,30 +963,17 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                     <span>Формат A4</span>
                                 </div>
 
-                                {/* ГОЛОВНИЙ БЛОК З ДВОМА КНОПКАМИ (PRIMARY + DONATE) */}
-                                <div className="space-y-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleDownload}
-                                        disabled={downloading}
-                                        className="flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-orange-500 text-black hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all text-sm font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-orange-500/10"
-                                        style={{ fontFamily: "'Unbounded', sans-serif" }}
-                                    >
-                                        <Download className="w-4 h-4 stroke-[2.5]" />
-                                        {downloading ? "Завантаження…" : "Завантажити PDF"}
-                                    </button>
-
-                                    <a
-                                        href={MONOBANK_JAR_URL}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={handleDonateClick}
-                                        className="group flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] hover:bg-blue-500/15 hover:border-blue-400/40 text-blue-200/90 hover:text-white transition-all duration-200 text-xs font-medium w-full"
-                                    >
-                                        <Shield className="w-4 h-4 text-blue-400 group-hover:text-blue-300 transition-colors" strokeWidth={2} />
-                                        <span>Антени для 79 ПЗ ДПСУ</span>
-                                    </a>
-                                </div>
+                                {/* ГОЛОВНА КНОПКА ЗАВАНТАЖЕННЯ. Донат тепер просимо ПІСЛЯ завантаження — див. showThanksModal */}
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    disabled={downloading}
+                                    className="flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-orange-500 text-black hover:bg-transparent hover:text-orange-500 border-2 border-orange-500 transition-all text-sm font-bold w-full disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-orange-500/10"
+                                    style={{ fontFamily: "'Unbounded', sans-serif" }}
+                                >
+                                    <Download className="w-4 h-4 stroke-[2.5]" />
+                                    {downloading ? "Завантаження…" : "Завантажити PDF"}
+                                </button>
                             </div>
 
                             <Card>
@@ -1109,47 +1216,100 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                 </div>
             </motion.section>
 
-            {/* МОДАЛКА ПРИ ЗАВАНТАЖЕННІ ДАКУМЕНТА — з додатковою пропозицією донату під час очікування */}
+            {/* МОДАЛКА ПІД ЧАС ЗАВАНТАЖЕННЯ — головний фокус на зборі, відлік — дрібним текстом внизу */}
             {mounted &&
                 showDownloadModal &&
                 createPortal(
                     <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#111] p-8 text-center shadow-2xl">
-                            <div className="mx-auto mb-5 h-12 w-12 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin" />
+                        <div
+                            className="w-full max-w-sm rounded-2xl bg-[#111] p-8 text-center shadow-2xl"
+                            style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+                        >
+                            <div
+                                className="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-amber-400/20 border border-white/10"
+                            >
+                                <Image
+                                    src="/images/tryzub.png"
+                                    alt="Тризуб"
+                                    width={28}
+                                    height={28}
+                                    className="w-7 h-7 object-contain"
+                                />
+                            </div>
+
                             <p
                                 className="text-white font-bold mb-2"
                                 style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "15px" }}
                             >
-                                Готуємо PDF…
+                                Поки готується файл
                             </p>
-                            <p className="text-sm text-white/45 leading-relaxed">
-                                Файл формується. Завантаження почнеться автоматично через кілька секунд.
+                            <p className="text-sm text-white/55 leading-relaxed mb-5">
+                                Цей шаблон безкоштовний завдяки людям, які його підтримують. Є 10 секунд —
+                                гляньте, чи можете допомогти захисникам 79 ОШБр
                             </p>
-                            <div className="mt-5 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                                <div
-                                    className="h-full rounded-full bg-orange-500"
-                                    style={{ animation: "downloadProgress 10s linear forwards" }}
-                                />
+
+                            <MilitaryDonateButton onClick={handleDonateClick} />
+
+                            <div className="mt-5 flex items-center justify-center gap-1.5 text-[10px] text-white/25">
+                                <div className="w-2.5 h-2.5 rounded-full border-2 border-white/15 border-t-white/40 animate-spin" />
+                                <span>
+                                    {secondsLeft > 0
+                                        ? `завантаження почнеться через ${secondsLeft} с…`
+                                        : "завантажуємо…"}
+                                </span>
                             </div>
 
-                            {/* Додаткове дружнє нагадування під час генерації */}
-                            <a
-                                href={MONOBANK_JAR_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={handleDonateClick}
-                                className="group mt-6 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-500/25 bg-blue-500/[0.07] hover:bg-blue-500/15 hover:border-blue-400/40 text-blue-200/80 hover:text-white transition-all duration-200 text-xs font-medium"
-                            >
-                                <Shield className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors" strokeWidth={2} />
-                                <span>Поки готується PDF — допоможи воїнам</span>
-                            </a>
+                            {showManualFallback && (
+                                <button
+                                    onClick={handleManualDownloadClick}
+                                    className="mt-3 text-xs text-orange-400 hover:text-orange-300 underline underline-offset-2 transition-colors"
+                                >
+                                    Завантаження не почалось? Натисніть сюди
+                                </button>
+                            )}
                         </div>
-                        <style>{`
-                            @keyframes downloadProgress {
-                                from { width: 0%; }
-                                to { width: 100%; }
-                            }
-                        `}</style>
+                    </div>,
+                    document.body
+                )}
+
+            {/* МОДАЛКА ПІСЛЯ УСПІШНОГО ЗАВАНТАЖЕННЯ — тут просимо про донат, коли людина вже отримала цінність */}
+            {mounted &&
+                showThanksModal &&
+                createPortal(
+                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#111] p-8 text-center shadow-2xl">
+                            <button
+                                onClick={() => setShowThanksModal(false)}
+                                aria-label="Закрити"
+                                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white flex items-center justify-center transition-colors"
+                            >
+                                <X className="w-4 h-4" strokeWidth={2.5} />
+                            </button>
+
+                            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center">
+                                <Check className="w-6 h-6 text-green-400" strokeWidth={3} />
+                            </div>
+
+                            <p
+                                className="text-white font-bold mb-2"
+                                style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "15px" }}
+                            >
+                                Договір завантажено
+                            </p>
+                            <p className="text-sm text-white/50 leading-relaxed mb-6">
+                                Якщо він заощадив вам гроші на юристі — 30 секунд, щоб підтримати
+                                захисників 79 ОШБр
+                            </p>
+
+                            <MilitaryDonateButton onClick={handlePostDownloadDonateClick} />
+
+                            <button
+                                onClick={() => setShowThanksModal(false)}
+                                className="mt-3 text-xs text-white/30 hover:text-white/50 transition-colors"
+                            >
+                                Нехай іншим разом
+                            </button>
+                        </div>
                     </div>,
                     document.body
                 )}
