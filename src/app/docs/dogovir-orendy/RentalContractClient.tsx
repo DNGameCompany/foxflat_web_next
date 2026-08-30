@@ -224,10 +224,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     return <p className="text-xs font-bold tracking-wider text-white/30 uppercase mb-3">{children}</p>;
 }
 
-// Кнопка донату в стилі DonateFoxFlat: градієнт blue → amber, чорний жирний текст, стрілка
+// Кнопка донату з пульсацією
 function MilitaryDonateButton({
                                   onClick,
-                                  label = "Задонатити на банку",
+                                  label = "Підтримати 79 ОШБр",
                                   small = false,
                               }: {
     onClick: () => void;
@@ -721,7 +721,7 @@ function DocumentPreview({
                     <span>{downloading ? "Завантаження…" : "Завантажити PDF"}</span>
                 </button>
 
-                <MilitaryDonateButton onClick={onDonate} label="Задонатити на банку" small />
+                <MilitaryDonateButton onClick={onDonate} label="Підтримати 79 ОШБр" small />
             </div>
 
             {mounted &&
@@ -862,7 +862,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
         gTag.event({
             action: "click_donate_monobank",
             category: "contract_page",
-            label: "79 ПЗ ДПСУ — Monobank Jar",
+            label: "79 ОШБр — Monobank Jar",
         });
     };
 
@@ -963,7 +963,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                     <span>Формат A4</span>
                                 </div>
 
-                                {/* ГОЛОВНА КНОПКА ЗАВАНТАЖЕННЯ. Донат тепер просимо ПІСЛЯ завантаження — див. showThanksModal */}
+                                {/* ГОЛОВНА КНОПКА ЗАВАНТАЖЕННЯ */}
                                 <button
                                     type="button"
                                     onClick={handleDownload}
@@ -1216,7 +1216,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                 </div>
             </motion.section>
 
-            {/* МОДАЛКА ПІД ЧАС ЗАВАНТАЖЕННЯ — головний фокус на зборі, відлік — дрібним текстом внизу */}
+            {/* МОДАЛКА ПІД ЧАС ЗАВАНТАЖЕННЯ */}
             {mounted &&
                 showDownloadModal &&
                 createPortal(
@@ -1225,9 +1225,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                             className="w-full max-w-sm rounded-2xl bg-[#111] p-8 text-center shadow-2xl"
                             style={{ border: "1px solid rgba(255,255,255,0.08)" }}
                         >
-                            <div
-                                className="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-amber-400/20 border border-white/10"
-                            >
+                            <div className="mx-auto mb-4 w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-amber-400/20 border border-white/10">
                                 <Image
                                     src="/images/tryzub.png"
                                     alt="Тризуб"
@@ -1241,11 +1239,10 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                 className="text-white font-bold mb-2"
                                 style={{ fontFamily: "'Unbounded', sans-serif", fontSize: "15px" }}
                             >
-                                Поки готується файл
+                                Поки файл готується
                             </p>
                             <p className="text-sm text-white/55 leading-relaxed mb-5">
-                                Цей шаблон безкоштовний завдяки людям, які його підтримують. Є 10 секунд —
-                                гляньте, чи можете допомогти захисникам 79 ОШБр
+                                Хлопці 79 ОШБр потребують допомоги прямо зараз.
                             </p>
 
                             <MilitaryDonateButton onClick={handleDonateClick} />
@@ -1272,7 +1269,7 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                     document.body
                 )}
 
-            {/* МОДАЛКА ПІСЛЯ УСПІШНОГО ЗАВАНТАЖЕННЯ — тут просимо про донат, коли людина вже отримала цінність */}
+            {/* МОДАЛКА ПІСЛЯ УСПІШНОГО ЗАВАНТАЖЕННЯ */}
             {mounted &&
                 showThanksModal &&
                 createPortal(
@@ -1297,8 +1294,9 @@ export default function RentalContractClient({ pdfUrl }: { pdfUrl: string }) {
                                 Договір завантажено
                             </p>
                             <p className="text-sm text-white/50 leading-relaxed mb-6">
-                                Якщо він заощадив вам гроші на юристі — 30 секунд, щоб підтримати
-                                захисників 79 ОШБр
+                                Можете допомогти 79 ОШБр.
+                                <br />
+                                Хлопцям потрібна підтримка.
                             </p>
 
                             <MilitaryDonateButton onClick={handlePostDownloadDonateClick} />
