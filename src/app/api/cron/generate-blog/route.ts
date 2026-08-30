@@ -7,15 +7,18 @@ import {
     saveContentPlan,
     getExistingPosts,
     planNextTopic,
-    writePost,
+    writeAndHumanizePost,
     publishDraft,
     sendDraftNotification,
 } from "@/lib/blogGeneration";
 
-// Більше пошукових запитів + довша генерація (до 7000 токенів) можуть не вкластись
-// у дефолтний таймаут serverless-функції. 300с — максимум на Vercel Pro для cron;
-// на Hobby максимум 60с — якщо ви на Hobby, зменшіть MAX_QUERIES_PER_ARTICLE в ai.ts,
-// інакше функція обірветься по таймауту й стаття не опублікується.
+// Більше пошукових запитів + довша генерація (до 7000 токенів на написання і ще
+// до 3×7000 на редакцію: чистка кліше → авторський голос → факт-чек) можуть не
+// вкластись у дефолтний таймаут serverless-функції. 300с — максимум на Vercel Pro
+// для cron; на Hobby максимум 60с — з трьома додатковими Claude-викликами
+// редакції це майже напевно перевищить ліміт на Hobby. Якщо ви на Hobby —
+// або перейдіть на Pro, або перенесіть редакцію в окрему чергу (Vercel Queue /
+// QStash), інакше функція обірветься по таймауту й стаття не опублікується.
 export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
@@ -48,7 +51,10 @@ export async function GET(req: NextRequest) {
         // новини, експертні думки, локальні дані) — до 8 запитів × 5 результатів.
         const topicSearchCtx = await runTargetedSearches(planning.search_queries ?? []);
 
-        const { result: post, tokens: writingTokens } = await writePost(
+        // writeAndHumanizePost: пише чернетку, тоді прогонить через три
+        // редакторські проходи (чистка кліше → авторський голос → факт-чек).
+        // tokens тут уже включає і написання, і всю редакцію.
+        const { post, corrections, tokens: writingTokens } = await writeAndHumanizePost(
             planning.selected_topic,
             planning.category,
             generalSearchCtx,
@@ -70,6 +76,7 @@ export async function GET(req: NextRequest) {
             selectionReason: planning.selection_reason,
             seoKeywords:     post.seo_keywords ?? [],
             planUpdated:     planning.plan_updates.filter((i) => i.status === "planned").length,
+            corrections,     // список факт-чек-виправлень — покаже в Telegram, що саме змінилось
         });
 
         const totalTokens = {
@@ -83,6 +90,7 @@ export async function GET(req: NextRequest) {
             slug:          post.slug,
             topic:         planning.selected_topic,
             search_queries: (planning.search_queries ?? []).map((q) => `[${q.category}] ${q.query}`),
+            corrections,
             tokens:        totalTokens,
         });
     } catch (e) {

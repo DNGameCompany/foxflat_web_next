@@ -1,6 +1,9 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { humanizeDraft, type HumanizeResult } from "./humanize";
+
+export { humanizeDraft, type HumanizeResult } from "./humanize";
 
 const BLOG_API = "https://api.foxflat.com.ua";
 
@@ -357,6 +360,40 @@ ${searchCtx}
     return { result: repairAndParseJson(raw) as GeneratedPost, tokens };
 }
 
+// ─── Редакція + публікація в один виклик ───────────────────────────────────
+// Обгортка над writePost + humanizeDraft: пише чернетку, проганяє її через
+// три редакторські проходи (чистка кліше → авторський голос → факт-чек) і
+// повертає фінальний пост разом із токенами і списком фактчек-виправлень
+// (щоб можна було показати в Telegram-сповіщенні).
+export async function writeAndHumanizePost(
+    selectedTopic: string,
+    category: string,
+    generalSearchCtx: string,
+    citySearchCtx: string,
+): Promise<{
+    post: GeneratedPost;
+    corrections: string[];
+    tokens: { input: number; output: number };
+}> {
+    const { result: draft, tokens: writeTokens } = await writePost(
+        selectedTopic, category, generalSearchCtx, citySearchCtx
+    );
+
+    const searchCtxAll = [generalSearchCtx, citySearchCtx].filter(Boolean).join("\n");
+    const humanized: HumanizeResult = await humanizeDraft(draft, searchCtxAll);
+
+    const finalPost: GeneratedPost = { ...draft, content: humanized.final };
+
+    return {
+        post: finalPost,
+        corrections: humanized.corrections,
+        tokens: {
+            input:  writeTokens.input + humanized.tokens.input,
+            output: writeTokens.output + humanized.tokens.output,
+        },
+    };
+}
+
 export async function sendDraftNotification(params: {
     title:           string;
     excerpt:         string;
@@ -364,6 +401,7 @@ export async function sendDraftNotification(params: {
     selectionReason: string;
     seoKeywords:     string[];
     planUpdated:     number;
+    corrections?:    string[]; // виправлення факт-чеку з humanizeDraft, якщо були
 }) {
     const token   = process.env.TELEGRAM_BOT_TOKEN!;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://foxflat.com.ua";
@@ -372,6 +410,10 @@ export async function sendDraftNotification(params: {
         .split(",")
         .map((id) => id.trim())
         .filter(Boolean);
+
+    const correctionsLine = params.corrections?.length
+        ? `🔧 Факт-чек виправив: ${params.corrections.join("; ")}\n`
+        : "";
 
     const text = [
         `🤖 *Нова чернетка в блозі*`,
@@ -385,9 +427,11 @@ export async function sendDraftNotification(params: {
         ``,
         `🔑 ${params.seoKeywords.join(" · ")}`,
         `📋 Контент-план оновлено: +${params.planUpdated} тем`,
+        correctionsLine,
+        `⚠️ Перед публікацією — перевірте текст у безкоштовному AI-детекторі (gptzero.me або sapling.ai).`,
         ``,
         `✏️ [Відкрити в адмінці](${siteUrl}/admin)`,
-    ].join("\n");
+    ].filter(Boolean).join("\n");
 
     await Promise.all(recipients.map((chatId) =>
         fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

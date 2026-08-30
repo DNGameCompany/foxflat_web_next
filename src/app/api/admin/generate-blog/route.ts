@@ -8,6 +8,7 @@ import {
     getExistingPosts,
     planNextTopic,
     writePost,
+    humanizeDraft,
     publishDraft,
     sendDraftNotification,
 } from "@/lib/blogGeneration";
@@ -44,32 +45,40 @@ export async function POST(req: NextRequest) {
                 formatSearchResults(lawResults,  "ЗАКОНОДАВСТВО"),
             ].filter(Boolean).join("\n");
 
-            await emit({ type: "progress", step: "planning", progress: 30, message: "Вибір теми..." });
+            await emit({ type: "progress", step: "planning", progress: 25, message: "Вибір теми..." });
 
             const { result: planning, tokens: planningTokens } = await planNextTopic(posts, plan, generalSearchCtx, forcedTopic);
 
             // Пошук саме під ті запити, які AI визначив як потрібні для ЦІЄЇ теми
             // (ціни міста, суми/назви програм допомоги, номери законів тощо) —
             // а не жорстко зашитий шаблон, який покривав тільки статті про міста.
-            await emit({ type: "progress", step: "searching_topic", progress: 45, message: "Пошук фактів для теми..." });
+            await emit({ type: "progress", step: "searching_topic", progress: 35, message: "Пошук фактів для теми..." });
             const topicSearchCtx = await runTargetedSearches(planning.search_queries ?? []);
 
-            await emit({ type: "progress", step: "generating", progress: 60, message: "Генерація AI контенту..." });
+            await emit({ type: "progress", step: "generating", progress: 50, message: "Генерація AI контенту..." });
 
-            const { result: post, tokens: contentTokens } = await writePost(
+            const { result: draft, tokens: contentTokens } = await writePost(
                 planning.selected_topic,
                 planning.category,
                 generalSearchCtx,
                 topicSearchCtx,
             );
 
+            // Редакція в три проходи: чистка кліше → авторський голос → факт-чек.
+            // Окремий emit тут важливий — це найдовша частина запиту (3 додаткові
+            // Claude-виклики), без прогрес-бару користувач подумає, що зависло.
+            await emit({ type: "progress", step: "humanizing", progress: 70, message: "Редагування та факт-чек..." });
+            const searchCtxAll = [generalSearchCtx, topicSearchCtx].filter(Boolean).join("\n");
+            const humanized = await humanizeDraft(draft, searchCtxAll);
+            const post = { ...draft, content: humanized.final };
+
             const tokens = {
-                input:  planningTokens.input + contentTokens.input,
-                output: planningTokens.output + contentTokens.output,
+                input:  planningTokens.input + contentTokens.input + humanized.tokens.input,
+                output: planningTokens.output + contentTokens.output + humanized.tokens.output,
             };
 
             if (isDryRun) {
-                // Return generated content without saving — user fills the form manually
+                // Return generated + humanized content without saving — user fills the form manually
                 await emit({
                     type: "done",
                     progress: 100,
@@ -80,12 +89,13 @@ export async function POST(req: NextRequest) {
                         category: post.category,
                         slug:     post.slug,
                     },
+                    corrections: humanized.corrections,
                     tokens,
                 });
                 return;
             }
 
-            await emit({ type: "progress", step: "saving", progress: 85, message: "Збереження статті..." });
+            await emit({ type: "progress", step: "saving", progress: 90, message: "Збереження статті..." });
 
             await saveContentPlan({ items: planning.plan_updates, updatedAt: new Date().toISOString() });
             await publishDraft(post);
@@ -99,6 +109,7 @@ export async function POST(req: NextRequest) {
                 selectionReason: planning.selection_reason,
                 seoKeywords:     post.seo_keywords ?? [],
                 planUpdated:     planning.plan_updates.filter((i) => i.status === "planned").length,
+                corrections:     humanized.corrections,
             });
 
             await emit({
@@ -107,6 +118,7 @@ export async function POST(req: NextRequest) {
                 slug:     post.slug,
                 topic:    planning.selected_topic,
                 reason:   planning.selection_reason,
+                corrections: humanized.corrections,
                 tokens,
             });
         } catch (e) {
