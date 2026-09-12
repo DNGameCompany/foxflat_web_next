@@ -37,7 +37,7 @@ async function getHomePageReviews() {
 export const metadata = {
     title: 'FoxFlat — Telegram-бот для оренди квартир | Київ, Львів, Одеса, Харків',
     description:
-        'FoxFlat — Telegram-бот для пошуку квартир без посередників. Оновлення кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
+        'FoxFlat — Telegram-бот для моніторингу оголошень оренди квартир. Оновлення кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
     keywords: [
         // Бренд
         'foxflat',
@@ -60,8 +60,6 @@ export const metadata = {
         'оренда квартир Запоріжжя телеграм',
 
         // Загальні оренда
-        'оренда квартир без посередників',
-        'зняти квартиру без посередників',
         'зняти квартиру швидко',
         'знайти квартиру Україна',
         'пошук квартир онлайн',
@@ -97,7 +95,7 @@ export const metadata = {
     openGraph: {
         title: 'FoxFlat — Знайди квартиру першим через Telegram',
         description:
-            'Бот моніторить оголошення кожні 15 хвилин у 22 містах України. Отримуй нові квартири без посередників прямо в Telegram — безкоштовно!',
+            'Бот моніторить оголошення кожні 15 хвилин у 22 містах України. Отримуй нові оголошення прямо в Telegram — безкоштовно!',
         url: 'https://foxflat.com.ua/',
         siteName: 'FoxFlat',
         images: [
@@ -116,7 +114,7 @@ export const metadata = {
         card: 'summary_large_image',
         title: 'FoxFlat — Знайди квартиру першим через Telegram',
         description:
-            'Оновлення кожні 15 хвилин. 22 міста України. Без посередників. Запусти бота безкоштовно!',
+            'Оновлення кожні 15 хвилин. 22 міста України. Запусти бота безкоштовно!',
         images: ['https://foxflat.com.ua/og-image.png'],
     },
 };
@@ -147,7 +145,7 @@ export default async function HomePage() {
                                 '@type': 'WebSite',
                                 name: 'FoxFlat',
                                 url: 'https://foxflat.com.ua/',
-                                description: 'Telegram-бот для пошуку квартир у 22 містах України. Оренда без посередників.',
+                                description: 'Telegram-бот для моніторингу оголошень оренди квартир у 22 містах України.',
                                 inLanguage: 'uk-UA',
                                 potentialAction: {
                                     '@type': 'SearchAction',
@@ -163,7 +161,7 @@ export default async function HomePage() {
                                 applicationCategory: 'BusinessApplication',
                                 operatingSystem: 'Telegram',
                                 url: 'https://t.me/FoxFlat_bot',
-                                description: 'Telegram-бот для пошуку оренди квартир без посередників у 22 містах України. Оновлення кожні 15 хвилин.',
+                                description: 'Telegram-бот для моніторингу оголошень оренди квартир у 22 містах України. Оновлення кожні 15 хвилин.',
                                 offers: {
                                     '@type': 'Offer',
                                     price: '0',

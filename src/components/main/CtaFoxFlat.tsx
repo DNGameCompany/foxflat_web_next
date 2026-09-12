@@ -24,7 +24,7 @@ export default function CtaFoxFlat() {
         >
             <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Почни пошук квартири зараз
+                    Почни моніторинг квартир зараз
                 </h2>
                 <p className="mt-4 text-lg leading-8 text-gray-300 max-w-2xl mx-auto">
                     FoxFlat надсилає актуальні оголошення про квартири в Києві, Львові, Одесі, Харкові та ще 18 містах України.
