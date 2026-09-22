@@ -38,7 +38,7 @@ export default async function TermsOfServicePage() {
         offerUrl: 'https://foxflat.com.ua/legal/terms-of-service',
         botUrl: 'https://t.me/FoxFlat_bot',
         aupUrl: 'https://foxflat.com.ua/legal/acceptable-use-policy',
-        privacyPolicyUrl: 'https://flatfox.com/legal/privacy-policy',
+        privacyPolicyUrl: 'https://foxflat.com.ua/legal/privacy-policy',
         executorDetails: {
             name: 'ФОП Айдогдиєв Дмитро Романович',
             rnokpp: '3646203653',
