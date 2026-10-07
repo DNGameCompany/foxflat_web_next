@@ -1,5 +1,6 @@
 import ClientHome from './ClientHome';
 import FooterFoxFlat from '@/src/components/FooterFoxFlat';
+import { faqs } from '@/src/components/main/faqData';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -35,9 +36,9 @@ async function getHomePageReviews() {
 }
 
 export const metadata = {
-    title: 'FoxFlat — Telegram-бот для оренди квартир | Київ, Львів, Одеса, Харків',
+    title: 'FoxFlat — Telegram-бот, який сповіщає про нові оголошення оренди квартир',
     description:
-        'FoxFlat — Telegram-бот для моніторингу оголошень оренди квартир. Оновлення кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Запусти безкоштовно прямо зараз!',
+        'FoxFlat — Telegram-бот, який надсилає нові оголошення про оренду квартир за твоїми фільтрами. Платформи перевіряються кожні 15 хвилин у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро. Безкоштовний старт.',
     keywords: [
         // Бренд
         'foxflat',
@@ -62,9 +63,8 @@ export const metadata = {
         // Загальні оренда
         'зняти квартиру швидко',
         'знайти квартиру Україна',
-        'пошук квартир онлайн',
-        'актуальні оголошення оренди квартир',
         'нові оголошення оренди квартир',
+        'сповіщення про нові оголошення оренда',
         'оренда квартир у 22 містах України',
 
         // За типом аудиторії
@@ -84,8 +84,6 @@ export const metadata = {
 
         // Проблема яку вирішує
         'як знайти квартиру в Україні',
-        'як орендувати квартиру без ріелтора',
-        'пошук житла Україна',
         'житло в Україні',
     ],
 
@@ -93,9 +91,9 @@ export const metadata = {
     alternates: { canonical: 'https://foxflat.com.ua/' },
 
     openGraph: {
-        title: 'FoxFlat — Знайди квартиру першим через Telegram',
+        title: 'FoxFlat — Дізнавайся про нові квартири в оренду першим',
         description:
-            'Бот моніторить оголошення кожні 15 хвилин у 22 містах України. Отримуй нові оголошення прямо в Telegram — безкоштовно!',
+            'Бот перевіряє платформи кожні 15 хвилин і надсилає нові оголошення за твоїми фільтрами прямо в Telegram. 22 міста України, безкоштовний старт.',
         url: 'https://foxflat.com.ua/',
         siteName: 'FoxFlat',
         images: [
@@ -103,7 +101,7 @@ export const metadata = {
                 url: 'https://foxflat.com.ua/og-image.png',
                 width: 1200,
                 height: 630,
-                alt: 'FoxFlat — Telegram-бот для оренди квартир в Україні',
+                alt: 'FoxFlat — Telegram-бот, який сповіщає про нові оголошення оренди квартир',
             },
         ],
         locale: 'uk_UA',
@@ -112,9 +110,9 @@ export const metadata = {
 
     twitter: {
         card: 'summary_large_image',
-        title: 'FoxFlat — Знайди квартиру першим через Telegram',
+        title: 'FoxFlat — Дізнавайся про нові квартири в оренду першим',
         description:
-            'Оновлення кожні 15 хвилин. 22 міста України. Запусти бота безкоштовно!',
+            'Нові оголошення за твоїми фільтрами в Telegram. Перевірка кожні 15 хвилин, 22 міста України. Безкоштовний старт.',
         images: ['https://foxflat.com.ua/og-image.png'],
     },
 };
@@ -145,13 +143,8 @@ export default async function HomePage() {
                                 '@type': 'WebSite',
                                 name: 'FoxFlat',
                                 url: 'https://foxflat.com.ua/',
-                                description: 'Telegram-бот для моніторингу оголошень оренди квартир у 22 містах України.',
+                                description: 'Telegram-бот, який надсилає нові оголошення про оренду квартир за фільтрами користувача у 22 містах України.',
                                 inLanguage: 'uk-UA',
-                                potentialAction: {
-                                    '@type': 'SearchAction',
-                                    target: 'https://foxflat.com.ua/?q={search_term_string}',
-                                    'query-input': 'required name=search_term_string',
-                                },
                             },
                             // SoftwareApplication schema — для Telegram-бота
                             {
@@ -161,12 +154,12 @@ export default async function HomePage() {
                                 applicationCategory: 'BusinessApplication',
                                 operatingSystem: 'Telegram',
                                 url: 'https://t.me/FoxFlat_bot',
-                                description: 'Telegram-бот для моніторингу оголошень оренди квартир у 22 містах України. Оновлення кожні 15 хвилин.',
+                                description: 'Telegram-бот, який надсилає нові оголошення про оренду квартир за фільтрами користувача у 22 містах України. Платформи перевіряються кожні 15 хвилин.',
                                 offers: {
                                     '@type': 'Offer',
                                     price: '0',
                                     priceCurrency: 'UAH',
-                                    description: 'Безкоштовний базовий доступ. Преміум — 199 грн/міс.',
+                                    description: 'Безкоштовний тариф. Преміум — 99 грн на 7 днів або 199 грн на місяць.',
                                 },
                                 ...(ratingCount > 0 ? {
                                     aggregateRating: {
@@ -191,86 +184,18 @@ export default async function HomePage() {
                                 },
                                 sameAs: ['https://t.me/FoxFlat_bot'],
                             },
-                            // FAQPage schema — розширені фрагменти у пошуку
+                            // FAQPage schema — береться з того ж файлу, що й видимий FAQ
                             {
                                 '@context': 'https://schema.org',
                                 '@type': 'FAQPage',
-                                mainEntity: [
-                                    {
-                                        '@type': 'Question',
-                                        name: 'Скільки коштує використання FoxFlat?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'Є безкоштовний тариф з базовим пошуком і обмеженнями. Преміум-доступ: 99 грн на 7 днів або 199 грн на місяць — в обох варіантах повний функціонал без обмежень.',
-                                        },
+                                mainEntity: faqs.map((item) => ({
+                                    '@type': 'Question',
+                                    name: item.q,
+                                    acceptedAnswer: {
+                                        '@type': 'Answer',
+                                        text: item.a,
                                     },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'Яка різниця між Free та Premium?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'Free дає базовий пошук квартир з обмеженнями: сповіщення приходять кожні 30 хвилин, можна змінювати фільтри лише раз на добу і відкривати до 3 оголошень на день. Premium відкриває всі можливості: миттєві сповіщення, повний набір фільтрів (район, площа, поверх), необмежені зміни параметрів пошуку та необмежену кількість переходів на оголошення.',
-                                        },
-                                    },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'У яких містах працює бот?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'FoxFlat працює у 22 містах України: Київ, Львів, Одеса, Харків, Дніпро, Запоріжжя, Вінниця, Миколаїв, Херсон, Чернігів, Полтава, Черкаси, Суми, Житомир, Рівне, Луцьк, Тернопіль, Хмельницький, Кропивницький, Ужгород, Івано-Франківськ та Чернівці.',
-                                        },
-                                    },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'Як швидко приходять нові оголошення?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'FoxFlat перевіряє нові оголошення кожні 15 хвилин. У Premium користувачі отримують сповіщення практично миттєво (кожні кілька хвилин). У Free тарифі оголошення надсилаються підбіркою приблизно раз на 30 хвилин.',
-                                        },
-                                    },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'Чи можна налаштувати фільтри пошуку?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'Так. Ти можеш фільтрувати оголошення за містом, ціною, кількістю кімнат та іншими параметрами. У Premium доступний повний набір фільтрів, включаючи район, площу, поверх та можливість використовувати кілька значень одночасно.',
-                                        },
-                                    },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'FoxFlat — це агентство нерухомості?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'Ні. FoxFlat — це сервіс моніторингу оголошень. Ми збираємо публічні оголошення з популярних платформ і надсилаємо їх тобі.',
-                                        },
-                                    },
-                                    {
-                                        '@type': 'Question',
-                                        name: 'Що робити, якщо бот не надсилає сповіщення?',
-                                        acceptedAnswer: {
-                                            '@type': 'Answer',
-                                            text: 'Перевір налаштування фільтрів — можливо критерії занадто вузькі. Також переконайся, що бот не заблокований у Telegram. Якщо проблема не зникає — напиши нам у підтримку, і ми допоможемо.',
-                                        },
-                                    },
-                                ],
-                            },
-                            // VideoObject schema
-                            {
-                                '@context': 'https://schema.org',
-                                '@type': 'VideoObject',
-                                name: 'FoxFlat — як працює Telegram-бот для оренди квартир',
-                                description: 'Демо роботи FoxFlat: налаштування фільтрів, отримання сповіщень про нові квартири в Telegram у 22 містах України.',
-                                thumbnailUrl: 'https://foxflat.com.ua/images/video-thumb.jpg',
-                                uploadDate: '2025-01-01T00:00:00+02:00',
-                                contentUrl: 'https://foxflat.com.ua/videos/phone-screen-video.mp4',
-                                embedUrl: 'https://foxflat.com.ua/',
-                                duration: 'PT12S',
-                                inLanguage: 'uk-UA',
-                                publisher: {
-                                    '@type': 'Organization',
-                                    name: 'FoxFlat',
-                                    url: 'https://foxflat.com.ua',
-                                },
+                                })),
                             },
                         ]),
                     }}

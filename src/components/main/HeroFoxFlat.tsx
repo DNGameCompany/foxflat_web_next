@@ -27,15 +27,15 @@ export default function HeroFoxFlat() {
                     <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
 
                         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-                            FoxFlat — Telegram-бот для швидкої оренди квартир в Україні
+                            FoxFlat — Telegram-бот, який сповіщує про нові оголошення оренди квартир
                         </h1>
 
                         <h2 className="mt-4 text-2xl font-semibold text-gray-300">
-                            Актуальні оголошення оренди квартир у 22 містах України: Київ, Львів, Одеса, Харків та інші
+                            Працює у 22 містах України: Київ, Львів, Одеса, Харків та інших
                         </h2>
 
                         <p className="mt-6 text-lg leading-8 text-gray-300 max-w-lg">
-                            Знімай квартиру швидко та без зайвих пошуків. FoxFlat миттєво надсилає нові оголошення оренди прямо в Telegram, щоб ти був першим, хто дізнається про доступні квартири.
+                            Налаштуй фільтри один раз — і FoxFlat надсилатиме тобі в Telegram нові оголошення з популярних платформ. Не потрібно самому оновлювати сайти.
                         </p>
 
                         {/* Кнопка */}
@@ -47,9 +47,14 @@ export default function HeroFoxFlat() {
                                 onClick={handleBotClick}
                                 className="w-full sm:w-auto rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-3 text-base font-semibold text-black shadow-sm hover:from-orange-400 hover:to-orange-300 transition"
                             >
-                                Запустити бота
+                                Налаштувати сповіщення
                             </a>
                         </div>
+
+                        {/* Уточнення */}
+                        <p className="mt-4 text-sm text-gray-500">
+                            Це бот-сповіщувач, а не каталог: він надсилає лише нові оголошення, без архіву й перегляду бази.
+                        </p>
 
                     </div>
 

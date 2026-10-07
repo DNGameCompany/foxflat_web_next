@@ -19,7 +19,7 @@ export default function AcceptableUsePolicy() {
     const pageData: PageData = {
         title: 'Політика прийнятного використання',
         description: 'Політика прийнятного використання Telegram-бота FoxFlat, який надає інформаційні послуги з моніторингу оголошень про оренду квартир.',
-        lastUpdated: '08 травня 2025 року',
+        lastUpdated: '7 жовтня 2026 року',
     };
 
     return (

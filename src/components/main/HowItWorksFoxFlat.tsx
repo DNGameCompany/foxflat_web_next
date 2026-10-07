@@ -40,33 +40,33 @@ const steps = [
         num: '01',
         Icon: IconBot,
         title: 'Обери місто',
-        desc: 'Запусти бота і обери місто — і ти вже в системі. Моніторинг стартує миттєво, всі базові фільтри вже встановлено.',
-        highlight: 'Старт за 10 сек',
-        detail: 'Доступно на iOS, Android та десктопі',
+        desc: 'Відкрий бота в Telegram і обери місто. Реєстрація на сайтах не потрібна, моніторинг стартує одразу.',
+        highlight: 'Старт за кілька секунд',
+        detail: 'Працює в Telegram на iOS, Android та десктопі',
     },
     {
         num: '02',
         Icon: IconFilter,
         title: 'Налаштуй фільтри',
-        desc: "Обери район, площу, кількість кімнат, поверх і бюджет. Бот запам'ятає всі твої вподобання і застосує їх автоматично.",
-        highlight: 'Гнучкі критерії',
-        detail: '22 міста, необмежена кількість фільтрів у преміумі',
+        desc: "Вкажи ціну та кількість кімнат — бот запамʼятає і надсилатиме лише відповідні оголошення. У Premium також доступні район, площа та поверх.",
+        highlight: 'Налаштуй один раз',
+        detail: 'Фільтри можна змінювати будь-коли — скільки завгодно разів',
     },
     {
         num: '03',
         Icon: IconBell,
         title: 'Отримуй сповіщення',
-        desc: 'Нові квартири надходять миттєво — ти серед перших, хто бачить нове оголошення. Моніторинг кожні 15 хвилин.',
-        highlight: 'Моментально',
-        detail: 'Без спаму — тільки релевантні оголошення',
+        desc: 'Бот перевіряє платформи кожні 15 хвилин і надсилає нові оголошення, що підходять під твої фільтри. У Premium вони приходять після кожної перевірки, у Free — підбіркою не частіше ніж раз на 30 хвилин. Якщо нових немає, сповіщень не буде.',
+        highlight: 'Лише нові',
+        detail: 'Без архіву й перегляду бази — тільки нові оголошення',
     },
     {
         num: '04',
         Icon: IconHome,
-        title: 'Знайди квартиру',
-        desc: "Перейди за посиланням прямо до оголошення й зв'яжись з орендодавцем напряму.",
-        highlight: 'Без переплат',
-        detail: 'Прямий контакт з власником квартири',
+        title: 'Звʼяжись з автором',
+        desc: "Перейди за посиланням до оголошення на сайті-джерелі й звʼяжись з автором оголошення напряму.",
+        highlight: 'Напряму',
+        detail: 'FoxFlat не є посередником і не бере участі в угоді',
     },
 ];
 
@@ -102,7 +102,7 @@ export default function HowItWorksFoxFlat() {
                         letterSpacing: '-1px',
                     }}
                 >
-                    Як знайти квартиру через Telegram: 4 прості кроки
+                    Як працює FoxFlat: 4 прості кроки
                 </motion.h2>
 
                 <motion.p
@@ -112,7 +112,7 @@ export default function HowItWorksFoxFlat() {
                     transition={{ delay: 0.15 }}
                     className="text-center text-white/40 text-base max-w-md mx-auto mb-20 leading-relaxed"
                 >
-                    Без реєстрацій, без дзвінків ріелторам — тільки свіжі оголошення в Telegram
+                    Без реєстрації на сайтах — тільки нові оголошення прямо в Telegram
                 </motion.p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
@@ -280,7 +280,7 @@ export default function HowItWorksFoxFlat() {
                         className="inline-flex items-center gap-3 bg-orange-500 hover:bg-transparent text-black hover:text-orange-500 font-bold px-8 py-4 rounded-xl border-2 border-orange-500 transition-all duration-200"
                         style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '13px' }}
                     >
-                        <span>Спробувати зараз</span>
+                        <span>Налаштувати сповіщення</span>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>

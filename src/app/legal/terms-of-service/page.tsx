@@ -15,7 +15,6 @@ interface PageData {
     description: string;
     lastUpdated: string;
     supportTelegram: string;
-    supportEmail: string;
     offerUrl: string;
     botUrl: string;
     aupUrl: string;
@@ -32,9 +31,8 @@ export default async function TermsOfServicePage() {
         title: 'Договір публічної оферти',
         description:
             'Договір публічної оферти для використання Telegram-бота FoxFlat, який визначає умови надання інформаційних послуг.',
-        lastUpdated: '28 липня 2025 року',
+        lastUpdated: '7 жовтня 2026 року', // постав реальну дату публікації
         supportTelegram: 'https://t.me/FoxFlatSupport',
-        supportEmail: 'support@foxflat.com',
         offerUrl: 'https://foxflat.com.ua/legal/terms-of-service',
         botUrl: 'https://t.me/FoxFlat_bot',
         aupUrl: 'https://foxflat.com.ua/legal/acceptable-use-policy',

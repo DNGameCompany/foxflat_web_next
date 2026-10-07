@@ -8,7 +8,6 @@ const stats = [
         value: 2400,
         suffix: '+',
         label: 'активних користувачів',
-        max: 3000,
         icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="7" r="4" />
@@ -21,8 +20,7 @@ const stats = [
     {
         value: 22,
         suffix: '',
-        label: 'міста України',
-        max: 25,
+        label: 'міст України',
         icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
@@ -33,8 +31,7 @@ const stats = [
     {
         value: 180,
         suffix: '+',
-        label: 'нових квартир щодня',
-        max: 250,
+        label: 'нових оголошень щодня',
         icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9.5z" />
@@ -44,10 +41,8 @@ const stats = [
     },
     {
         value: 15,
-        prefix: '<',
         suffix: ' хв',
-        label: 'до першого сповіщення',
-        max: 60,
+        label: 'інтервал перевірки платформ',
         icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="9" />
@@ -57,11 +52,9 @@ const stats = [
     },
 ];
 
-// КЛЮЧОВА ЗМІНА: стартуємо з target, а не з 0.
-// SSR/перший рендер завжди покаже фінальне число — Google і будь-який
-// бот без JS бачитимуть коректні цифри одразу в HTML.
-// Анімація "від 0" — це лише косметичний ефект, що відбувається ПІСЛЯ
-// гідратації, і тільки якщо елемент потрапив у viewport.
+// Стартуємо з target, а не з 0: SSR/перший рендер завжди показує фінальне
+// число, тож Google і боти без JS бачать коректні цифри одразу в HTML.
+// Анімація "від 0" — косметичний ефект після гідратації, лише у viewport.
 function useCountUp(target: number, duration = 1800, started: boolean) {
     const [count, setCount] = useState(target);
     const hasAnimated = useRef(false);
@@ -70,7 +63,6 @@ function useCountUp(target: number, duration = 1800, started: boolean) {
         if (!started || hasAnimated.current) return;
         hasAnimated.current = true;
 
-        // Косметичний "розбіг" від 0 — тільки в браузері, тільки один раз.
         setCount(0);
         let startTime: number | null = null;
 
@@ -83,7 +75,7 @@ function useCountUp(target: number, duration = 1800, started: boolean) {
             setCount(Math.floor(ease * target));
 
             if (progress < 1) requestAnimationFrame(step);
-            else setCount(target); // гарантуємо точне фінальне значення
+            else setCount(target);
         };
 
         requestAnimationFrame(step);
@@ -94,7 +86,6 @@ function useCountUp(target: number, duration = 1800, started: boolean) {
 
 function StatCard({ item, index, started }: { item: typeof stats[0]; index: number; started: boolean }) {
     const count = useCountUp(item.value, 1600 + index * 120, started);
-    const progressPct = Math.min((item.value / item.max) * 100, 100);
 
     return (
         <motion.div
@@ -114,16 +105,6 @@ function StatCard({ item, index, started }: { item: typeof stats[0]; index: numb
             </div>
 
             <div className="flex items-end gap-0.5 mb-1">
-
-                {item.prefix && (
-                    <span
-                        className="font-black text-orange-500 mb-1"
-                        style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(20px, 2.5vw, 28px)', letterSpacing: '-1px' }}
-                    >
-                        {item.prefix}
-                    </span>
-                )}
-
                 <span
                     className="font-black leading-none text-white"
                     style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(36px, 4vw, 48px)', letterSpacing: '-2px' }}
@@ -137,31 +118,11 @@ function StatCard({ item, index, started }: { item: typeof stats[0]; index: numb
                 >
                     {item.suffix}
                 </span>
-
             </div>
 
-            <p className="text-xs text-white/40 font-medium mb-5 leading-snug">
+            <p className="text-xs text-white/40 font-medium leading-snug">
                 {item.label}
             </p>
-
-            <div className="mt-auto">
-                <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] text-white/20 font-medium">0</span>
-                    <span className="text-[10px] text-white/20 font-medium">
-                        {item.max.toLocaleString('uk-UA')}{item.suffix}
-                    </span>
-                </div>
-
-                <div className="h-[3px] w-full rounded-full bg-white/[0.06] overflow-hidden">
-                    <motion.div
-                        className="h-full rounded-full"
-                        style={{ background: 'linear-gradient(90deg, #F97316, #FBBF24)' }}
-                        initial={{ width: '0%' }}
-                        animate={started ? { width: `${progressPct}%` } : { width: '0%' }}
-                        transition={{ duration: 1.4, ease: 'easeOut', delay: index * 0.1 + 0.3 }}
-                    />
-                </div>
-            </div>
         </motion.div>
     );
 }

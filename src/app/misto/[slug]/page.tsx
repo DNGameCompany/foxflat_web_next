@@ -172,7 +172,7 @@ const cityContent: Record<string, CityContent> = {
         price1br: '3 500–7 000 грн/міс',
         price2br: '5 500–10 000 грн/міс',
         districts: ['Дніпровський', 'Корабельний', 'Суворовський'],
-        tip: 'Херсон має невисокі ціни порівняно з іншими обласними центрами. Ринок оренди невеликий, але FoxFlat відстежує всі нові оголошення і надсилає їх миттєво.',
+        tip: 'Херсон має невисокі ціни порівняно з іншими обласними центрами. Ринок оренди невеликий, тому нових оголошень може бути небагато: FoxFlat надішле їх, щойно вони зʼявляться на платформах і пройдуть твої фільтри.',
     },
 };
 
@@ -209,8 +209,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const hook = rawHook ? truncateAtWord(rawHook, 60) : null;
 
     const description = (content && hook)
-        ? `${hook}. 1-кімнатні від ${content.price1br}. Нові оголошення в Telegram кожні 15 хв — безкоштовно.`
-        : `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat. Оновлення кожні 15 хвилин. Запусти безкоштовно!`;
+        ? `${hook}. 1-кімнатні: ${content.price1br}. Бот надсилає нові оголошення в Telegram за твоїми фільтрами — безкоштовний старт.`
+        : `FoxFlat надсилає нові оголошення про оренду квартир у ${city.nameGen} в Telegram за твоїми фільтрами. Безкоштовний старт.`;
 
     return {
         title,
@@ -220,7 +220,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             `оренда квартир ${city.name} телеграм`,
             `зняти квартиру ${city.name}`,
             `знайти квартиру ${city.name}`,
-            `квартири ${city.name} без посередників`,
+            `нові оголошення оренда ${city.name}`,
             `telegram бот оренда ${city.name}`,
             `оренда ${city.name} бот`,
             `житло ${city.name}`,
@@ -252,8 +252,8 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
         {
             '@context': 'https://schema.org',
             '@type': 'WebPage',
-            name: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
-            description: `Знаходь квартири у ${city.nameGen} першим через Telegram-бот FoxFlat.`,
+            name: `Нові оголошення про оренду квартир у ${city.nameGen} — FoxFlat`,
+            description: `Нові оголошення про оренду квартир у ${city.nameGen} в Telegram за твоїми фільтрами.`,
             url: `https://foxflat.com.ua/misto/${slug}`,
             breadcrumb: {
                 '@type': 'BreadcrumbList',
@@ -267,8 +267,8 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
         {
             '@context': 'https://schema.org',
             '@type': 'Service',
-            name: `Оренда квартир у ${city.nameGen} через Telegram — FoxFlat`,
-            description: `Telegram-бот для пошуку квартир у ${city.nameGen} без посередників. Оновлення кожні 15 хвилин.`,
+            name: `Сповіщення про нові оголошення оренди у ${city.nameGen} — FoxFlat`,
+            description: `Telegram-бот, який надсилає нові оголошення про оренду квартир у ${city.nameGen} за твоїми фільтрами. Платформи перевіряються кожні 15 хвилин.`,
             url: `https://foxflat.com.ua/misto/${slug}`,
             provider: {
                 '@type': 'Organization',
@@ -283,12 +283,12 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                     name: city.region,
                 },
             },
-            serviceType: 'Пошук квартир для оренди',
+            serviceType: 'Сповіщення про нові оголошення оренди',
             offers: {
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'UAH',
-                description: 'Безкоштовний базовий доступ. Преміум — 199 грн/міс.',
+                description: 'Безкоштовний тариф. Преміум — 99 грн на 7 днів або 199 грн на місяць.',
             },
         },
     ];
@@ -324,8 +324,8 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                         Оренда квартир у {city.nameGen}
                     </h1>
                     <p className="text-white/40 text-base leading-relaxed max-w-lg mx-auto mb-10">
-                        FoxFlat надсилає нові оголошення у {city.nameGen} кожні 15 хвилин прямо в Telegram.
-                        Без реєстрації — просто запусти бота.
+                        FoxFlat стежить за популярними платформами і надсилає в Telegram нові оголошення
+                        про оренду у {city.nameGen} за твоїми фільтрами. Платформи перевіряються кожні 15 хвилин.
                     </p>
                     <a
                         href={`https://t.me/FoxFlat_bot?start=website_${slug}`}
@@ -334,11 +334,14 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                         className="inline-flex items-center gap-3 bg-orange-500 hover:bg-transparent hover:text-orange-500 text-black font-bold border-2 border-orange-500 px-8 py-4 rounded-xl transition-all duration-200"
                         style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '12px' }}
                     >
-                        Знайти квартиру в {city.nameGen}
+                        Отримувати оголошення у {city.nameGen}
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </a>
+                    <p className="text-xs text-white/30 mt-5 max-w-sm mx-auto leading-relaxed">
+                        Це бот-сповіщувач, а не каталог: лише нові оголошення, без архіву й перегляду бази.
+                    </p>
                 </div>
             </section>
 
@@ -346,7 +349,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
             <section className="px-6 pb-20 max-w-4xl mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                        { num: '15 хв', label: `Оновлення у ${city.nameGen}` },
+                        { num: '15 хв', label: 'Інтервал перевірки платформ' },
                         { num: '0 грн', label: 'Безкоштовний старт' },
                         { num: '24/7', label: 'Моніторинг оголошень' },
                     ].map((s, i) => (
@@ -369,13 +372,13 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                     className="font-black text-white mb-8 text-center"
                     style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(20px, 2.5vw, 30px)', letterSpacing: '-1px' }}
                 >
-                    Як знайти квартиру в {city.nameGen}
+                    Як працює FoxFlat у {city.nameGen}
                 </h2>
                 <div className="flex flex-col gap-4">
                     {[
                         { n: '01', t: 'Запусти бота', d: <span>Відкрий <a href={`https://t.me/FoxFlat_bot?start=website_${slug}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline underline-offset-2">@FoxFlat_bot</a> у Telegram</span> },
-                        { n: '02', t: 'Місто обрано автоматично', d: `${city.name} підставиться автоматично — бо ти перейшов з цієї сторінки. Залишилось налаштувати фільтри: ціна, район, кімнати` },
-                        { n: '03', t: 'Отримуй квартири', d: `Нові оголошення у ${city.nameGen} приходять кожні 15 хвилин прямо в Telegram` },
+                        { n: '02', t: 'Налаштуй фільтри', d: `${city.name} підставиться автоматично, бо ти перейшов з цієї сторінки. Залишилось вказати ціну та кількість кімнат. Район і поверх доступні в Premium.` },
+                        { n: '03', t: 'Отримуй нові оголошення', d: `Бот перевіряє платформи кожні 15 хвилин і надсилає нові оголошення у ${city.nameGen}, що підходять під твої фільтри. Якщо нових немає, сповіщень не буде. Для зв'язку з автором переходиш за посиланням на сайт, де було опубліковано оголошення.` },
                     ].map((step, i) => (
                         <div key={i} className="flex gap-5 p-6 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
                             <span
@@ -423,6 +426,9 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                         <p className="text-sm text-white/45 leading-relaxed text-center max-w-xl mx-auto">
                             {content.tip}
                         </p>
+                        <p className="text-xs text-white/25 text-center mt-4">
+                            Орієнтовні ціни за оголошеннями на платформах.
+                        </p>
                     </section>
 
                     {/* Популярні райони */}
@@ -444,7 +450,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
                             ))}
                         </div>
                         <p className="text-xs text-white/30 text-center mt-6 leading-relaxed">
-                            FoxFlat надсилає оголошення з усіх районів {city.nameGen} — обери потрібний у фільтрах бота.
+                            Бот надсилає оголошення з усіх районів {city.nameGen}. Фільтр за районом доступний у Premium.
                         </p>
                     </section>
                 </>
